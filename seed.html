@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS Handover — Data Seeder</title>
+<style>
+  body { font-family: sans-serif; max-width: 640px; margin: 40px auto; padding: 20px; background: #f4f6fb; color: #1a1a2e; }
+  h1 { color: #1446a0; }
+  input { width: 100%; padding: 10px; margin: 6px 0 14px; border: 1.5px solid #dde3ef; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+  button { padding: 12px 24px; background: #1446a0; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; margin-right: 10px; }
+  button:disabled { background: #aaa; cursor: not-allowed; }
+  button.danger { background: #c0392b; }
+  #log { background: white; border: 1px solid #dde3ef; border-radius: 8px; padding: 16px; margin-top: 20px; font-size: 13px; font-family: monospace; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+  .ok { color: #27ae60; } .err { color: #c0392b; } .info { color: #2980b9; }
+  #loginSection, #seedSection { background: white; padding: 24px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(20,70,160,0.08); }
+  #seedSection { display: none; }
+  label { font-size: 13px; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>CS Handover — Data Seeder</h1>
+<p style="color:#6b7280;font-size:14px">Logs in as admin and populates Tom &amp; Jerry with realistic dummy data for showcase.</p>
+
+<div id="loginSection">
+  <h3 style="margin-top:0">Step 1 — Log in as Admin</h3>
+  <label>Email</label>
+  <input type="email" id="email" placeholder="admin@connectedstars.com">
+  <label>Password</label>
+  <input type="password" id="password">
+  <button onclick="doLogin()">Log In</button>
+</div>
+
+<div id="seedSection">
+  <h3 style="margin-top:0">Step 2 — Seed Data</h3>
+  <p id="welcomeMsg" style="color:#27ae60;font-size:14px"></p>
+  <button onclick="runSeed()" id="seedBtn">Populate Tom &amp; Jerry</button>
+  <button class="danger" onclick="clearSeedData()" id="clearBtn" style="display:none">Clear Seeded Data</button>
+</div>
+
+<div id="log">Ready. Log in above to begin.</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, doc, updateDoc,
+  deleteDoc, serverTimestamp, Timestamp, writeBatch }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCwHzZFibrc9SNP8vAV6Jr_NmQr4fVCEto",
+  authDomain: "connected-stars-handover.firebaseapp.com",
+  projectId: "connected-stars-handover",
+  storageBucket: "connected-stars-handover.firebasestorage.app",
+  messagingSenderId: "606134396217",
+  appId: "1:606134396217:web:6636e2fbe9b73b7723b4e8"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const logEl = document.getElementById('log');
+function log(msg, type='') { logEl.innerHTML += `<span class="${type}">${msg}</span>\n`; logEl.scrollTop = logEl.scrollHeight; }
+function clear() { logEl.innerHTML = ''; }
+
+// Track seeded doc IDs for cleanup
+const seededIds = { taskTemplates:[], dailyRecords:[], alerts:[], reminders:[], adhocTasks:[], logEntries:[] };
+
+window.doLogin = async function() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  clear();
+  log('Signing in...', 'info');
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    log(`Signed in as ${cred.user.email}`, 'ok');
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('seedSection').style.display = 'block';
+    document.getElementById('welcomeMsg').textContent = `Logged in as ${cred.user.email}`;
+  } catch(e) {
+    log(`Login failed: ${e.message}`, 'err');
+  }
+};
+
+window.runSeed = async function() {
+  document.getElementById('seedBtn').disabled = true;
+  clear();
+
+  // 1. Find Tom and Jerry
+  log('Looking up Tom and Jerry...', 'info');
+  const suSnap = await getDocs(query(collection(db,'serviceUsers'), where('status','==','active')));
+  const all = suSnap.docs.map(d => ({id:d.id,...d.data()}));
+  const tom = all.find(u => u.name.toLowerCase().includes('tom'));
+  const jerry = all.find(u => u.name.toLowerCase().includes('jerry'));
+
+  if (!tom) { log('ERROR: Cannot find a service user named Tom.', 'err'); document.getElementById('seedBtn').disabled=false; return; }
+  if (!jerry) { log('ERROR: Cannot find a service user named Jerry.', 'err'); document.getElementById('seedBtn').disabled=false; return; }
+
+  log(`Found Tom — ID: ${tom.id}, Unit: ${tom.unitId}`, 'ok');
+  log(`Found Jerry — ID: ${jerry.id}, Unit: ${jerry.unitId}`, 'ok');
+
+  const today = new Date().toISOString().slice(0,10);
+  const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  const tomorrow = new Date(Date.now()+86400000).toISOString().slice(0,10);
+  const nextWeek = new Date(Date.now()+7*86400000).toISOString().slice(0,10);
+
+  // ── TASK TEMPLATES ────────────────────────────────────────────────
+  log('\nAdding task templates...', 'info');
+
+  const tomTasks = [
+    { name:'Morning medication administered', type:'checkbox', shift:'morning', mustComplete:true },
+    { name:'Personal care completed', type:'checkbox', shift:'morning', mustComplete:true },
+    { name:'Breakfast eaten', type:'yesno', shift:'morning', mustComplete:false },
+    { name:'Wake-up time', type:'time', shift:'morning', mustComplete:false },
+    { name:'Lunch taken', type:'yesno', shift:'afternoon', mustComplete:false },
+    { name:'Afternoon activity', type:'paragraph', shift:'afternoon', mustComplete:false },
+    { name:'Evening medication given', type:'checkbox', shift:'evening', mustComplete:true },
+    { name:'Settled for the night', type:'checkbox', shift:'evening', mustComplete:true },
+  ];
+  const jerryTasks = [
+    { name:'Morning medication administered', type:'checkbox', shift:'morning', mustComplete:true },
+    { name:'Personal hygiene routine', type:'checkbox', shift:'morning', mustComplete:true },
+    { name:'Breakfast consumed', type:'yesno', shift:'morning', mustComplete:false },
+    { name:'Wake-up time logged', type:'time', shift:'morning', mustComplete:false },
+    { name:'Lunch eaten', type:'yesno', shift:'afternoon', mustComplete:false },
+    { name:'Physio exercises completed', type:'checkbox', shift:'afternoon', mustComplete:false },
+    { name:'Mood and behaviour summary', type:'paragraph', shift:'evening', mustComplete:true },
+    { name:'Night medication given', type:'checkbox', shift:'evening', mustComplete:true },
+  ];
+
+  const tomTaskIds = {};
+  for (const t of tomTasks) {
+    const ref = await addDoc(collection(db,'taskTemplates'), { ...t, level:'serviceuser', serviceUserId:tom.id, unitId:tom.unitId, status:'active', expiryDate:null, createdAt:serverTimestamp() });
+    tomTaskIds[t.name] = ref.id;
+    seededIds.taskTemplates.push(ref.id);
+    log(`  + Tom task: ${t.name}`, 'ok');
+  }
+  const jerryTaskIds = {};
+  for (const t of jerryTasks) {
+    const ref = await addDoc(collection(db,'taskTemplates'), { ...t, level:'serviceuser', serviceUserId:jerry.id, unitId:jerry.unitId, status:'active', expiryDate:null, createdAt:serverTimestamp() });
+    jerryTaskIds[t.name] = ref.id;
+    seededIds.taskTemplates.push(ref.id);
+    log(`  + Jerry task: ${t.name}`, 'ok');
+  }
+
+  // ── DAILY RECORDS (completions for today) ─────────────────────────
+  log('\nAdding daily records for today...', 'info');
+
+  const tomCompletions = {};
+  tomCompletions[tomTaskIds['Morning medication administered']] = { by:'SR', byName:'Sarah R', time:'07:45', note:'All meds taken without issue' };
+  tomCompletions[tomTaskIds['Personal care completed']] = { by:'SR', byName:'Sarah R', time:'08:10', note:'' };
+  tomCompletions[tomTaskIds['Breakfast eaten']] = { by:'SR', byName:'Sarah R', time:'08:30', note:'', value:'yes' };
+  tomCompletions[tomTaskIds['Wake-up time']] = { by:'SR', byName:'Sarah R', time:'07:30', note:'', value:'07:15' };
+  tomCompletions[tomTaskIds['Lunch taken']] = { by:'MK', byName:'Mike K', time:'12:45', note:'', value:'yes' };
+
+  const tomRecordRef = await addDoc(collection(db,'dailyRecords'), { serviceUserId:tom.id, unitId:tom.unitId, date:today, tasks:tomCompletions });
+  seededIds.dailyRecords.push(tomRecordRef.id);
+  log(`  + Tom daily record for ${today}`, 'ok');
+
+  const jerryCompletions = {};
+  jerryCompletions[jerryTaskIds['Morning medication administered']] = { by:'JL', byName:'Jane L', time:'08:00', note:'Jerry was reluctant — took 10 mins' };
+  jerryCompletions[jerryTaskIds['Personal hygiene routine']] = { by:'JL', byName:'Jane L', time:'08:30', note:'' };
+  jerryCompletions[jerryTaskIds['Breakfast consumed']] = { by:'JL', byName:'Jane L', time:'09:00', note:'', value:'yes' };
+  jerryCompletions[jerryTaskIds['Wake-up time logged']] = { by:'JL', byName:'Jane L', time:'07:50', note:'', value:'07:45' };
+
+  const jerryRecordRef = await addDoc(collection(db,'dailyRecords'), { serviceUserId:jerry.id, unitId:jerry.unitId, date:today, tasks:jerryCompletions });
+  seededIds.dailyRecords.push(jerryRecordRef.id);
+  log(`  + Jerry daily record for ${today}`, 'ok');
+
+  // ── ALERTS ────────────────────────────────────────────────────────
+  log('\nAdding alerts...', 'info');
+
+  const endDate3 = new Date(Date.now() + 3*86400000);
+  const endDate7 = new Date(Date.now() + 7*86400000);
+
+  const tomAlerts = [
+    { text:'Tom has a severe peanut allergy — do NOT serve any nut products', duration:'ongoing', endDate:endDate7 },
+    { text:'GP has prescribed new Sertraline 50mg — check MAR chart before administering', duration:'ongoing', endDate:endDate3 },
+    { text:'Tom\'s behaviour can escalate quickly — follow de-escalation protocol if he raises his voice', duration:'ongoing', endDate:endDate7 },
+  ];
+  const jerryAlerts = [
+    { text:'Jerry is at risk of falls — always use walking frame and do not leave unattended on stairs', duration:'ongoing', endDate:endDate7 },
+    { text:'Upcoming CPA review on ' + nextWeek + ' — ensure support plan is up to date beforehand', duration:'ongoing', endDate:endDate7 },
+  ];
+
+  for (const a of tomAlerts) {
+    const ref = await addDoc(collection(db,'alerts'), { ...a, serviceUserId:tom.id, unitId:tom.unitId, addedBy:'SR', addedByName:'Sarah R', status:'active', handoverDate:today, createdAt:serverTimestamp() });
+    seededIds.alerts.push(ref.id);
+    log(`  + Tom alert: ${a.text.slice(0,50)}...`, 'ok');
+  }
+  for (const a of jerryAlerts) {
+    const ref = await addDoc(collection(db,'alerts'), { ...a, serviceUserId:jerry.id, unitId:jerry.unitId, addedBy:'JL', addedByName:'Jane L', status:'active', handoverDate:today, createdAt:serverTimestamp() });
+    seededIds.alerts.push(ref.id);
+    log(`  + Jerry alert: ${a.text.slice(0,50)}...`, 'ok');
+  }
+
+  // ── REMINDERS ─────────────────────────────────────────────────────
+  log('\nAdding reminders...', 'info');
+
+  const tomReminders = [
+    { title:'GP appointment — Dr Patel, Hounslow Surgery', eventDate:tomorrow, showOnDay:true, showDayBefore:true, onDayNotes:'Appointment at 10:30am. Ensure Tom has had breakfast and taken morning meds before leaving.', dayBeforeNotes:'Remind Tom about his GP visit tomorrow and confirm transport is arranged.' },
+    { title:'Dentist check-up — Dental Care Hounslow', eventDate:nextWeek, showOnDay:true, showDayBefore:true, onDayNotes:'9:00am appointment. Tom needs to leave by 8:40am.', dayBeforeNotes:'Check Tom is happy to attend and remind him what to expect.' },
+  ];
+  const jerryReminders = [
+    { title:'Physiotherapy session — Community Physio Team', eventDate:tomorrow, showOnDay:true, showDayBefore:true, onDayNotes:'11:00am. Make sure Jerry has completed morning exercises before the session.', dayBeforeNotes:'Lay out Jerry\'s physio kit tonight and remind him of the session in the morning.' },
+    { title:'CPA Review Meeting', eventDate:nextWeek, showOnDay:true, showDayBefore:true, onDayNotes:'2:00pm. Family and care coordinator will attend. Ensure support plan is printed.', dayBeforeNotes:'Confirm attendance with family and prepare a brief update on Jerry\'s progress.' },
+  ];
+
+  for (const r of tomReminders) {
+    const ref = await addDoc(collection(db,'reminders'), { ...r, serviceUserId:tom.id, unitId:tom.unitId, type:'reminder', addedBy:'SR', createdAt:serverTimestamp() });
+    seededIds.reminders.push(ref.id);
+    log(`  + Tom reminder: ${r.title}`, 'ok');
+  }
+  for (const r of jerryReminders) {
+    const ref = await addDoc(collection(db,'reminders'), { ...r, serviceUserId:jerry.id, unitId:jerry.unitId, type:'reminder', addedBy:'JL', createdAt:serverTimestamp() });
+    seededIds.reminders.push(ref.id);
+    log(`  + Jerry reminder: ${r.title}`, 'ok');
+  }
+
+  // ── AD HOC TASKS ──────────────────────────────────────────────────
+  log('\nAdding ad hoc tasks...', 'info');
+
+  const tomAdhoc = [
+    { title:'Book repeat prescription for Sertraline — contact Dr Patel\'s surgery', priority:'high', recurrence:'once', targetDate:today, mustComplete:true, addedBy:'SR', addedByName:'Sarah R' },
+    { title:'Call Tom\'s sister (Lisa) — she requested an update on his mood this week', priority:'medium', recurrence:'once', targetDate:today, mustComplete:false, addedBy:'MK', addedByName:'Mike K' },
+    { title:'Order new stock of continence pads (size M) from supplier', priority:'medium', recurrence:'once', targetDate:tomorrow, mustComplete:true, addedBy:'SR', addedByName:'Sarah R' },
+    { title:'Complete monthly food and fluid chart and send to manager by end of week', priority:'low', recurrence:'once', targetDate:today, mustComplete:false, addedBy:'MK', addedByName:'Mike K' },
+  ];
+  const jerryAdhoc = [
+    { title:'Check walking frame — left wheel appears stiff, may need repair or replacement', priority:'high', recurrence:'once', targetDate:today, mustComplete:true, addedBy:'JL', addedByName:'Jane L' },
+    { title:'Complete incident report for yesterday\'s minor fall near bathroom', priority:'high', recurrence:'once', targetDate:today, mustComplete:true, addedBy:'JL', addedByName:'Jane L' },
+    { title:'Prepare summary for Jerry\'s CPA review — include mood, sleep, and activity notes', priority:'medium', recurrence:'once', targetDate:today, mustComplete:false, addedBy:'JL', addedByName:'Jane L' },
+    { title:'Update photo ID on Jerry\'s support plan file', priority:'low', recurrence:'once', targetDate:tomorrow, mustComplete:false, addedBy:'MK', addedByName:'Mike K' },
+  ];
+
+  for (const t of tomAdhoc) {
+    const ref = await addDoc(collection(db,'adhocTasks'), { ...t, serviceUserId:tom.id, unitId:tom.unitId, completed:false, createdAt:serverTimestamp() });
+    seededIds.adhocTasks.push(ref.id);
+    log(`  + Tom adhoc: ${t.title.slice(0,55)}...`, 'ok');
+  }
+  for (const t of jerryAdhoc) {
+    const ref = await addDoc(collection(db,'adhocTasks'), { ...t, serviceUserId:jerry.id, unitId:jerry.unitId, completed:false, createdAt:serverTimestamp() });
+    seededIds.adhocTasks.push(ref.id);
+    log(`  + Jerry adhoc: ${t.title.slice(0,55)}...`, 'ok');
+  }
+
+  // ── LOG ENTRIES (notes & activities) ─────────────────────────────
+  log('\nAdding log entries...', 'info');
+
+  const tomNotes = [
+    { type:'note', date:today, text:'Tom was unsettled during the morning — pacing the corridor and appeared anxious. He calmed significantly after staff offered a cup of tea and sat with him for 20 minutes. No aggressive behaviour noted.', addedBy:'SR', addedByName:'Sarah R' },
+    { type:'note', date:today, text:'Tom mentioned that he hasn\'t heard from his sister this week and seemed down about it. Key worker to follow up and facilitate a call.', addedBy:'MK', addedByName:'Mike K' },
+    { type:'note', date:yesterday, text:'Tom had a very positive day yesterday — engaged well with all activities and was in good spirits at handover. Best day in a while.', addedBy:'JL', addedByName:'Jane L' },
+  ];
+  const tomActivities = [
+    { type:'activity', date:today, text:'Tom attended music group session in the lounge — participated actively and sang along. Visibly enjoyed it.', addedBy:'SR', addedByName:'Sarah R' },
+    { type:'activity', date:today, text:'Short walk around the garden after lunch — approx 15 minutes. Tom was in good spirits during the walk.', addedBy:'MK', addedByName:'Mike K' },
+    { type:'activity', date:yesterday, text:'Tom watched a film (The Italian Job) in the lounge with two other residents. Appeared relaxed and engaged throughout.', addedBy:'JL', addedByName:'Jane L' },
+  ];
+  const jerryNotes = [
+    { type:'note', date:today, text:'Jerry had a minor fall near the bathroom at 09:15 this morning. No injury sustained but he was shaken. Incident report completed. Family notified by phone at 09:45.', addedBy:'JL', addedByName:'Jane L' },
+    { type:'note', date:today, text:'Jerry\'s sleep has been poor this week — waking 2-3 times per night. He reports discomfort in his right hip. Flagged to GP; awaiting call back.', addedBy:'MK', addedByName:'Mike K' },
+    { type:'note', date:yesterday, text:'Jerry appeared brighter yesterday afternoon after his physio session. Said his hip felt "much better" and he walked the full corridor unaided with supervision.', addedBy:'JL', addedByName:'Jane L' },
+  ];
+  const jerryActivities = [
+    { type:'activity', date:today, text:'Seated chair exercises completed with Jerry — 20 minutes. He engaged well and completed all repetitions. Noted improved range of movement in right shoulder.', addedBy:'JL', addedByName:'Jane L' },
+    { type:'activity', date:today, text:'Jerry joined the afternoon quiz in the lounge. Won the first round and was very pleased. Good social interaction with other residents.', addedBy:'MK', addedByName:'Mike K' },
+    { type:'activity', date:yesterday, text:'Helped Jerry video call his daughter in Australia — 30 minutes. He was very cheerful afterwards and talked about it at dinner.', addedBy:'JL', addedByName:'Jane L' },
+  ];
+
+  for (const e of [...tomNotes, ...tomActivities]) {
+    const ref = await addDoc(collection(db,'logEntries'), { ...e, serviceUserId:tom.id, unitId:tom.unitId, createdAt:serverTimestamp() });
+    seededIds.logEntries.push(ref.id);
+    log(`  + Tom ${e.type}: ${e.text.slice(0,55)}...`, 'ok');
+  }
+  for (const e of [...jerryNotes, ...jerryActivities]) {
+    const ref = await addDoc(collection(db,'logEntries'), { ...e, serviceUserId:jerry.id, unitId:jerry.unitId, createdAt:serverTimestamp() });
+    seededIds.logEntries.push(ref.id);
+    log(`  + Jerry ${e.type}: ${e.text.slice(0,55)}...`, 'ok');
+  }
+
+  // Save seeded IDs to localStorage for cleanup
+  localStorage.setItem('seededIds', JSON.stringify(seededIds));
+
+  log('\n✅ All done! Tom and Jerry are now fully populated.', 'ok');
+  log(`\nSummary:`, 'info');
+  log(`  Task templates:  ${seededIds.taskTemplates.length}`, 'info');
+  log(`  Daily records:   ${seededIds.dailyRecords.length}`, 'info');
+  log(`  Alerts:          ${seededIds.alerts.length}`, 'info');
+  log(`  Reminders:       ${seededIds.reminders.length}`, 'info');
+  log(`  Ad hoc tasks:    ${seededIds.adhocTasks.length}`, 'info');
+  log(`  Log entries:     ${seededIds.logEntries.length}`, 'info');
+
+  document.getElementById('seedBtn').disabled = false;
+  document.getElementById('clearBtn').style.display = 'inline-block';
+};
+
+window.clearSeedData = async function() {
+  const raw = localStorage.getItem('seededIds');
+  if (!raw) { log('No seeded data found in localStorage.', 'err'); return; }
+  const ids = JSON.parse(raw);
+  if (!confirm('This will delete all seeded data. Are you sure?')) return;
+  clear();
+  log('Clearing seeded data...', 'info');
+  const colMap = { taskTemplates:'taskTemplates', dailyRecords:'dailyRecords', alerts:'alerts', reminders:'reminders', adhocTasks:'adhocTasks', logEntries:'logEntries' };
+  for (const [col, docIds] of Object.entries(ids)) {
+    for (const id of docIds) {
+      await deleteDoc(doc(db, colMap[col], id));
+      log(`  Deleted ${col}/${id}`, 'ok');
+    }
+  }
+  localStorage.removeItem('seededIds');
+  log('\nAll seeded data cleared.', 'ok');
+};
+</script>
+</body>
+</html>
