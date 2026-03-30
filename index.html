@@ -1942,7 +1942,8 @@ async function renderAlerts(suId, date) {
       const el = document.createElement('div');
       el.className = 'alert-item';
       const expiry = a.duration === 'day' ? 'Today only' : formatExpiry(a.endDate);
-      el.innerHTML = `<div><div class="alert-text">⚠️ ${a.text}</div><div class="alert-meta">Added by ${a.addedBy} · ${formatTs(a.createdAt)}</div></div><span class="alert-expiry">${expiry}</span>`;
+      const canEdit = currentStaffProfile?.initials === a.addedBy || currentStaffProfile?.role === 'admin';
+      el.innerHTML = `<div style="flex:1"><div class="alert-text">⚠️ ${a.text}</div><div class="alert-meta">Added by ${a.addedBy}${a.editedBy ? ` · edited by ${a.editedBy}` : ''} · ${formatTs(a.createdAt)}</div>${canEdit && !isObserverMode ? `<div style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="editAlertItem('${a.id}','${a.text.replace(/'/g,"\\'").replace(/\n/g,' ')}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteAlertItem('${a.id}')">Delete</button></div>` : ''}</div><span class="alert-expiry">${expiry}</span>`;
       body.insertBefore(el, empty);
     });
   } catch(e) { console.error(e); }
@@ -1994,25 +1995,36 @@ async function renderReminders(suId, date) {
     count.textContent = items.length;
     body.querySelectorAll('.reminder-item').forEach(el => el.remove());
     empty.style.display = items.length ? 'none' : 'block';
-    items.forEach(r => {
+    for (const r of items) {
       const el = document.createElement('div');
       el.className = r.type === 'carryforward' ? 'reminder-item carried-forward' : 'reminder-item';
+      const canEdit = currentStaffProfile?.initials === r.addedBy || currentStaffProfile?.role === 'admin';
       let content = '';
       if (r.type === 'carryforward') {
+        let liveText = r.text;
+        if (r.sourceNoteId) {
+          try {
+            const srcSnap = await getDoc(doc(db,'logEntries',r.sourceNoteId));
+            if (srcSnap.exists()) liveText = srcSnap.data().text;
+          } catch(e) {}
+        }
+        const escapedExtra = (r.extraNote||'').replace(/'/g,"\\'").replace(/\n/g,' ');
         content = `<div class="carried-tag">📌 CARRIED FORWARD from ${r.sourceDate}</div>
-          <div class="reminder-title">${r.text}</div>
+          <div class="reminder-title">${liveText}</div>
           ${r.extraNote ? `<div class="reminder-notes">${r.extraNote}</div>` : ''}
-          <div class="text-muted" style="margin-top:6px">Carried by ${r.addedBy}</div>`;
+          <div class="text-muted" style="margin-top:6px">Carried by ${r.addedBy}${r.editedBy ? ` · edited by ${r.editedBy}` : ''}</div>
+          ${canEdit && !isObserverMode ? `<div style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="editCarryForwardNote('${r.id}','${escapedExtra}')">Edit Note</button><button class="btn btn-danger btn-sm" onclick="deleteReminderItem('${r.id}')">Delete</button></div>` : ''}`;
       } else {
         const isDayBefore = r.eventDate !== date;
         const notes = isDayBefore ? (r.dayBeforeNotes || '') : (r.onDayNotes || '');
         content = `<div class="reminder-title">🔔 ${r.title}</div>
           ${isDayBefore ? `<div class="tag" style="background:var(--alert-amber-bg);color:var(--alert-amber);margin:4px 0">Tomorrow: ${r.eventDate}</div>` : `<div class="tag" style="background:var(--success-bg);color:var(--success);margin:4px 0">Today</div>`}
-          ${notes ? `<div class="reminder-notes">${notes}</div>` : ''}`;
+          ${notes ? `<div class="reminder-notes">${notes}</div>` : ''}
+          ${canEdit && !isObserverMode ? `<div style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="editReminderTitle('${r.id}','${r.title.replace(/'/g,"\\'").replace(/\n/g,' ')}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteReminderItem('${r.id}')">Delete</button></div>` : ''}`;
       }
       el.innerHTML = content;
       body.insertBefore(el, empty);
-    });
+    }
   } catch(e) { console.error(e); }
 }
 
@@ -2073,16 +2085,20 @@ async function renderAdhocTasks(suId, date) {
     sorted.forEach(t => {
       const el = document.createElement('div');
       el.className = `adhoc-item priority-${t.priority}${t.completed ? ' completed' : ''}`;
+      const canEdit = currentStaffProfile?.initials === t.addedBy || currentStaffProfile?.role === 'admin';
       el.innerHTML = `
         <div class="adhoc-top">
           <div>
             <div class="adhoc-title">${t.completed ? '✅ ' : ''}${t.title}</div>
-            <div class="adhoc-meta">Added by ${t.addedBy}${t.carriedFrom ? ` · Carried from ${t.carriedFrom}` : ''}${t.mustComplete ? ' · <strong>Must complete</strong>' : ''}</div>
+            <div class="adhoc-meta">Added by ${t.addedBy}${t.editedBy ? ` · edited by ${t.editedBy}` : ''}${t.carriedFrom ? ` · Carried from ${t.carriedFrom}` : ''}${t.mustComplete ? ' · <strong>Must complete</strong>' : ''}</div>
           </div>
           <span class="priority-badge ${t.priority}">${t.priority.toUpperCase()}</span>
         </div>
         ${t.completed && t.completionNote ? `<div class="completion-note">✅ ${t.completionNote} <span style="font-weight:700">— ${t.completedBy}</span> · ${formatTs(t.completedAt)}</div>` : ''}
-        ${!t.completed && !isObserverMode ? `<button class="btn btn-success btn-sm" style="margin-top:8px" onclick="openCompleteAdhoc('${t.id}')">Mark Complete</button>` : ''}
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+          ${!t.completed && !isObserverMode ? `<button class="btn btn-success btn-sm" onclick="openCompleteAdhoc('${t.id}')">Mark Complete</button>` : ''}
+          ${canEdit && !isObserverMode ? `<button class="btn btn-ghost btn-sm" onclick="editAdhocTitle('${t.id}','${t.title.replace(/'/g,"\\'").replace(/\n/g,' ')}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteAdhocTask('${t.id}')">Delete</button>` : ''}
+        </div>
       `;
       body.insertBefore(el, empty);
     });
@@ -2197,12 +2213,14 @@ async function renderRoutineTasks(suId, date) {
         item.className = `task-item${comp ? ' completed' : ''}`;
         let inner = '';
         if (t.type === 'checkbox') {
+          const canEditNote = comp && !isObserverMode && (currentStaffProfile?.initials === comp.by || currentStaffProfile?.role === 'admin');
           inner = `<input type="checkbox" class="task-checkbox" ${comp ? 'checked' : ''} ${isObserverMode ? 'disabled' : ''} onchange="completeRoutineTask('${t.id}','checkbox',this)">
             <div class="task-content">
               <div class="task-label">${t.name}</div>
               ${comp ? `<div class="task-stamp">✓ ${comp.by} · ${comp.time}</div>` : ''}
               ${!comp && !isObserverMode ? `<textarea class="task-note-field" placeholder="Optional note..." id="tn_${t.id}"></textarea>` : ''}
               ${comp?.note ? `<div class="text-muted" style="margin-top:4px;font-size:12px">Note: ${comp.note}</div>` : ''}
+              ${canEditNote ? `<div id="task-note-edit-area-${t.id}" style="display:none"><textarea class="task-note-field" id="task-note-inp-${t.id}" placeholder="Optional note...">${comp.note || ''}</textarea><div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-primary btn-sm" onclick="saveRoutineNote('${t.id}')">Save</button><button class="btn btn-ghost btn-sm" onclick="document.getElementById('task-note-edit-area-${t.id}').style.display='none'">Cancel</button></div></div><button class="btn btn-ghost btn-sm" style="margin-top:6px;font-size:11px" onclick="document.getElementById('task-note-edit-area-${t.id}').style.display='block'">Edit Note</button>` : ''}
             </div>`;
         } else if (t.type === 'yesno') {
           inner = `<div class="task-content">
@@ -2278,6 +2296,95 @@ window.completeRoutineTask = async function(taskId, type, el, value) {
   renderRoutineTasks(currentHandover.serviceUserId, currentHandover.date);
 };
 
+// ── ROUTINE TASK NOTE EDIT ──
+window.saveRoutineNote = async function(taskId) {
+  if (isObserverMode) return;
+  const note = document.getElementById(`task-note-inp-${taskId}`)?.value?.trim() || '';
+  const recordId = `${currentHandover.serviceUserId}_${currentHandover.date}`;
+  await updateDoc(doc(db,'dailyRecords',recordId), { [`tasks.${taskId}.note`]: note });
+  showToast('Note updated', 'success');
+  renderRoutineTasks(currentHandover.serviceUserId, currentHandover.date);
+};
+
+// ── LOG ENTRY EDIT/DELETE ──
+window.startLogEdit = function(id) {
+  document.getElementById(`log-txt-${id}`).style.display = 'none';
+  document.getElementById(`log-edit-${id}`).style.display = 'block';
+};
+window.cancelLogEdit = function(id) {
+  document.getElementById(`log-txt-${id}`).style.display = 'block';
+  document.getElementById(`log-edit-${id}`).style.display = 'none';
+};
+window.saveLogEdit = async function(id, type) {
+  const newText = document.getElementById(`log-inp-${id}`)?.value?.trim();
+  if (!newText) { showToast('Text cannot be empty', 'error'); return; }
+  await updateDoc(doc(db,'logEntries',id), { text: newText, editedBy: currentStaffProfile?.initials || '??', editedAt: serverTimestamp() });
+  showToast('Updated', 'success');
+  renderLogEntries(type, currentHandover.serviceUserId, currentHandover.date);
+};
+window.deleteLogEntry = async function(id, type) {
+  if (!confirm('Delete this entry?')) return;
+  const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  await deleteDoc(doc(db,'logEntries',id));
+  showToast('Deleted', 'success');
+  renderLogEntries(type, currentHandover.serviceUserId, currentHandover.date);
+};
+
+// ── ALERT EDIT/DELETE ──
+window.editAlertItem = async function(id, currentText) {
+  const newText = prompt('Edit alert:', currentText);
+  if (!newText || newText.trim() === currentText) return;
+  await updateDoc(doc(db,'alerts',id), { text: newText.trim(), editedBy: currentStaffProfile?.initials || '??' });
+  showToast('Alert updated', 'success');
+  renderAlerts(currentHandover.serviceUserId, currentHandover.date);
+};
+window.deleteAlertItem = async function(id) {
+  if (!confirm('Delete this alert?')) return;
+  const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  await deleteDoc(doc(db,'alerts',id));
+  showToast('Deleted', 'success');
+  renderAlerts(currentHandover.serviceUserId, currentHandover.date);
+};
+
+// ── REMINDER EDIT/DELETE ──
+window.editCarryForwardNote = async function(id, currentExtra) {
+  const newExtra = prompt('Edit additional note:', currentExtra);
+  if (newExtra === null) return;
+  await updateDoc(doc(db,'reminders',id), { extraNote: newExtra.trim(), editedBy: currentStaffProfile?.initials || '??' });
+  showToast('Note updated', 'success');
+  renderReminders(currentHandover.serviceUserId, currentHandover.date);
+};
+window.editReminderTitle = async function(id, currentTitle) {
+  const newTitle = prompt('Edit reminder title:', currentTitle);
+  if (!newTitle || newTitle.trim() === currentTitle) return;
+  await updateDoc(doc(db,'reminders',id), { title: newTitle.trim(), editedBy: currentStaffProfile?.initials || '??' });
+  showToast('Reminder updated', 'success');
+  renderReminders(currentHandover.serviceUserId, currentHandover.date);
+};
+window.deleteReminderItem = async function(id) {
+  if (!confirm('Delete this reminder?')) return;
+  const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  await deleteDoc(doc(db,'reminders',id));
+  showToast('Deleted', 'success');
+  renderReminders(currentHandover.serviceUserId, currentHandover.date);
+};
+
+// ── ADHOC TASK EDIT/DELETE ──
+window.editAdhocTitle = async function(id, currentTitle) {
+  const newTitle = prompt('Edit task:', currentTitle);
+  if (!newTitle || newTitle.trim() === currentTitle) return;
+  await updateDoc(doc(db,'adhocTasks',id), { title: newTitle.trim(), editedBy: currentStaffProfile?.initials || '??' });
+  showToast('Task updated', 'success');
+  renderAdhocTasks(currentHandover.serviceUserId, currentHandover.date);
+};
+window.deleteAdhocTask = async function(id) {
+  if (!confirm('Delete this task?')) return;
+  const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  await deleteDoc(doc(db,'adhocTasks',id));
+  showToast('Deleted', 'success');
+  renderAdhocTasks(currentHandover.serviceUserId, currentHandover.date);
+};
+
 // ── LOG ENTRIES ──
 async function renderLogEntries(type, suId, date) {
   const bodyId = type === 'activity' ? 'activitiesBody' : 'notesBody';
@@ -2299,11 +2406,24 @@ async function renderLogEntries(type, suId, date) {
     items.forEach(entry => {
       const el = document.createElement('div');
       el.className = `log-entry ${type}`;
-      el.innerHTML = `<div class="log-text">${entry.text}</div>
+      const canEdit = currentStaffProfile?.initials === entry.addedBy || currentStaffProfile?.role === 'admin';
+      const safeText = entry.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      el.innerHTML = `
+        <div class="log-text" id="log-txt-${entry.id}">${entry.text}</div>
+        <div id="log-edit-${entry.id}" style="display:none">
+          <textarea class="task-note-field" id="log-inp-${entry.id}" style="min-height:60px">${safeText}</textarea>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button class="btn btn-primary btn-sm" onclick="saveLogEdit('${entry.id}','${type}')">Save</button>
+            <button class="btn btn-ghost btn-sm" onclick="cancelLogEdit('${entry.id}')">Cancel</button>
+          </div>
+        </div>
         <div class="log-meta">
-          <span class="log-author">${entry.addedBy}</span>
+          <span class="log-author">${entry.addedBy}${entry.editedBy ? ` · edited by ${entry.editedBy}` : ''}</span>
           <span class="log-stamp">${formatTs(entry.createdAt)}</span>
-          ${type === 'note' && !isObserverMode ? `<button class="carry-forward-btn" onclick="openCarryForward('${entry.id}','${entry.text.replace(/'/g,"\\'")}')">📌 Carry Forward</button>` : ''}
+          ${type === 'note' && !isObserverMode && !entry.carriedForward ? `<button class="carry-forward-btn" onclick="openCarryForward('${entry.id}','${entry.text.replace(/'/g,"\\'").replace(/\n/g,' ')}')">📌 Carry Forward</button>` : ''}
+          ${type === 'note' && entry.carriedForward ? `<span style="font-size:11px;color:var(--brand);background:var(--brand-light);padding:2px 8px;border-radius:10px">📌 Carried Forward</span>` : ''}
+          ${canEdit && !isObserverMode ? `<button class="btn btn-ghost btn-sm" onclick="startLogEdit('${entry.id}')">Edit</button>` : ''}
+          ${canEdit && !isObserverMode ? `<button class="btn btn-danger btn-sm" onclick="deleteLogEntry('${entry.id}','${type}')">Delete</button>` : ''}
         </div>`;
       body.insertBefore(el, addArea);
     });
@@ -2346,14 +2466,17 @@ async function confirmCarryForward() {
     unitId: currentHandover.unitId,
     type: 'carryforward',
     text: pendingCarryForward.text,
+    sourceNoteId: pendingCarryForward.id,
     extraNote: document.getElementById('carryForwardNote').value.trim(),
     sourceDate: currentHandover.date,
     targetDate: tomorrowStr,
     addedBy: currentStaffProfile?.initials || '??',
     createdAt: serverTimestamp()
   });
+  await updateDoc(doc(db,'logEntries', pendingCarryForward.id), { carriedForward: true, carriedForwardTo: tomorrowStr });
   closeModal('carryForwardModal');
   showToast('Carried forward to tomorrow', 'success');
+  renderLogEntries('note', currentHandover.serviceUserId, currentHandover.date);
 }
 
 // ── PRINT ──
