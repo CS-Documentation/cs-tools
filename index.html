@@ -1660,7 +1660,11 @@
         </select>
       </div>
       <div class="form-group"><label>Email Address</label><input type="email" id="staffEmail" placeholder="staff@connectedstars.com"></div>
-      <p style="font-size:12px;color:var(--text-muted);margin-top:-8px">Note: You also need to create this person's login in Firebase Authentication separately.</p>
+      <div class="form-group">
+        <label>Firebase UID <span style="font-size:11px;font-weight:400;color:var(--text-muted)">— from Authentication console</span></label>
+        <input type="text" id="staffUID" placeholder="e.g. xK9mP2qRsT4uVwXyZ..." style="font-family:monospace;font-size:13px">
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:-8px">Create the login in Firebase Authentication first, then paste their UID above to link the profile.</p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" onclick="closeModal('addStaffModal')">Cancel</button>
@@ -1679,7 +1683,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteField,
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc, deleteField,
   query, where, orderBy, serverTimestamp, Timestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -1936,6 +1940,7 @@ async function renderAlerts(suId, date) {
       return expiry >= dateObj;
     });
     count.textContent = active.length;
+    document.getElementById('alertsSection').style.display = active.length ? '' : 'none';
     body.querySelectorAll('.alert-item').forEach(el => el.remove());
     empty.style.display = active.length ? 'none' : 'block';
     active.forEach(a => {
@@ -1993,6 +1998,7 @@ async function renderReminders(suId, date) {
       return false;
     });
     count.textContent = items.length;
+    document.getElementById('remindersSection').style.display = items.length ? '' : 'none';
     body.querySelectorAll('.reminder-item').forEach(el => el.remove());
     empty.style.display = items.length ? 'none' : 'block';
     for (const r of items) {
@@ -2080,6 +2086,7 @@ async function renderAdhocTasks(suId, date) {
     });
     const sorted = items.sort((a,b) => { const order = {high:0,medium:1,low:2}; return order[a.priority]-order[b.priority]; });
     count.textContent = sorted.length;
+    document.getElementById('adhocSection').style.display = sorted.length ? '' : 'none';
     body.querySelectorAll('.adhoc-item').forEach(el => el.remove());
     empty.style.display = sorted.length ? 'none' : 'block';
     sorted.forEach(t => {
@@ -2647,8 +2654,10 @@ async function saveTask() {
 async function saveStaff() {
   const name = document.getElementById('staffName').value.trim();
   const initials = document.getElementById('staffInitials').value.trim().toUpperCase();
+  const uid = document.getElementById('staffUID').value.trim();
   if (!name || !initials) { showToast('Please fill in name and initials', 'error'); return; }
-  await addDoc(collection(db,'staffProfiles'), {
+  if (!uid) { showToast('Please paste the Firebase UID', 'error'); return; }
+  await setDoc(doc(db,'staffProfiles', uid), {
     name, initials,
     role: document.getElementById('staffRole').value,
     email: document.getElementById('staffEmail').value.trim(),
