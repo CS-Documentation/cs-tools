@@ -1143,7 +1143,7 @@
         <p id="handoverSubtitle">06:00 Mon 26 Mar → 05:59 Tue 27 Mar · Hounslow</p>
       </div>
       <div class="handover-header-actions" data-no-print>
-        <button class="btn btn-white btn-sm" onclick="openPrintModal()">🖨️ Print</button>
+        <button id="printBtn" class="btn btn-white btn-sm" onclick="openPrintModal()">🖨️ Print</button>
         <button class="btn btn-white btn-sm" id="addAlertBtn" onclick="openModal('alertModal')">🚨 Add Alert</button>
         <button class="btn btn-white btn-sm" onclick="openModal('reminderModal')">🔔 Add Reminder</button>
         <button class="btn btn-white btn-sm" onclick="openModal('adhocModal')">➕ Add Task</button>
@@ -1820,6 +1820,41 @@
   </div>
 </div>
 
+<!-- Edit Staff Modal -->
+<div class="modal-overlay" id="editStaffModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>✏️ Edit Staff Member</h3>
+      <button class="modal-close" onclick="closeModal('editStaffModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editStaffId">
+      <div class="form-group"><label>Full Name</label><input type="text" id="editStaffName" placeholder="e.g. Max Brown"></div>
+      <div class="form-group"><label>Initials (2–4 letters)</label><input type="text" id="editStaffInitials" placeholder="e.g. MB" maxlength="4" style="text-transform:uppercase"></div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="editStaffRole">
+          <option value="support">Support Staff</option>
+          <option value="admin">Admin</option>
+          <option value="observer">Observer</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Email Address</label><input type="email" id="editStaffEmail" placeholder="staff@connectedstars.com"></div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="editStaffStatus">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('editStaffModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveEditStaff()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
@@ -2017,6 +2052,8 @@ function showApp() {
   if (role === 'admin') {
     document.getElementById('adminTabBtn').style.display = 'block';
     document.getElementById('modeToggleBtn').style.display = 'flex';
+  } else {
+    document.getElementById('printBtn').style.display = 'none';
   }
   if (role === 'observer') {
     isObserverMode = true;
@@ -2150,9 +2187,8 @@ async function loadHandover() {
   document.getElementById('handoverSubtitle').textContent = `06:00 ${formatted} → 05:59 ${nextDay.getDate()} ${monthNames[nextDay.getMonth()]} · ${currentHandover.unitName}`;
   document.getElementById('handoverPlaceholder').style.display = 'none';
   document.getElementById('handoverHeader').style.display = 'flex';
-  // Update widget summary and collapse it
+  // Update widget summary
   document.getElementById('hwSummary').textContent = `📋 ${su?.name || ''} · ${currentHandover.unitName} · ${dateObj.getDate()} ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
-  document.getElementById('hwWidget').classList.add('collapsed');
   document.getElementById('handoverContent').style.display = 'block';
   await Promise.all([
     renderAlerts(suId, date),
@@ -2558,6 +2594,7 @@ window.saveRoutineNote = async function(taskId) {
 
 // ── LOG ENTRY EDIT/DELETE ──
 window.startLogEdit = function(id) {
+  if (isObserverMode) return;
   document.getElementById(`log-txt-${id}`).style.display = 'none';
   document.getElementById(`log-edit-${id}`).style.display = 'block';
 };
@@ -2566,6 +2603,7 @@ window.cancelLogEdit = function(id) {
   document.getElementById(`log-edit-${id}`).style.display = 'none';
 };
 window.saveLogEdit = async function(id, type) {
+  if (isObserverMode) return;
   const newText = document.getElementById(`log-inp-${id}`)?.value?.trim();
   if (!newText) { showToast('Text cannot be empty', 'error'); return; }
   await updateDoc(doc(db,'logEntries',id), { text: newText, editedBy: currentStaffProfile?.initials || '??', editedAt: serverTimestamp() });
@@ -2573,6 +2611,7 @@ window.saveLogEdit = async function(id, type) {
   renderLogEntries(type, currentHandover.serviceUserId, currentHandover.date);
 };
 window.deleteLogEntry = async function(id, type) {
+  if (isObserverMode) return;
   if (!confirm('Delete this entry?')) return;
   const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
   await deleteDoc(doc(db,'logEntries',id));
@@ -2582,6 +2621,7 @@ window.deleteLogEntry = async function(id, type) {
 
 // ── ALERT EDIT/DELETE ──
 window.editAlertItem = async function(id, currentText) {
+  if (isObserverMode) return;
   const newText = prompt('Edit alert:', currentText);
   if (!newText || newText.trim() === currentText) return;
   await updateDoc(doc(db,'alerts',id), { text: newText.trim(), editedBy: currentStaffProfile?.initials || '??' });
@@ -2589,6 +2629,7 @@ window.editAlertItem = async function(id, currentText) {
   renderAlerts(currentHandover.serviceUserId, currentHandover.date);
 };
 window.deleteAlertItem = async function(id) {
+  if (isObserverMode) return;
   if (!confirm('Delete this alert?')) return;
   const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
   await deleteDoc(doc(db,'alerts',id));
@@ -2598,6 +2639,7 @@ window.deleteAlertItem = async function(id) {
 
 // ── REMINDER EDIT/DELETE ──
 window.editCarryForwardNote = async function(id, currentExtra) {
+  if (isObserverMode) return;
   const newExtra = prompt('Edit additional note:', currentExtra);
   if (newExtra === null) return;
   await updateDoc(doc(db,'reminders',id), { extraNote: newExtra.trim(), editedBy: currentStaffProfile?.initials || '??' });
@@ -2605,6 +2647,7 @@ window.editCarryForwardNote = async function(id, currentExtra) {
   renderReminders(currentHandover.serviceUserId, currentHandover.date);
 };
 window.editReminderTitle = async function(id, currentTitle) {
+  if (isObserverMode) return;
   const newTitle = prompt('Edit reminder title:', currentTitle);
   if (!newTitle || newTitle.trim() === currentTitle) return;
   await updateDoc(doc(db,'reminders',id), { title: newTitle.trim(), editedBy: currentStaffProfile?.initials || '??' });
@@ -2612,6 +2655,7 @@ window.editReminderTitle = async function(id, currentTitle) {
   renderReminders(currentHandover.serviceUserId, currentHandover.date);
 };
 window.deleteReminderItem = async function(id) {
+  if (isObserverMode) return;
   if (!confirm('Delete this reminder?')) return;
   const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
   await deleteDoc(doc(db,'reminders',id));
@@ -2621,6 +2665,7 @@ window.deleteReminderItem = async function(id) {
 
 // ── ADHOC TASK EDIT/DELETE ──
 window.editAdhocTitle = async function(id, currentTitle) {
+  if (isObserverMode) return;
   const newTitle = prompt('Edit task:', currentTitle);
   if (!newTitle || newTitle.trim() === currentTitle) return;
   await updateDoc(doc(db,'adhocTasks',id), { title: newTitle.trim(), editedBy: currentStaffProfile?.initials || '??' });
@@ -2628,6 +2673,7 @@ window.editAdhocTitle = async function(id, currentTitle) {
   renderAdhocTasks(currentHandover.serviceUserId, currentHandover.date);
 };
 window.deleteAdhocTask = async function(id) {
+  if (isObserverMode) return;
   if (!confirm('Delete this task?')) return;
   const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
   await deleteDoc(doc(db,'adhocTasks',id));
@@ -2730,7 +2776,10 @@ async function confirmCarryForward() {
 }
 
 // ── PRINT ──
-function openPrintModal() { openModal('printModal'); }
+function openPrintModal() {
+  if (currentStaffProfile?.role !== 'admin') return;
+  openModal('printModal');
+}
 
 function executePrint() {
   const noAttrib = !document.getElementById('printAttribution').checked;
@@ -2808,7 +2857,19 @@ async function loadStaffTable() {
     tbody.innerHTML = snap.empty ? '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">No staff profiles yet</td></tr>' : '';
     snap.docs.forEach(d => {
       const s = {id:d.id,...d.data()};
-      tbody.innerHTML += `<tr><td><strong>${s.name}</strong></td><td><span style="font-family:DM Mono,monospace;font-size:12px">${s.initials}</span></td><td><span class="role-badge">${s.role}</span></td><td><span class="status-badge ${s.status==='active'?'status-active':'status-inactive'}">${s.status||'active'}</span></td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>`;
+      const eName = (s.name||'').replace(/'/g,"\\'");
+      const eInit = (s.initials||'').replace(/'/g,"\\'");
+      const eEmail = (s.email||'').replace(/'/g,"\\'");
+      tbody.innerHTML += `<tr>
+        <td><strong>${s.name}</strong></td>
+        <td><span style="font-family:DM Mono,monospace;font-size:12px">${s.initials}</span></td>
+        <td><span class="role-badge">${s.role}</span></td>
+        <td><span class="status-badge ${s.status==='active'?'status-active':'status-inactive'}">${s.status||'active'}</span></td>
+        <td style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="openEditStaff('${s.id}','${eName}','${eInit}','${s.role||'support'}','${eEmail}','${s.status||'active'}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteStaffProfile('${s.id}','${eName}')">Delete</button>
+        </td>
+      </tr>`;
     });
   } catch(e) {}
 }
@@ -2911,6 +2972,40 @@ async function saveStaff() {
   showToast(`${name} added`, 'success');
   loadStaffTable();
 }
+
+window.openEditStaff = function(id, name, initials, role, email, status) {
+  document.getElementById('editStaffId').value = id;
+  document.getElementById('editStaffName').value = name;
+  document.getElementById('editStaffInitials').value = initials;
+  document.getElementById('editStaffRole').value = role || 'support';
+  document.getElementById('editStaffEmail').value = email || '';
+  document.getElementById('editStaffStatus').value = status || 'active';
+  openModal('editStaffModal');
+};
+
+async function saveEditStaff() {
+  const id = document.getElementById('editStaffId').value;
+  const name = document.getElementById('editStaffName').value.trim();
+  const initials = document.getElementById('editStaffInitials').value.trim().toUpperCase();
+  if (!name || !initials) { showToast('Please fill in name and initials', 'error'); return; }
+  await updateDoc(doc(db, 'staffProfiles', id), {
+    name, initials,
+    role: document.getElementById('editStaffRole').value,
+    email: document.getElementById('editStaffEmail').value.trim(),
+    status: document.getElementById('editStaffStatus').value
+  });
+  closeModal('editStaffModal');
+  showToast(`${name} updated`, 'success');
+  loadStaffTable();
+}
+
+window.deleteStaffProfile = async function(id, name) {
+  if (!confirm(`Delete ${name}'s profile? This removes their access to the system.\n\nNote: their Firebase Authentication account must be deleted separately in the Firebase console.`)) return;
+  const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  await deleteDoc(doc(db, 'staffProfiles', id));
+  showToast(`${name} deleted`, 'success');
+  loadStaffTable();
+};
 
 window.archiveSU = async function(id, currentStatus) {
   const newStatus = currentStatus === 'active' ? 'archived' : 'active';
@@ -3144,21 +3239,25 @@ window.deleteNBAlert = async function(id) {
   await dd(doc(db,'alerts',id)); showToast('Deleted', 'success'); renderNBAlerts(currentNBUnit.unitId);
 };
 window.editNBReminder = async function(id, cur) {
+  if (isObserverMode) return;
   const t = prompt('Edit reminder title:', cur); if (!t || t.trim()===cur) return;
   await updateDoc(doc(db,'reminders',id), { title:t.trim(), editedBy:currentStaffProfile?.initials||'??' });
   showToast('Updated', 'success'); renderNBReminders(currentNBUnit.unitId);
 };
 window.deleteNBReminder = async function(id) {
+  if (isObserverMode) return;
   if (!confirm('Delete this reminder?')) return;
   const { deleteDoc:dd } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
   await dd(doc(db,'reminders',id)); showToast('Deleted', 'success'); renderNBReminders(currentNBUnit.unitId);
 };
 window.editNBTask = async function(id, cur) {
+  if (isObserverMode) return;
   const t = prompt('Edit task:', cur); if (!t || t.trim()===cur) return;
   await updateDoc(doc(db,'adhocTasks',id), { title:t.trim(), editedBy:currentStaffProfile?.initials||'??' });
   showToast('Updated', 'success'); renderNBTasks(currentNBUnit.unitId);
 };
 window.deleteNBTask = async function(id) {
+  if (isObserverMode) return;
   if (!confirm('Delete this task?')) return;
   const { deleteDoc:dd } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
   await dd(doc(db,'adhocTasks',id)); showToast('Deleted', 'success'); renderNBTasks(currentNBUnit.unitId);
