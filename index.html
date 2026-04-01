@@ -920,6 +920,44 @@
     color: var(--brand);
   }
 
+  /* ── TASKS PAGE ── */
+  .tasks-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .tasks-page-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--brand);
+    flex: 1;
+  }
+  .tasks-section {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+  }
+  .tasks-section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--brand);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--brand-light);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
   /* ── TASK HIERARCHY ── */
   .task-hierarchy-item {
     border: 1.5px solid var(--border);
@@ -1321,7 +1359,7 @@
 
   <!-- ── ADMIN TAB ── -->
   <div id="tabAdmin" class="main-content" style="display:none">
-    <div class="admin-grid">
+    <div class="admin-grid" id="adminCardsGrid">
       <div class="admin-card" onclick="openAdminSection('adminServiceUsers')">
         <div class="admin-card-icon">👥</div>
         <div class="admin-card-title">Service Users</div>
@@ -1332,7 +1370,7 @@
         <div class="admin-card-title">Units</div>
         <div class="admin-card-desc">Manage your care units</div>
       </div>
-      <div class="admin-card" onclick="openAdminSection('adminTasks')">
+      <div class="admin-card" onclick="openTasksPage()">
         <div class="admin-card-icon">✅</div>
         <div class="admin-card-title">Routine Tasks</div>
         <div class="admin-card-desc">Set up daily task templates</div>
@@ -1380,36 +1418,6 @@
       </div>
     </div>
 
-    <!-- TASKS ADMIN -->
-    <div class="admin-section" id="adminTasks">
-      <div class="flex-between">
-        <h3>✅ Routine Tasks</h3>
-        <button class="btn btn-primary btn-sm" onclick="openAddTaskModal()">+ Add Task</button>
-      </div>
-
-      <!-- Global Tasks -->
-      <div style="margin-top:20px">
-        <div class="flex-between" style="margin-bottom:10px">
-          <div style="font-size:14px;font-weight:700">🌐 Global Tasks <span id="globalTaskCount" class="section-count"></span></div>
-          <span style="font-size:12px;color:var(--text-muted)">Applies to every service user</span>
-        </div>
-        <div id="globalTasksList"><div style="color:var(--text-muted);font-size:13px;padding:6px 0">Loading...</div></div>
-        <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="openAddTaskModal('global','','Global')">+ Add Global Task</button>
-      </div>
-
-      <!-- Service User Tasks -->
-      <div style="margin-top:28px">
-        <div style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--text)">👤 Service User Tasks</div>
-        <div id="suTaskGroups"><div style="color:var(--text-muted);font-size:13px;padding:6px 0">Loading...</div></div>
-      </div>
-
-      <!-- Unit Tasks -->
-      <div style="margin-top:28px">
-        <div style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--text)">🏠 Unit Tasks</div>
-        <div id="unitTaskGroups"><div style="color:var(--text-muted);font-size:13px;padding:6px 0">Loading...</div></div>
-      </div>
-    </div>
-
     <!-- STAFF ADMIN -->
     <div class="admin-section" id="adminStaff">
       <div class="flex-between">
@@ -1425,6 +1433,38 @@
             <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- TASKS PAGE (full-panel view) -->
+    <div id="tasksPage" style="display:none">
+      <div class="tasks-page-header">
+        <button class="btn btn-ghost btn-sm" onclick="closeTasksPage()">← Back</button>
+        <div class="tasks-page-title">✅ Routine Tasks</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddTaskModal()">+ Add Task</button>
+      </div>
+
+      <!-- Global Tasks -->
+      <div class="tasks-section">
+        <div class="tasks-section-title">
+          🌐 Global Tasks
+          <span id="globalTaskCount" class="section-count"></span>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin:-4px 0 14px">These appear on every service user's handover</p>
+        <div id="globalTasksList"></div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="openAddTaskModal('global','','Global')">+ Add Global Task</button>
+      </div>
+
+      <!-- Service User Tasks -->
+      <div class="tasks-section">
+        <div class="tasks-section-title">👤 Service User Tasks</div>
+        <div id="suTaskGroups"></div>
+      </div>
+
+      <!-- Unit Tasks -->
+      <div class="tasks-section">
+        <div class="tasks-section-title">🏠 Unit Tasks</div>
+        <div id="unitTaskGroups"></div>
       </div>
     </div>
 
@@ -3616,6 +3656,28 @@ window.deleteNBTask = async function(id) {
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
 });
+
+// ── TASKS PAGE ──
+function openTasksPage() {
+  document.getElementById('adminCardsGrid').style.display = 'none';
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('open'));
+  document.getElementById('tasksPage').style.display = 'block';
+  loadTasksHierarchy();
+}
+function closeTasksPage() {
+  document.getElementById('tasksPage').style.display = 'none';
+  document.getElementById('adminCardsGrid').style.display = '';
+}
+
+// Expose module functions used in inline onclick handlers
+window.openTasksPage = openTasksPage;
+window.closeTasksPage = closeTasksPage;
+window.openAddTaskModal = openAddTaskModal;
+window.toggleTaskGroup = toggleTaskGroup;
+window.updateTaskCategoryFields = updateTaskCategoryFields;
+window.saveEditTask = saveEditTask;
+window.openEditTask = openEditTask;
+window.populateAdhocSUSelect = populateAdhocSUSelect;
 
 // Enter key on login
 document.getElementById('loginPassword').addEventListener('keydown', e => {
