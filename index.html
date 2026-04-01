@@ -1053,7 +1053,6 @@
     <div class="form-group">
       <label>Username</label>
       <input type="text" id="loginEmail" placeholder="e.g. sarah.jones" autocomplete="username" style="text-transform:lowercase">
-      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">@connectedstars.co.uk will be added automatically</div>
     </div>
     <div class="form-group">
       <label>Password</label>
@@ -1115,12 +1114,6 @@
     <div class="ctrl-widget" id="hwWidget">
       <div class="ctrl-widget-top" onclick="toggleCtrlWidget('hwWidget')">
         <div class="ctrl-widget-summary" id="hwSummary">📋 Select a service user to begin</div>
-        <div class="ctrl-widget-btns" id="hwBtns" style="display:none" data-no-print>
-          <button class="btn btn-secondary btn-sm" id="addAlertBtn" onclick="openModal('alertModal');event.stopPropagation()">🚨 Alert</button>
-          <button class="btn btn-secondary btn-sm" onclick="openModal('reminderModal');event.stopPropagation()">🔔 Reminder</button>
-          <button class="btn btn-secondary btn-sm" onclick="openModal('adhocModal');event.stopPropagation()">➕ Task</button>
-          <button class="btn btn-secondary btn-sm" onclick="openPrintModal();event.stopPropagation()">🖨️ Print</button>
-        </div>
         <span class="ctrl-chevron">▲</span>
       </div>
       <div class="ctrl-widget-body">
@@ -1148,6 +1141,12 @@
       <div>
         <h2 id="handoverTitle">Tom — Monday 26 March 2026</h2>
         <p id="handoverSubtitle">06:00 Mon 26 Mar → 05:59 Tue 27 Mar · Hounslow</p>
+      </div>
+      <div class="handover-header-actions" data-no-print>
+        <button class="btn btn-white btn-sm" onclick="openPrintModal()">🖨️ Print</button>
+        <button class="btn btn-white btn-sm" id="addAlertBtn" onclick="openModal('alertModal')">🚨 Add Alert</button>
+        <button class="btn btn-white btn-sm" onclick="openModal('reminderModal')">🔔 Add Reminder</button>
+        <button class="btn btn-white btn-sm" onclick="openModal('adhocModal')">➕ Add Task</button>
       </div>
     </div>
 
@@ -2153,7 +2152,6 @@ async function loadHandover() {
   document.getElementById('handoverHeader').style.display = 'flex';
   // Update widget summary and collapse it
   document.getElementById('hwSummary').textContent = `📋 ${su?.name || ''} · ${currentHandover.unitName} · ${dateObj.getDate()} ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
-  document.getElementById('hwBtns').style.display = 'flex';
   document.getElementById('hwWidget').classList.add('collapsed');
   document.getElementById('handoverContent').style.display = 'block';
   await Promise.all([
