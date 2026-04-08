@@ -170,6 +170,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-sm:hover{background:var(--surface3);color:var(--text)}
 .btn-sm.d{border-color:var(--red-bd);color:var(--red);background:var(--red-bg)}
 .btn-sm.s{border-color:var(--green-bd);color:var(--green);background:var(--green-bg)}
+.entry-actions{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
 
 /* ── MODAL ── */
 .mo{position:fixed;inset:0;background:rgba(26,26,46,.4);backdrop-filter:blur(3px);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px}
@@ -541,7 +542,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <!-- TASK -->
 <div class="mo" id="m-task">
   <div class="modal">
-    <div class="mh"><div class="mt">✅ Add Task</div><button class="mc" onclick="cm('m-task')">✕</button></div>
+    <div class="mh"><div class="mt" id="task-modal-title">Add Task</div><button class="mc" onclick="cm('m-task')">✕</button></div>
     <div class="mb">
       <div class="fg"><label class="fl">Young Person</label><select class="fc" id="t-yp"></select></div>
       <div class="fg"><label class="fl">Task name</label><input type="text" class="fc" id="t-name" placeholder="e.g. Book GP appointment"></div>
@@ -566,7 +567,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <!-- KEY WORK / ISS -->
 <div class="mo" id="m-kw">
   <div class="modal">
-    <div class="mh"><div class="mt">Key Work / ISS</div><button class="mc" onclick="cm('m-kw')">✕</button></div>
+    <div class="mh"><div class="mt" id="kw-modal-title">Add Key Work / ISS</div><button class="mc" onclick="cm('m-kw')">✕</button></div>
     <div class="mb">
       <div class="fg"><label class="fl">Type</label>
         <div class="rg">
@@ -699,6 +700,7 @@ let allSUsForConfig = [];
 let notesCache = [], tasksCache = [], kwCache = [], missingCache = [];
 let locsCache = {}, rotaCache = [];
 let pendingTaskId = null, pendingAlertId = null, pendingMissingId = null;
+let pendingEditNoteId = null, pendingEditTaskId = null, pendingEditKWId = null;
 let pendingUpdCtx = null, pendingUpdId = null, priorOn = false, kwTypeVal = 'kw';
 
 const SHIFTS = {
@@ -734,6 +736,7 @@ Object.assign(window, {
   selNType,selRType,togPrior,togCB,saveNote,saveTask,openCompleteTask,completeTask,
   selKWType,saveKW,selMType,saveMissing,openCloseMiss,closeMissing,
   openUpd,saveUpdate,openResolve,resolveAlert,setLoc,setLocNote,submitShift,editShift,
+  editNote,deleteNote,editTask,deleteTask,editKW,deleteKW,deleteMissing,
   showATab,
   openAddRotaModal,saveRota,saveRotaCell,renderRotaGrid,downloadSampleCSV,handleRotaCSV,
   openAddCatModal,saveCat,removeCat,
@@ -950,7 +953,7 @@ function renderAlertsBanner() {
   });
   g('alerts-banner').innerHTML = [
     ...openMiss.map(m=>`<div class="ac t-missing"><span class="abadge ab-missing">${m.mtype==='ua'?'⚠️ UA':'🔴 MISSING'}</span><div class="ac-body"><div class="ac-title">${getYPInit(m.ypId)} — ${m.mtype==='ua'?'Unauthorised Absence':'MISSING PERSON'}</div><div class="ac-meta">Reported ${m.time||''}${(m.updates||[]).length?' · '+(m.updates||[]).length+' update(s)':''}</div></div><div class="ac-actions"><button class="btn-sm" onclick="openUpd('missing','${m.id}')">+ Update</button><button class="btn-sm s" onclick="openCloseMiss('${m.id}')">Close</button></div></div>`),
-    ...active.map(n=>{ const isr=n.type==='reminder'; return `<div class="ac t-${n.type}"><span class="abadge ${isr?'ab-reminder':'ab-alert'}">${isr?'🔔 Reminder':'🔴 Alert'}</span><div class="ac-body"><div class="ac-title">${n.text}</div><div class="ac-meta"><span class="ac-yp">${getYPInit(n.ypId)}</span> · ${n.time||''}${n.until?' · until '+fmtD(n.until):''}${n.rdate?' · '+fmtD(n.rdate):''}</div></div><div class="ac-actions"><button class="btn-sm" onclick="openUpd('alert','${n.id}')">+ Update</button><button class="btn-sm s" onclick="openResolve('${n.id}')">Resolve</button></div></div>`; })
+    ...active.map(n=>{ const isr=n.type==='reminder'; return `<div class="ac t-${n.type}"><span class="abadge ${isr?'ab-reminder':'ab-alert'}">${isr?'🔔 Reminder':'🔴 Alert'}</span><div class="ac-body"><div class="ac-title">${n.text}</div><div class="ac-meta"><span class="ac-yp">${getYPInit(n.ypId)}</span> · ${n.time||''}${n.until?' · until '+fmtD(n.until):''}${n.rdate?' · '+fmtD(n.rdate):''}</div></div><div class="ac-actions"><button class="btn-sm" onclick="openUpd('alert','${n.id}')">+ Update</button><button class="btn-sm s" onclick="openResolve('${n.id}')">Resolve</button><button class="btn-sm" onclick="editNote('${n.id}')">✏ Edit</button><button class="btn-sm d" onclick="deleteNote('${n.id}')">✕ Delete</button></div></div>`; })
   ].join('')||'';
 }
 
@@ -959,7 +962,7 @@ function renderNotes() {
   g('cnt-notes').textContent = items.length;
   g('notes-list').innerHTML = items.length ? items.map(n=>{
     const idx=getYPColorIdx(n.ypId); const col=ypColor(idx);
-    return `<div class="entry"><div class="eh"><span class="yp-tag" style="background:${col}">${getYPInit(n.ypId)}</span>${n.cat?`<span class="ecat">${n.cat}</span>`:''}<span class="etime">${n.time||''}</span>${n.createdByName?`<span class="creator-tag">${n.createdByName}</span>`:''}</div><div class="etext">${n.text}</div>${(n.flagSP||n.flagRA)?`<div class="eflags">${n.flagSP?'<span class="eflag f-sp">📘 Update SP</span>':''}${n.flagRA?'<span class="eflag f-ra">⚠️ Update RA</span>':''}</div>`:''}</div>`;
+    return `<div class="entry"><div class="eh"><span class="yp-tag" style="background:${col}">${getYPInit(n.ypId)}</span>${n.cat?`<span class="ecat">${n.cat}</span>`:''}<span class="etime">${n.time||''}</span>${n.createdByName?`<span class="creator-tag">${n.createdByName}</span>`:''}</div><div class="etext">${n.text}</div>${(n.flagSP||n.flagRA)?`<div class="eflags">${n.flagSP?'<span class="eflag f-sp">📘 Update SP</span>':''}${n.flagRA?'<span class="eflag f-ra">⚠️ Update RA</span>':''}</div>`:''}<div class="entry-actions"><button class="btn-sm" onclick="editNote('${n.id}')">✏ Edit</button><button class="btn-sm d" onclick="deleteNote('${n.id}')">✕ Delete</button></div></div>`;
   }).join('') : empt('📝','No notes for this shift');
 }
 
@@ -967,7 +970,7 @@ function renderTasks() {
   g('cnt-tasks').textContent = tasksCache.filter(t=>!t.done).length;
   g('tasks-list').innerHTML = tasksCache.length ? tasksCache.map(t=>{
     const idx=getYPColorIdx(t.ypId); const col=ypColor(idx); const over=!t.done&&t.due&&t.due<currentDate;
-    return `<div class="task-item"><div class="tcheck ${t.done?'done':''}" onclick="openCompleteTask('${t.id}')">${t.done?'✓':''}</div><div class="tbody"><div class="tlabel ${t.done?'done':''}"><span class="tag-dot" style="background:${col}"></span>${t.name}${t.createdByName?` <span class="creator-tag">${t.createdByName}</span>`:''}</div>${t.desc?`<div class="tmeta">${t.desc}</div>`:''}${t.due?`<div class="tmeta tdue ${over?'over':''}">Due: ${fmtD(t.due)}${over?' ⚠️ Overdue':''}</div>`:''}${t.done&&t.cnote?`<div class="tcnote">✓ ${t.cnote}</div>`:''}</div></div>`;
+    return `<div class="task-item"><div class="tcheck ${t.done?'done':''}" onclick="openCompleteTask('${t.id}')">${t.done?'✓':''}</div><div class="tbody"><div class="tlabel ${t.done?'done':''}"><span class="tag-dot" style="background:${col}"></span>${t.name}${t.createdByName?` <span class="creator-tag">${t.createdByName}</span>`:''}</div>${t.desc?`<div class="tmeta">${t.desc}</div>`:''}${t.due?`<div class="tmeta tdue ${over?'over':''}">Due: ${fmtD(t.due)}${over?' ⚠️ Overdue':''}</div>`:''}${t.done&&t.cnote?`<div class="tcnote">✓ ${t.cnote}</div>`:''}${!t.done?`<div class="entry-actions"><button class="btn-sm" onclick="editTask('${t.id}')">✏ Edit</button><button class="btn-sm d" onclick="deleteTask('${t.id}')">✕ Delete</button></div>`:`<div class="entry-actions"><button class="btn-sm d" onclick="deleteTask('${t.id}')">✕ Delete</button></div>`}</div></div>`;
   }).join('') : empt('✅','No tasks');
 }
 
@@ -975,7 +978,7 @@ function renderKW() {
   g('cnt-kw').textContent = kwCache.length;
   g('kw-list').innerHTML = kwCache.length ? kwCache.map(k=>{
     const idx=getYPColorIdx(k.ypId); const col=ypColor(idx);
-    return `<div class="entry"><div class="eh"><span class="yp-tag" style="background:${col}">${getYPInit(k.ypId)}</span><span class="kw-badge ${k.type==='kw'?'kw-kw':'kw-iss'}">${k.type==='kw'?'Key Work':'ISS'}</span><span class="etime">${k.time||''}</span>${k.createdByName?`<span class="creator-tag">${k.createdByName}</span>`:''}</div><div class="etext">${k.text}</div></div>`;
+    return `<div class="entry"><div class="eh"><span class="yp-tag" style="background:${col}">${getYPInit(k.ypId)}</span><span class="kw-badge ${k.type==='kw'?'kw-kw':'kw-iss'}">${k.type==='kw'?'Key Work':'ISS'}</span><span class="etime">${k.time||''}</span>${k.createdByName?`<span class="creator-tag">${k.createdByName}</span>`:''}</div><div class="etext">${k.text}</div><div class="entry-actions"><button class="btn-sm" onclick="editKW('${k.id}')">✏ Edit</button><button class="btn-sm d" onclick="deleteKW('${k.id}')">✕ Delete</button></div></div>`;
   }).join('') : empt('🤝','No key work or ISS entries');
 }
 
@@ -1043,7 +1046,7 @@ function openNoteModal() {
   g('cb-ra').className='cbox'; g('cb-ra').textContent='';
   document.querySelectorAll('#m-note .ro').forEach(o=>{o.className='ro';if(o.textContent.includes('Note'))o.classList.add('sn')});
   document.querySelectorAll('#m-note .chip').forEach((c,i)=>c.classList.toggle('on',i===0));
-  g('note-modal-title').textContent='Add Entry'; om('m-note');
+  pendingEditNoteId=null; g('note-modal-title').textContent='Add Entry'; om('m-note');
 }
 function selNType(type,el) {
   sv('n-type',type);
@@ -1069,19 +1072,24 @@ async function saveNote() {
   if(type==='note'){data.cat=gv('n-cat');data.flagSP=g('cb-sp').classList.contains('on');data.flagRA=g('cb-ra').classList.contains('on');}
   if(type==='alert') data.until=gv('n-until')||null;
   if(type==='reminder'){data.rtype=gv('n-rtype');data.rdate=gv('n-rdate')||null;data.prior=priorOn;data.priorNote=priorOn?gv('n-prior'):'';}
-  try { await addDoc(collection(db,'oShiftNotes'),data); cm('m-note'); await loadNotes(); renderHandover(); toast('Saved ✓'); }
+  try {
+    if(pendingEditNoteId){ await updateDoc(doc(db,'oShiftNotes',pendingEditNoteId),{text:data.text,time:data.time,cat:data.cat||'',flagSP:data.flagSP||false,flagRA:data.flagRA||false,until:data.until||null,rtype:data.rtype||null,rdate:data.rdate||null,prior:data.prior||false,priorNote:data.priorNote||'',editedBy:currentStaff?.name||'',editedAt:serverTimestamp()}); pendingEditNoteId=null; }
+    else { await addDoc(collection(db,'oShiftNotes'),data); }
+    cm('m-note'); await loadNotes(); renderHandover(); toast('Saved ✓');
+  }
   catch { toast('Save failed','err'); }
 }
 
 // ── TASK MODAL ──
-function openTaskModal() { popYP('t-yp'); sv('t-name',''); sv('t-desc',''); sv('t-due',''); om('m-task'); }
+function openTaskModal() { pendingEditTaskId=null; popYP('t-yp'); sv('t-name',''); sv('t-desc',''); sv('t-due',''); g('task-modal-title').textContent='Add Task'; om('m-task'); }
 
 async function saveTask() {
   const ypId=gv('t-yp'), name=gv('t-name').trim();
   if(!name){toast('Enter task name','err');return;} if(!currentUnitId){toast('Select a unit first','err');return;}
   try {
-    await addDoc(collection(db,'oShiftTasks'),{unitId:currentUnitId,ypId,name,desc:gv('t-desc'),due:gv('t-due'),done:false,cnote:'',createdBy:currentUser.uid,createdByName:currentStaff?.name||'',createdAt:serverTimestamp()});
-    cm('m-task'); await loadTasks(); renderHandover(); toast('Task added ✓');
+    if(pendingEditTaskId){ await updateDoc(doc(db,'oShiftTasks',pendingEditTaskId),{ypId,name,desc:gv('t-desc'),due:gv('t-due'),editedBy:currentStaff?.name||'',editedAt:serverTimestamp()}); pendingEditTaskId=null; }
+    else { await addDoc(collection(db,'oShiftTasks'),{unitId:currentUnitId,ypId,name,desc:gv('t-desc'),due:gv('t-due'),done:false,cnote:'',createdBy:currentUser.uid,createdByName:currentStaff?.name||'',createdAt:serverTimestamp()}); }
+    cm('m-task'); await loadTasks(); renderHandover(); toast('Saved ✓');
   } catch { toast('Save failed','err'); }
 }
 
@@ -1100,8 +1108,8 @@ async function completeTask() {
 
 // ── KEY WORK MODAL ──
 function openKWModal() {
-  kwTypeVal='kw'; popYP('kw-yp'); sv('kw-text',''); sv('kw-time',nowT()); sv('kw-type','kw');
-  document.querySelectorAll('#m-kw .ro').forEach(o=>o.className='ro'); g('kwt-kw').classList.add('sn'); om('m-kw');
+  pendingEditKWId=null; kwTypeVal='kw'; popYP('kw-yp'); sv('kw-text',''); sv('kw-time',nowT()); sv('kw-type','kw');
+  document.querySelectorAll('#m-kw .ro').forEach(o=>o.className='ro'); g('kwt-kw').classList.add('sn'); g('kw-modal-title').textContent='Add Key Work / ISS'; om('m-kw');
 }
 function selKWType(type,el) { kwTypeVal=type; sv('kw-type',type); document.querySelectorAll('#m-kw .ro').forEach(o=>o.className='ro'); el.classList.add('sn'); }
 
@@ -1109,9 +1117,78 @@ async function saveKW() {
   const ypId=gv('kw-yp'), text=gv('kw-text').trim();
   if(!text){toast('Enter notes','err');return;} if(!currentUnitId){toast('Select a unit first','err');return;}
   try {
-    await addDoc(collection(db,'oShiftKeywork'),{unitId:currentUnitId,ypId,shift:currentShift,date:currentDate,type:kwTypeVal,text,time:gv('kw-time'),createdBy:currentUser.uid,createdByName:currentStaff?.name||'',createdAt:serverTimestamp()});
+    if(pendingEditKWId){ await updateDoc(doc(db,'oShiftKeywork',pendingEditKWId),{ypId,type:kwTypeVal,text,time:gv('kw-time'),editedBy:currentStaff?.name||'',editedAt:serverTimestamp()}); pendingEditKWId=null; }
+    else { await addDoc(collection(db,'oShiftKeywork'),{unitId:currentUnitId,ypId,shift:currentShift,date:currentDate,type:kwTypeVal,text,time:gv('kw-time'),createdBy:currentUser.uid,createdByName:currentStaff?.name||'',createdAt:serverTimestamp()}); }
     cm('m-kw'); await loadKW(); renderHandover(); toast('Saved ✓');
   } catch { toast('Save failed','err'); }
+}
+
+// ── EDIT / DELETE ──
+function editNote(id) {
+  const n=notesCache.find(n=>n.id===id); if(!n) return;
+  pendingEditNoteId=id;
+  popYP('n-yp'); popCat('n-cat');
+  sv('n-yp',n.ypId); sv('n-text',n.text); sv('n-time',n.time||''); sv('n-type',n.type);
+  document.querySelectorAll('#m-note .ro').forEach(o=>o.className='ro');
+  const typeMap={'note':'sn','alert':'sa','reminder':'sr'};
+  document.querySelector(`#m-note .ro[onclick*="'${n.type}'"]`)?.classList.add(typeMap[n.type]||'sn');
+  g('note-fields').style.display=n.type==='note'?'block':'none';
+  g('alert-fields').style.display=n.type==='alert'?'block':'none';
+  g('reminder-fields').style.display=n.type==='reminder'?'block':'none';
+  if(n.type==='note'){
+    setTimeout(()=>sv('n-cat',n.cat||''),0);
+    const spEl=g('cb-sp'); const raEl=g('cb-ra');
+    spEl.className='cbox'+(n.flagSP?' on':''); spEl.textContent=n.flagSP?'✓':'';
+    raEl.className='cbox'+(n.flagRA?' on':''); raEl.textContent=n.flagRA?'✓':'';
+  }
+  if(n.type==='alert') sv('n-until',n.until||'');
+  if(n.type==='reminder'){
+    sv('n-rtype',n.rtype||'today'); sv('n-rdate',n.rdate||'');
+    priorOn=n.prior||false; g('prior-tog').classList.toggle('on',priorOn); g('prior-note-wrap').style.display=priorOn?'block':'none';
+    sv('n-prior',n.priorNote||''); g('r-date-row').style.display=n.rtype==='date'?'block':'none';
+    document.querySelectorAll('#m-note .chip').forEach((c,i)=>c.classList.toggle('on',(n.rtype||'today')===(i===0?'today':'date')));
+  }
+  g('note-modal-title').textContent='Edit Entry'; om('m-note');
+}
+
+async function deleteNote(id) {
+  if(!confirm('Delete this entry?')) return;
+  try { await deleteDoc(doc(db,'oShiftNotes',id)); await loadNotes(); renderHandover(); renderMissingView(); toast('Deleted'); }
+  catch { toast('Delete failed','err'); }
+}
+
+function editTask(id) {
+  const t=tasksCache.find(t=>t.id===id); if(!t||t.done) return;
+  pendingEditTaskId=id;
+  popYP('t-yp'); sv('t-yp',t.ypId); sv('t-name',t.name); sv('t-desc',t.desc||''); sv('t-due',t.due||'');
+  g('task-modal-title').textContent='Edit Task'; om('m-task');
+}
+
+async function deleteTask(id) {
+  if(!confirm('Delete this task?')) return;
+  try { await deleteDoc(doc(db,'oShiftTasks',id)); await loadTasks(); renderHandover(); toast('Deleted'); }
+  catch { toast('Delete failed','err'); }
+}
+
+function editKW(id) {
+  const k=kwCache.find(k=>k.id===id); if(!k) return;
+  pendingEditKWId=id; kwTypeVal=k.type||'kw';
+  popYP('kw-yp'); sv('kw-yp',k.ypId); sv('kw-text',k.text); sv('kw-time',k.time||''); sv('kw-type',k.type||'kw');
+  document.querySelectorAll('#m-kw .ro').forEach(o=>o.className='ro');
+  g('kwt-'+(k.type||'kw'))?.classList.add('sn');
+  g('kw-modal-title').textContent='Edit Key Work / ISS'; om('m-kw');
+}
+
+async function deleteKW(id) {
+  if(!confirm('Delete this entry?')) return;
+  try { await deleteDoc(doc(db,'oShiftKeywork',id)); await loadKW(); renderHandover(); toast('Deleted'); }
+  catch { toast('Delete failed','err'); }
+}
+
+async function deleteMissing(id) {
+  if(!confirm('Delete this missing report? This cannot be undone.')) return;
+  try { await deleteDoc(doc(db,'oShiftMissing',id)); await loadMissing(); renderHandover(); renderMissingView(); updateMissBadge(); toast('Deleted'); }
+  catch { toast('Delete failed','err'); }
 }
 
 // ── MISSING ──
@@ -1144,7 +1221,7 @@ async function closeMissing() {
 
 function renderMissingView() {
   const cases=missingCache;
-  g('missing-list').innerHTML = cases.length ? cases.map(m=>`<div class="miss-card ${m.status==='closed'?'closed':''}"><div class="miss-hdr"><div class="miss-title ${m.status==='closed'?'cl':''}">${m.status==='closed'?'✓':'🔴'} ${m.mtype==='ua'?'Unauth. Absence':'Missing'} — ${getYPInit(m.ypId)}</div><div style="display:flex;gap:6px">${m.status==='open'?`<button class="btn-sm" onclick="openUpd('missing','${m.id}')">+ Update</button><button class="btn-sm s" onclick="openCloseMiss('${m.id}')">Close</button>`:'<span style="color:var(--green);font-size:12px;font-weight:700">Closed ✓</span>'}</div></div><div style="font-size:11px;color:var(--text3)">${m.time||''} · ${fmtD(m.date)}${m.createdByName?` · <span class="creator-tag">${m.createdByName}</span>`:''}</div><div style="font-size:13px;color:var(--text2);margin-top:4px">${m.note}</div>${(m.updates||[]).map(u=>`<div class="miss-upd"><div class="upd-t">${u.time||''}</div>${u.text}</div>`).join('')}${m.resolution?`<div style="margin-top:7px;padding:6px 9px;background:var(--green-bg);border-radius:var(--rs);font-size:12px;color:var(--green)">✓ ${m.resolution}: ${m.closeNote}</div>`:''}</div>`).join('')
+  g('missing-list').innerHTML = cases.length ? cases.map(m=>`<div class="miss-card ${m.status==='closed'?'closed':''}"><div class="miss-hdr"><div class="miss-title ${m.status==='closed'?'cl':''}">${m.status==='closed'?'✓':'🔴'} ${m.mtype==='ua'?'Unauth. Absence':'Missing'} — ${getYPInit(m.ypId)}</div><div style="display:flex;gap:6px">${m.status==='open'?`<button class="btn-sm" onclick="openUpd('missing','${m.id}')">+ Update</button><button class="btn-sm s" onclick="openCloseMiss('${m.id}')">Close</button><button class="btn-sm d" onclick="deleteMissing('${m.id}')">✕ Delete</button>`:`<span style="color:var(--green);font-size:12px;font-weight:700">Closed ✓</span><button class="btn-sm d" onclick="deleteMissing('${m.id}')" style="margin-left:4px">✕ Delete</button>`}</div></div><div style="font-size:11px;color:var(--text3)">${m.time||''} · ${fmtD(m.date)}${m.createdByName?` · <span class="creator-tag">${m.createdByName}</span>`:''}</div><div style="font-size:13px;color:var(--text2);margin-top:4px">${m.note}</div>${(m.updates||[]).map(u=>`<div class="miss-upd"><div class="upd-t">${u.time||''}</div>${u.text}</div>`).join('')}${m.resolution?`<div style="margin-top:7px;padding:6px 9px;background:var(--green-bg);border-radius:var(--rs);font-size:12px;color:var(--green)">✓ ${m.resolution}: ${m.closeNote}</div>`:''}</div>`).join('')
     : empt('✅','No missing persons reported for this unit');
 }
 
