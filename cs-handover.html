@@ -1992,9 +1992,7 @@ window.confirmCarryForward = confirmCarryForward;
 window.addLogEntry = addLogEntry;
 window.openPrintModal = openPrintModal;
 window.executePrint = executePrint;
-window.saveUnit = saveUnit;
 window.saveTask = saveTask;
-window.saveStaff = saveStaff;
 window.updateAdhocRecurrenceFields = updateAdhocRecurrenceFields;
 window.updateTaskLevelFields = updateTaskLevelFields;
 
@@ -2167,7 +2165,7 @@ async function loadServiceUsers() {
   currentHandover.unitName = unit?.name || '';
   try {
     const snap = await getDocs(query(collection(db,'serviceUsers'),
-      where('unitId','==',unitId), where('status','==','active')));
+      where('currentUnitId','==',unitId), where('status','==','active')));
     serviceUsersCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     serviceUsersCache.forEach(su => { sel.innerHTML += `<option value="${su.id}">${su.name}</option>`; });
   } catch(e) { showToast('Could not load service users', 'error'); }
@@ -3381,7 +3379,6 @@ window.saveNBAlert = saveNBAlert;
 window.saveNBReminder = saveNBReminder;
 window.saveNBTask = saveNBTask;
 window.confirmNBCompleteTask = confirmNBCompleteTask;
-window.saveEditStaff = saveEditStaff;
 window.toggleCtrlWidget = toggleCtrlWidget;
 
 window.swapTaskOrder = async function(id1, o1, id2, o2) {

@@ -810,7 +810,7 @@ async function onUnitChange() {
 async function loadYPsForUnit() {
   try {
     const snap = await getDocs(query(collection(db,'serviceUsers'),
-      where('unitId','==',currentUnitId), where('status','==','active')));
+      where('currentUnitId','==',currentUnitId), where('status','==','active')));
     currentUnitYPs = snap.docs.map((d,i)=>({id:d.id,...d.data(),_idx:i}));
   } catch { currentUnitYPs=[]; }
 }
