@@ -570,7 +570,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
                 <label class="btn btn-primary" style="cursor:pointer;margin:0">⬆ Upload CSV<input type="file" accept=".csv" style="display:none" id="rota-csv-inp" onchange="handleRotaCSV(event)"></label>
               </div>
             </div>
-            <div style="font-size:11px;color:var(--text3)">CSV format: <code style="background:var(--surface3);padding:1px 5px;border-radius:3px">date,shift,staffName</code> — shifts: morning, evening, sleepin. Edit cells inline — saves automatically.</div>
+            <div style="font-size:11px;color:var(--text3)">CSV format: <code style="background:var(--surface3);padding:1px 5px;border-radius:3px">date,Morning Shift,Evening Shift,Sleep-in</code> — one row per day, leave cells blank if no staff. Download the sample to see the layout. Edit cells inline — saves automatically.</div>
           </div>
         </div>
         <div class="panel">
@@ -1606,10 +1606,14 @@ function downloadSampleCSV() {
   const month=gv('rota-month-inp')||todayISO().slice(0,7);
   const [year,m]=month.split('-').map(Number);
   const pad=n=>String(n).padStart(2,'0');
-  const rows=['date,shift,staffName',`${year}-${pad(m)}-01,morning,Sarah Collins`,`${year}-${pad(m)}-01,evening,James Osei`,`${year}-${pad(m)}-01,sleepin,David Mensah`,`${year}-${pad(m)}-02,morning,Fatima Al-Rashid`,`${year}-${pad(m)}-02,evening,Leon Walsh`];
+  const daysInMonth=new Date(year,m,0).getDate();
+  const rows=['date,Morning Shift,Evening Shift,Sleep-in'];
+  for(let day=1;day<=daysInMonth;day++){
+    rows.push(`${year}-${pad(m)}-${pad(day)},,,`);
+  }
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'}));
-  a.download=`rota-sample-${month}.csv`; a.click();
+  a.download=`rota-${month}.csv`; a.click();
 }
 
 async function handleRotaCSV(ev) {
@@ -1618,16 +1622,24 @@ async function handleRotaCSV(ev) {
   if(!file||!unitId||!month){toast('Select a unit and month first','err');ev.target.value='';return;}
   const reader=new FileReader();
   reader.onload=async e=>{
-    const lines=e.target.result.trim().split('\n').slice(1);
+    const lines=e.target.result.trim().split('\n').slice(1); // skip header
     const batch=writeBatch(db); let count=0;
+    const shifts=['morning','evening','sleepin'];
     for(const line of lines){
-      const [date,shift,staffName]=line.split(',').map(s=>s.trim().replace(/^"|"$/g,''));
-      if(!date||!shift||!staffName) continue;
-      const s=shift.toLowerCase();
-      if(!['morning','evening','sleepin'].includes(s)) continue;
-      if(date.slice(0,7)!==month) continue;
-      batch.set(doc(db,'oShiftRota',`${unitId}_${date}_${s}`),{unitId,date,shift:s,staffName,month,updatedAt:serverTimestamp()});
-      count++;
+      const cols=line.split(',').map(s=>s.trim().replace(/^"|"$/g,''));
+      const date=cols[0];
+      if(!date||date.slice(0,7)!==month) continue;
+      for(let i=0;i<3;i++){
+        const staffName=cols[i+1]||'';
+        const shift=shifts[i];
+        const docId=`${unitId}_${date}_${shift}`;
+        if(staffName){
+          batch.set(doc(db,'oShiftRota',docId),{unitId,date,shift,staffName,month,updatedAt:serverTimestamp()});
+          count++;
+        } else {
+          batch.delete(doc(db,'oShiftRota',docId));
+        }
+      }
     }
     await batch.commit();
     toast(`Imported ${count} rota entries ✓`);
