@@ -277,6 +277,55 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 #toast.ok{background:var(--green)}
 #toast.err{background:var(--red)}
 
+/* ── NOTICE BOARD ── */
+.nb-task{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.nb-task:last-child{border-bottom:none}
+.nb-task.done .nb-tlabel{text-decoration:line-through;color:var(--text3)}
+.nb-priority{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;flex-shrink:0;border:1px solid;margin-top:2px}
+.nb-p-normal{background:var(--surface3);color:var(--text3);border-color:var(--border)}
+.nb-p-high{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-bd)}
+.nb-p-urgent{background:var(--red-bg);color:var(--red);border-color:var(--red-bd)}
+.nb-tlabel{font-size:13px;font-weight:600}
+.nb-tmeta{font-size:11px;color:var(--text3);margin-top:2px}
+.nb-hdr{align-items:flex-start}
+
+/* ── MOBILE: TOPBAR ── */
+@media(max-width:600px){
+  #topbar{gap:6px;padding:0 10px;min-height:48px}
+  .shift-tabs{width:100%;justify-content:center}
+  .shift-tab{padding:4px 8px;font-size:10px}
+  .tb-left{flex-wrap:wrap;gap:5px}
+  .tb-sel,.tb-date{font-size:12px;padding:4px 7px}
+  .tb-user span#tb-name{display:none}
+  .tb-signout{font-size:10px}
+}
+
+/* ── MOBILE: CONTENT ── */
+@media(max-width:600px){
+  #content{padding:8px}
+  .sib{gap:6px;padding:8px 10px}
+  .sib-actions{flex-direction:column;width:100%}
+  .sib-actions .btn{width:100%;justify-content:center}
+  .sec-hdr{flex-direction:column;align-items:flex-start;gap:8px}
+  .sec-hdr .btn{width:100%;justify-content:center}
+  .ph{flex-wrap:wrap;gap:4px}
+  .entry-actions{flex-wrap:wrap}
+  .btn-sm{font-size:10px;padding:4px 7px}
+  .sf{flex-direction:column;align-items:flex-start;gap:8px}
+  .sf #sf-btns .btn{width:100%;justify-content:center}
+}
+
+/* ── MOBILE: MODAL ── */
+@media(max-width:600px){
+  .mo{padding:8px;align-items:flex-end}
+  .modal{border-radius:14px 14px 0 0;max-height:96vh}
+  .fr{grid-template-columns:1fr}
+  .rg{flex-direction:column}
+  .rg .ro{width:100%;text-align:left}
+  .mf{flex-direction:column-reverse;gap:6px}
+  .mf .btn{width:100%;justify-content:center}
+}
+
 /* ── PRINT ── */
 @media print{
   #sidebar,#topbar,.sib-actions,.shift-tabs,.sf,.no-print,#toast,button,select,input[type=time],input[type=date]{display:none!important}
@@ -338,6 +387,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="sb-sec">Main</div>
     <div class="nav-item active" onclick="showView('handover');closeSB()"><span class="ni">📋</span>Handover</div>
     <div class="nav-item" onclick="showView('missing');closeSB()"><span class="ni">🔴</span>Missing Persons<span class="nav-badge" id="miss-badge" style="display:none">0</span></div>
+    <div class="nav-item" onclick="showView('noticeboard');closeSB()"><span class="ni">📌</span>Notice Board<span class="nav-badge" id="nb-badge" style="display:none">0</span></div>
     <div class="sb-sec">Reports</div>
     <div class="nav-item" onclick="showView('sp-ra');closeSB()"><span class="ni">📌</span>SP / RA Actions</div>
     <div class="sb-sec">Admin</div>
@@ -449,6 +499,52 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
           <div class="ph"><div class="pt">⚠️ Update Risk Assessment</div></div>
           <div class="pb"><div id="ra-list"></div></div>
         </div>
+      </div>
+    </div>
+
+    <!-- NOTICE BOARD VIEW -->
+    <div id="view-noticeboard" class="view">
+      <div class="sec-hdr nb-hdr">
+        <div>
+          <div class="sec-title">📌 Unit Notice Board</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">Unit-specific alerts, reminders &amp; sticky tasks</div>
+        </div>
+      </div>
+
+      <!-- Alerts + Reminders — TOP -->
+      <div class="pg" style="margin-bottom:12px">
+        <div class="panel">
+          <div class="ph">
+            <div class="pt">🔴 Unit Alerts</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="cbadge" id="nb-cnt-alerts">0</span>
+              <button class="btn-sm no-print" onclick="openNBNoticeModal('alert')">＋ Add</button>
+            </div>
+          </div>
+          <div class="pb"><div class="el" id="nb-alerts-list"></div></div>
+        </div>
+        <div class="panel">
+          <div class="ph">
+            <div class="pt">🔔 Unit Reminders</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="cbadge" id="nb-cnt-reminders">0</span>
+              <button class="btn-sm no-print" onclick="openNBNoticeModal('reminder')">＋ Add</button>
+            </div>
+          </div>
+          <div class="pb"><div class="el" id="nb-reminders-list"></div></div>
+        </div>
+      </div>
+
+      <!-- Tasks — BOTTOM -->
+      <div class="panel">
+        <div class="ph">
+          <div class="pt">✅ Tasks <span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:4px">— linked to Task Board</span></div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="cbadge" id="nb-cnt-tasks">0</span>
+            <button class="btn-sm no-print" onclick="openNBTaskModal()">＋ Add</button>
+          </div>
+        </div>
+        <div class="pb" id="nb-tasks-list"></div>
       </div>
     </div>
 
@@ -668,6 +764,76 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </div>
 
+<!-- NOTICE BOARD: ADD / EDIT UNIT ALERT OR REMINDER -->
+<div class="mo" id="m-nb-notice">
+  <div class="modal">
+    <div class="mh"><div class="mt" id="nb-notice-title">Add Unit Alert</div><button class="mc" onclick="cm('m-nb-notice')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Type</label>
+        <div class="rg">
+          <div class="ro sa" id="nb-notice-alert" onclick="selNBNoticeType('alert',this)">🔴 Alert</div>
+          <div class="ro" id="nb-notice-reminder" onclick="selNBNoticeType('reminder',this)">🔔 Reminder</div>
+        </div>
+        <input type="hidden" id="nb-notice-type" value="alert">
+      </div>
+      <div class="fg"><label class="fl">Young Person (optional)</label><select class="fc" id="nb-notice-yp"></select></div>
+      <div class="fg"><label class="fl">Notice text</label><textarea class="fc" id="nb-notice-text" rows="3" placeholder="What staff need to know…"></textarea></div>
+      <!-- Alert fields -->
+      <div id="nb-alert-fields">
+        <div class="fg"><label class="fl">Keep active until (optional)</label><input type="date" class="fc" id="nb-notice-until" placeholder="Leave blank to keep indefinitely"></div>
+      </div>
+      <!-- Reminder fields -->
+      <div id="nb-reminder-fields" style="display:none">
+        <div class="fg"><label class="fl">Remind on</label>
+          <div class="chip-grp" style="margin-bottom:7px">
+            <div class="chip on" onclick="selNBRType('today',this)">Today / ongoing</div>
+            <div class="chip" onclick="selNBRType('date',this)">Specific date</div>
+          </div>
+          <input type="hidden" id="nb-notice-rtype" value="today">
+        </div>
+        <div id="nb-reminder-date-row" style="display:none">
+          <div class="fg"><label class="fl">Reminder date</label><input type="date" class="fc" id="nb-notice-rdate"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-nb-notice')">Cancel</button><button class="btn btn-primary" id="nb-notice-save-btn" onclick="saveNBNotice()">Add</button></div>
+  </div>
+</div>
+
+<!-- NOTICE BOARD: ADD / EDIT TASK -->
+<div class="mo" id="m-nb-task">
+  <div class="modal">
+    <div class="mh"><div class="mt" id="nb-task-modal-title">Add Task</div><button class="mc" onclick="cm('m-nb-task')">✕</button></div>
+    <div class="mb">
+      <div class="fg">
+        <label class="fl">Scope</label>
+        <div class="rg">
+          <div class="ro sn" id="nb-scope-unit" onclick="selNBScope('unit',this)">🏠 Unit-wide</div>
+          <div class="ro" id="nb-scope-yp" onclick="selNBScope('yp',this)">👤 Specific YP</div>
+        </div>
+        <input type="hidden" id="nb-scope" value="unit">
+      </div>
+      <div id="nb-yp-row" style="display:none">
+        <div class="fg"><label class="fl">Young Person</label><select class="fc" id="nb-yp"></select></div>
+      </div>
+      <div class="fg"><label class="fl">Task title</label><input type="text" class="fc" id="nb-title" placeholder="e.g. Book GP appointment"></div>
+      <div class="fg"><label class="fl">Description</label><textarea class="fc" id="nb-desc" rows="2" placeholder="Details…"></textarea></div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Target date</label><input type="date" class="fc" id="nb-due"></div>
+        <div class="fg">
+          <label class="fl">Priority</label>
+          <select class="fc" id="nb-priority">
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-nb-task')">Cancel</button><button class="btn btn-primary" id="nb-task-save-btn" onclick="saveNBTask()">Add Task</button></div>
+  </div>
+</div>
+
 <!-- ADMIN: ADD CATEGORY -->
 <div class="mo" id="m-add-cat">
   <div class="modal">
@@ -710,6 +876,8 @@ let handoverConfig = { enabledUnits: [], unitSUs: {} };
 let allSUsForConfig = [];
 let notesCache = [], tasksCache = [], kwCache = [], missingCache = [];
 let locsCache = {}, rotaCache = [];
+let nbTasksCache = [], nbUnitNoticesCache = [];
+let pendingNBTaskId = null, pendingNBEditId = null, pendingNBNoticeEditId = null;
 let pendingTaskId = null, pendingAlertId = null, pendingMissingId = null;
 let pendingEditNoteId = null, pendingEditTaskId = null, pendingEditKWId = null;
 let pendingUpdCtx = null, pendingUpdId = null, priorOn = false, kwTypeVal = 'kw';
@@ -752,6 +920,8 @@ Object.assign(window, {
   openAddRotaModal,saveRota,saveRotaCell,renderRotaGrid,downloadSampleCSV,handleRotaCSV,
   openAddCatModal,saveCat,removeCat,
   toggleConfigUnit,toggleConfigUnitAll,toggleConfigSU,
+  openNBTaskModal,selNBScope,saveNBTask,completeNBTask,uncompleteNBTask,deleteNBTask,editNBTask,
+  openNBNoticeModal,selNBNoticeType,selNBRType,saveNBNotice,editNBNotice,deleteNBNotice,resolveNBNotice,
   cm
 });
 
@@ -835,6 +1005,7 @@ function showView(name) {
   if(name==='missing') renderMissingView();
   if(name==='sp-ra') renderSPRA();
   if(name==='admin') renderAdmin();
+  if(name==='noticeboard') loadNoticeBoardData().then(renderNoticeBoard);
 }
 
 // ── UNITS ──
@@ -1513,6 +1684,313 @@ async function popCat(selId) {
 
 function popYP(selId) {
   g(selId).innerHTML='<option value="">Select YP…</option>'+currentUnitYPs.map(y=>`<option value="${y.id}">${y.initials||y.name}</option>`).join('');
+}
+
+// ── NOTICE BOARD ──
+
+async function loadNoticeBoardData() {
+  if (!currentUnitId) { nbTasksCache=[]; nbUnitNoticesCache=[]; return; }
+  try {
+    const tSnap = await getDocs(query(collection(db,'adhocTasks'),
+      where('unitId','==',currentUnitId), where('completed','==',false), where('status','==','active')));
+    nbTasksCache = tSnap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch { nbTasksCache=[]; }
+  try {
+    const nSnap = await getDocs(query(collection(db,'unitNotices'),
+      where('unitId','==',currentUnitId), where('done','==',false)));
+    nbUnitNoticesCache = nSnap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch { nbUnitNoticesCache=[]; }
+  updateNBBadge();
+}
+
+function renderNoticeBoard() {
+  if (!currentUnitId) {
+    ['nb-tasks-list','nb-alerts-list','nb-reminders-list'].forEach(id=>{ g(id).innerHTML=empt('🏠','Select a unit first'); });
+    g('nb-cnt-tasks').textContent=g('nb-cnt-alerts').textContent=g('nb-cnt-reminders').textContent='0';
+    return;
+  }
+  const today = todayISO();
+
+  // ── Unit Alerts ──
+  const alerts = nbUnitNoticesCache.filter(n=>{
+    if(n.type!=='alert') return false;
+    return !n.until || n.until >= today;
+  });
+  g('nb-cnt-alerts').textContent = alerts.length;
+  g('nb-alerts-list').innerHTML = alerts.length ? alerts.map(n=>{
+    const ypIdx = n.ypId ? getYPColorIdx(n.ypId) : -1;
+    const ypTag = n.ypId ? `<span class="yp-tag" style="background:${ypColor(ypIdx)}">${getYPInit(n.ypId)}</span>` : '<span class="ecat">Unit-wide</span>';
+    return `<div class="entry" style="border-left:3px solid var(--red);background:var(--red-bg)">
+      <div class="eh">${ypTag}${n.until?`<span class="etime">until ${fmtD(n.until)}</span>`:''}${n.createdByName?`<span class="creator-tag">${n.createdByName}</span>`:''}</div>
+      <div class="etext">${n.text}</div>
+      ${(n.updates||[]).length?`<div style="margin-top:4px">${n.updates.map(u=>`<div class="miss-upd"><div class="upd-t">${u.time||''} ${u.by||''}</div>${u.text}</div>`).join('')}</div>`:''}
+      <div class="entry-actions"><button class="btn-sm s" onclick="resolveNBNotice('${n.id}')">✓ Resolve</button><button class="btn-sm" onclick="editNBNotice('${n.id}')">✏ Edit</button><button class="btn-sm d" onclick="deleteNBNotice('${n.id}')">✕ Delete</button></div>
+    </div>`;
+  }).join('') : empt('🟢','No active unit alerts');
+
+  // ── Unit Reminders ──
+  const reminders = nbUnitNoticesCache.filter(n=>{
+    if(n.type!=='reminder') return false;
+    if(n.rtype==='today') return true;
+    if(n.rdate && n.rdate >= today) return true;
+    return false;
+  });
+  g('nb-cnt-reminders').textContent = reminders.length;
+  g('nb-reminders-list').innerHTML = reminders.length ? reminders.map(n=>{
+    const ypIdx = n.ypId ? getYPColorIdx(n.ypId) : -1;
+    const ypTag = n.ypId ? `<span class="yp-tag" style="background:${ypColor(ypIdx)}">${getYPInit(n.ypId)}</span>` : '<span class="ecat">Unit-wide</span>';
+    const dateLabel = n.rtype==='today' ? 'Ongoing' : (n.rdate ? fmtD(n.rdate) : '');
+    return `<div class="entry" style="border-left:3px solid var(--amber);background:var(--amber-bg)">
+      <div class="eh">${ypTag}<span class="etime">${dateLabel}</span>${n.createdByName?`<span class="creator-tag">${n.createdByName}</span>`:''}</div>
+      <div class="etext">${n.text}</div>
+      ${(n.updates||[]).length?`<div style="margin-top:4px">${n.updates.map(u=>`<div class="miss-upd"><div class="upd-t">${u.time||''} ${u.by||''}</div>${u.text}</div>`).join('')}</div>`:''}
+      <div class="entry-actions"><button class="btn-sm s" onclick="resolveNBNotice('${n.id}')">✓ Dismiss</button><button class="btn-sm" onclick="editNBNotice('${n.id}')">✏ Edit</button><button class="btn-sm d" onclick="deleteNBNotice('${n.id}')">✕ Delete</button></div>
+    </div>`;
+  }).join('') : empt('🔔','No active unit reminders');
+
+  // ── Tasks ──
+  const tasks = nbTasksCache;
+  g('nb-cnt-tasks').textContent = tasks.filter(t=>!t.completed).length;
+  g('nb-tasks-list').innerHTML = tasks.length ? tasks.map(t=>{
+    const ypLabel = t.serviceUserId ? (currentUnitYPs.find(y=>y.id===t.serviceUserId)?.initials || t.serviceUserId) : null;
+    const ypColorVal = ypLabel ? ypColor(currentUnitYPs.findIndex(y=>y.id===t.serviceUserId)) : null;
+    const pri = t.priority||'normal';
+    const over = !t.completed && (t.targetDate||t.dueDate) && (t.targetDate||t.dueDate) < today;
+    return `<div class="nb-task ${t.completed?'done':''}">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">
+          <span class="nb-priority nb-p-${pri}">${pri==='urgent'?'🔴 Urgent':pri==='high'?'🟠 High':'Normal'}</span>
+          ${ypLabel?`<span class="yp-tag" style="background:${ypColorVal};font-size:10px">${ypLabel}</span>`:'<span class="ecat">Unit-wide</span>'}
+        </div>
+        <div class="nb-tlabel">${t.title||t.name||'Untitled'}</div>
+        ${t.description||t.desc?`<div class="nb-tmeta">${t.description||t.desc}</div>`:''}
+        ${(t.targetDate||t.dueDate)?`<div class="nb-tmeta${over?' tdue over':''}">Target: ${fmtD(t.targetDate||t.dueDate)}${over?' ⚠️ Overdue':''}</div>`:''}
+        ${t.addedByName?`<div class="nb-tmeta">Added by ${t.addedByName}</div>`:''}
+        <div class="entry-actions" style="margin-top:6px">
+          ${!t.completed
+            ? `<button class="btn-sm s" onclick="completeNBTask('${t.id}')">✓ Complete</button><button class="btn-sm" onclick="editNBTask('${t.id}')">✏ Edit</button><button class="btn-sm d" onclick="deleteNBTask('${t.id}')">✕ Delete</button>`
+            : `<button class="btn-sm" onclick="uncompleteNBTask('${t.id}')">↩ Reopen</button><button class="btn-sm d" onclick="deleteNBTask('${t.id}')">✕ Delete</button>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('') : empt('✅','No tasks on the notice board — add one to get started');
+}
+
+function updateNBBadge() {
+  const today = todayISO();
+  const activeAlerts = nbUnitNoticesCache.filter(n=>n.type==='alert'&&(!n.until||n.until>=today)).length;
+  const activeReminders = nbUnitNoticesCache.filter(n=>n.type==='reminder'&&(n.rtype==='today'||(n.rdate&&n.rdate>=today))).length;
+  const pendingTasks = nbTasksCache.filter(t=>!t.completed).length;
+  const total = activeAlerts + activeReminders + pendingTasks;
+  g('nb-badge').style.display = total ? 'inline' : 'none';
+  g('nb-badge').textContent = total;
+}
+
+// ── UNIT NOTICE MODAL (alerts & reminders) ──
+function openNBNoticeModal(type) {
+  if (!currentUnitId) { toast('Select a unit first','err'); return; }
+  pendingNBNoticeEditId = null;
+  g('nb-notice-title').textContent = type==='alert' ? 'Add Unit Alert' : 'Add Unit Reminder';
+  g('nb-notice-save-btn').textContent = 'Add';
+  g('nb-notice-type').value = type;
+  document.querySelectorAll('#m-nb-notice .ro').forEach(o=>o.className='ro');
+  g(type==='alert'?'nb-notice-alert':'nb-notice-reminder').classList.add(type==='alert'?'sa':'sr');
+  g('nb-alert-fields').style.display = type==='alert' ? 'block' : 'none';
+  g('nb-reminder-fields').style.display = type==='reminder' ? 'block' : 'none';
+  g('nb-notice-text').value = '';
+  g('nb-notice-until').value = '';
+  g('nb-notice-rdate').value = '';
+  g('nb-notice-rtype').value = 'today';
+  g('nb-reminder-date-row').style.display = 'none';
+  document.querySelectorAll('#m-nb-notice .chip').forEach((c,i)=>c.classList.toggle('on',i===0));
+  popYP('nb-notice-yp'); g('nb-notice-yp').insertAdjacentHTML('afterbegin','<option value="">Unit-wide</option>'); g('nb-notice-yp').value='';
+  om('m-nb-notice');
+}
+
+function selNBNoticeType(type, el) {
+  g('nb-notice-type').value = type;
+  g('nb-notice-title').textContent = type==='alert' ? 'Add Unit Alert' : 'Add Unit Reminder';
+  document.querySelectorAll('#m-nb-notice .ro').forEach(o=>o.className='ro');
+  el.classList.add(type==='alert'?'sa':'sr');
+  g('nb-alert-fields').style.display = type==='alert' ? 'block' : 'none';
+  g('nb-reminder-fields').style.display = type==='reminder' ? 'block' : 'none';
+}
+
+function selNBRType(type, el) {
+  g('nb-notice-rtype').value = type;
+  document.querySelectorAll('#m-nb-notice .chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  g('nb-reminder-date-row').style.display = type==='date' ? 'block' : 'none';
+}
+
+async function saveNBNotice() {
+  const text = g('nb-notice-text').value.trim();
+  if (!text) { toast('Enter notice text','err'); return; }
+  if (!currentUnitId) { toast('Select a unit first','err'); return; }
+  const type = g('nb-notice-type').value;
+  const ypId = g('nb-notice-yp').value || null;
+  const data = {
+    unitId: currentUnitId, type, text, ypId,
+    done: false, updates: [],
+    createdBy: currentUser.uid, createdByName: currentStaff?.name||'',
+    createdAt: serverTimestamp()
+  };
+  if (type==='alert') data.until = g('nb-notice-until').value || null;
+  if (type==='reminder') { data.rtype = g('nb-notice-rtype').value; data.rdate = g('nb-notice-rdate').value || null; }
+  try {
+    if (pendingNBNoticeEditId) {
+      await updateDoc(doc(db,'unitNotices',pendingNBNoticeEditId),
+        {text, ypId, until:data.until||null, rtype:data.rtype||null, rdate:data.rdate||null, editedBy:currentStaff?.name||'', editedAt:serverTimestamp()});
+      pendingNBNoticeEditId = null;
+    } else {
+      await addDoc(collection(db,'unitNotices'), data);
+    }
+    cm('m-nb-notice'); await loadNoticeBoardData(); renderNoticeBoard(); toast('Saved ✓');
+  } catch { toast('Save failed','err'); }
+}
+
+function editNBNotice(id) {
+  const n = nbUnitNoticesCache.find(n=>n.id===id); if (!n) return;
+  pendingNBNoticeEditId = id;
+  g('nb-notice-title').textContent = n.type==='alert' ? 'Edit Unit Alert' : 'Edit Unit Reminder';
+  g('nb-notice-save-btn').textContent = 'Save Changes';
+  g('nb-notice-type').value = n.type;
+  document.querySelectorAll('#m-nb-notice .ro').forEach(o=>o.className='ro');
+  g(n.type==='alert'?'nb-notice-alert':'nb-notice-reminder').classList.add(n.type==='alert'?'sa':'sr');
+  g('nb-alert-fields').style.display = n.type==='alert' ? 'block' : 'none';
+  g('nb-reminder-fields').style.display = n.type==='reminder' ? 'block' : 'none';
+  g('nb-notice-text').value = n.text||'';
+  g('nb-notice-until').value = n.until||'';
+  g('nb-notice-rtype').value = n.rtype||'today';
+  g('nb-notice-rdate').value = n.rdate||'';
+  g('nb-reminder-date-row').style.display = n.rtype==='date' ? 'block' : 'none';
+  document.querySelectorAll('#m-nb-notice .chip').forEach((c,i)=>c.classList.toggle('on',(n.rtype||'today')===(i===0?'today':'date')));
+  popYP('nb-notice-yp'); g('nb-notice-yp').insertAdjacentHTML('afterbegin','<option value="">Unit-wide</option>');
+  setTimeout(()=>{ g('nb-notice-yp').value = n.ypId||''; },0);
+  om('m-nb-notice');
+}
+
+async function resolveNBNotice(id) {
+  try {
+    await updateDoc(doc(db,'unitNotices',id),{done:true,resolvedBy:currentStaff?.name||'',resolvedAt:serverTimestamp()});
+    await loadNoticeBoardData(); renderNoticeBoard(); toast('Resolved ✓');
+  } catch { toast('Failed','err'); }
+}
+
+async function deleteNBNotice(id) {
+  if (!confirm('Delete this notice?')) return;
+  try {
+    await deleteDoc(doc(db,'unitNotices',id));
+    await loadNoticeBoardData(); renderNoticeBoard(); toast('Deleted');
+  } catch { toast('Delete failed','err'); }
+}
+
+// ── NOTICE BOARD TASK MODAL ──
+function openNBTaskModal() {
+  if (!currentUnitId) { toast('Select a unit first','err'); return; }
+  pendingNBEditId = null;
+  g('nb-task-modal-title').textContent = 'Add Task';
+  g('nb-task-save-btn').textContent = 'Add Task';
+  g('nb-scope').value = 'unit';
+  document.querySelectorAll('#m-nb-task .ro').forEach(o=>o.className='ro');
+  g('nb-scope-unit').classList.add('sn');
+  g('nb-yp-row').style.display = 'none';
+  popYP('nb-yp');
+  g('nb-title').value = '';
+  g('nb-desc').value = '';
+  g('nb-due').value = '';
+  g('nb-priority').value = 'normal';
+  om('m-nb-task');
+}
+
+function selNBScope(scope, el) {
+  g('nb-scope').value = scope;
+  document.querySelectorAll('#m-nb-task .ro').forEach(o=>o.className='ro');
+  el.classList.add('sn');
+  g('nb-yp-row').style.display = scope==='yp' ? 'block' : 'none';
+}
+
+async function saveNBTask() {
+  const title = g('nb-title').value.trim();
+  if (!title) { toast('Enter a task title','err'); return; }
+  if (!currentUnitId) { toast('Select a unit first','err'); return; }
+  const scope = g('nb-scope').value;
+  const serviceUserId = scope==='yp' ? gv('nb-yp') : null;
+  const data = {
+    unitId: currentUnitId,
+    serviceUserId: serviceUserId || null,
+    title,
+    description: g('nb-desc').value.trim(),
+    targetDate: g('nb-due').value || null,
+    priority: g('nb-priority').value || 'normal',
+    completed: false,
+    status: 'active',
+    recurrence: 'once',
+    addedBy: currentUser.uid,
+    addedByName: currentStaff?.name || '',
+    createdAt: serverTimestamp()
+  };
+  try {
+    if (pendingNBEditId) {
+      await updateDoc(doc(db,'adhocTasks',pendingNBEditId), {
+        title: data.title, description: data.description,
+        targetDate: data.targetDate, priority: data.priority,
+        serviceUserId: data.serviceUserId,
+        editedBy: currentStaff?.name||'', editedAt: serverTimestamp()
+      });
+      pendingNBEditId = null;
+    } else {
+      await addDoc(collection(db,'adhocTasks'), data);
+    }
+    cm('m-nb-task');
+    await loadNoticeBoardData();
+    renderNoticeBoard();
+    toast('Task saved ✓');
+  } catch { toast('Save failed','err'); }
+}
+
+function editNBTask(id) {
+  const t = nbTasksCache.find(t=>t.id===id); if(!t) return;
+  pendingNBEditId = id;
+  g('nb-task-modal-title').textContent = 'Edit Task';
+  g('nb-task-save-btn').textContent = 'Save Changes';
+  popYP('nb-yp');
+  const hasYP = !!t.serviceUserId;
+  g('nb-scope').value = hasYP ? 'yp' : 'unit';
+  document.querySelectorAll('#m-nb-task .ro').forEach(o=>o.className='ro');
+  g(hasYP ? 'nb-scope-yp' : 'nb-scope-unit').classList.add('sn');
+  g('nb-yp-row').style.display = hasYP ? 'block' : 'none';
+  if (hasYP) setTimeout(()=>sv('nb-yp',t.serviceUserId),0);
+  g('nb-title').value = t.title||t.name||'';
+  g('nb-desc').value = t.description||t.desc||'';
+  g('nb-due').value = t.targetDate||t.dueDate||'';
+  g('nb-priority').value = t.priority||'normal';
+  om('m-nb-task');
+}
+
+async function completeNBTask(id) {
+  try {
+    await updateDoc(doc(db,'adhocTasks',id),{
+      completed:true, completedBy:currentUser.uid,
+      completedByName:currentStaff?.name||'', completedAt:serverTimestamp()
+    });
+    await loadNoticeBoardData(); renderNoticeBoard(); toast('Task completed ✓');
+  } catch { toast('Failed','err'); }
+}
+
+async function uncompleteNBTask(id) {
+  try {
+    await updateDoc(doc(db,'adhocTasks',id),{completed:false,completedBy:null,completedByName:'',completedAt:null});
+    await loadNoticeBoardData(); renderNoticeBoard(); toast('Task reopened');
+  } catch { toast('Failed','err'); }
+}
+
+async function deleteNBTask(id) {
+  if (!confirm('Delete this task? It will also be removed from the Task Board.')) return;
+  try {
+    await deleteDoc(doc(db,'adhocTasks',id));
+    await loadNoticeBoardData(); renderNoticeBoard(); toast('Deleted');
+  } catch { toast('Delete failed','err'); }
 }
 
 // ── CLOSE MODALS ON OVERLAY CLICK ──
