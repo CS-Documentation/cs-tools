@@ -75,6 +75,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .tb-date{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:#fff;padding:5px 9px;border-radius:var(--rs);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer}
 .tb-user{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:20px;padding:4px 10px 4px 6px;font-size:12px;font-weight:600;flex-shrink:0}
 .tb-av{width:24px;height:24px;background:#fff;color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.refresh-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;flex-shrink:0;transition:background .2s}
+.refresh-btn:hover{background:rgba(255,255,255,.28)}
+.refresh-btn:active{background:rgba(255,255,255,.35)}
+.refresh-btn.spinning{animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 .tb-signout{background:transparent;border:none;color:rgba(255,255,255,.7);font-size:11px;padding:0 4px;cursor:pointer;font-family:'DM Sans',sans-serif}
 .shift-tabs{display:flex;gap:2px;background:rgba(255,255,255,.15);padding:3px;border-radius:var(--rs);flex-shrink:0}
 .shift-tab{padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;color:rgba(255,255,255,.7);transition:all .12s;white-space:nowrap}
@@ -362,6 +367,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="shift-tab" data-s="evening" onclick="switchShift('evening')">🌙 Evening</div>
       <div class="shift-tab" data-s="sleepin" onclick="switchShift('sleepin')">💤 Sleep-in</div>
     </div>
+    <button class="refresh-btn" id="refreshBtn" onclick="handleRefresh()" title="Refresh data">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+      </svg>
+    </button>
     <div class="tb-user">
       <div class="tb-av" id="tb-av">?</div>
       <span id="tb-name">—</span>
@@ -775,6 +786,23 @@ async function doLogin() {
 }
 
 async function doLogout() { await signOut(auth); }
+
+async function handleRefresh() {
+  const btn = document.getElementById('refreshBtn');
+  if (!btn || btn.classList.contains('spinning')) return;
+  btn.classList.add('spinning');
+  try {
+    const unitId = document.getElementById('unit-sel')?.value;
+    if (unitId) {
+      await loadShiftData();
+    }
+    toast('Refreshed', 'ok');
+  } catch(e) {
+    toast('Could not refresh', 'err');
+  } finally {
+    setTimeout(() => btn.classList.remove('spinning'), 500);
+  }
+}
 
 async function showApp() {
   g('loginScreen').style.display = 'none';

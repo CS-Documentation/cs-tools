@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Board — Connected Stars</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brand:#1446a0;--brand-dark:#0d3278;--brand-light:#e8eef8;--brand-mid:#2d5bbf;
+  --alert-red:#c0392b;--alert-red-bg:#fdf0ef;
+  --alert-amber:#e67e22;--alert-amber-bg:#fef9f0;
+  --adhoc-purple:#7b2d8b;--adhoc-purple-bg:#f5eef8;
+  --success:#27ae60;--success-bg:#eafaf1;
+  --text:#1a1a2e;--text-muted:#6b7280;
+  --border:#dde3ef;--bg:#f4f6fb;--white:#ffffff;
+  --shadow:0 2px 12px rgba(20,70,160,.08);
+  --shadow-lg:0 8px 32px rgba(20,70,160,.13);
+  --radius:12px;--radius-sm:8px;
+  --sidebar-w:260px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
+
+/* ── LOGIN ── */
+#loginScreen{min-height:100vh;background:linear-gradient(135deg,var(--brand-dark) 0%,var(--brand) 50%,var(--brand-mid) 100%);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--white);border-radius:20px;padding:48px 40px;width:100%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,.25);text-align:center}
+.login-logo-wrap{background:var(--brand);border-radius:10px;padding:14px 20px;margin:0 auto 28px;max-width:280px;display:flex;align-items:center;justify-content:center;gap:10px}
+.login-logo-text{color:#fff;font-size:15px;font-weight:800;letter-spacing:-.3px;text-align:left;line-height:1.25}
+.login-logo-text span{display:block;font-size:10px;font-weight:500;opacity:.75;letter-spacing:1px;text-transform:uppercase}
+.login-badge{display:inline-flex;align-items:center;gap:5px;background:var(--brand-light);border:1px solid var(--brand);color:var(--brand);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;margin-bottom:16px;letter-spacing:.5px;text-transform:uppercase}
+.login-title{font-size:22px;font-weight:700;color:var(--brand);margin-bottom:6px}
+.login-sub{font-size:13px;color:var(--text-muted);margin-bottom:28px}
+.login-err{background:var(--alert-red-bg);color:var(--alert-red);border:1px solid #f5c6c2;border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;margin-bottom:16px;display:none;text-align:left}
+.form-group{margin-bottom:16px;text-align:left}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:#fff;outline:none;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(20,70,160,.1)}
+.form-group textarea{resize:vertical;min-height:72px}
+.login-btn{display:block;width:100%;padding:13px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+.login-btn:hover{background:var(--brand-dark);transform:translateY(-1px)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;text-decoration:none;white-space:nowrap}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-primary:hover{background:var(--brand-dark);transform:translateY(-1px)}
+.btn-secondary{background:var(--brand-light);color:var(--brand)}
+.btn-secondary:hover{background:#d0dcf4}
+.btn-danger{background:var(--alert-red);color:#fff}
+.btn-danger:hover{background:#a93226}
+.btn-success{background:var(--success);color:#fff}
+.btn-success:hover{background:#219a52}
+.btn-ghost{background:transparent;color:var(--text-muted);border:1.5px solid var(--border)}
+.btn-ghost:hover{border-color:var(--brand);color:var(--brand)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-icon{padding:6px;width:30px;height:30px;justify-content:center;border-radius:6px;background:transparent;color:var(--text-muted);border:none}
+.btn-icon:hover{background:var(--bg);color:var(--text)}
+
+/* ── APP SHELL ── */
+#app{display:none;min-height:100vh}
+.app-layout{display:flex;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform .25s}
+.sb-header{padding:16px;border-bottom:1px solid var(--border)}
+.sb-brand{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);margin-bottom:2px}
+.sb-title{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.sb-title span{color:var(--brand)}
+.sb-body{flex:1;overflow-y:auto;padding:8px}
+.sb-section-label{padding:10px 8px 4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted)}
+.sb-board-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-muted);font-weight:500;font-size:13px;transition:all .12s;margin-bottom:1px;user-select:none}
+.sb-board-item:hover{background:var(--bg);color:var(--text)}
+.sb-board-item.active{background:var(--brand-light);color:var(--brand);font-weight:700}
+.sb-board-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sb-board-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-board-badge{font-size:10px;font-weight:700;background:var(--bg);color:var(--text-muted);padding:1px 6px;border-radius:10px}
+.sb-board-item.active .sb-board-badge{background:rgba(20,70,160,.15);color:var(--brand)}
+.sb-footer{padding:12px 14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sb-user-av{width:30px;height:30px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;font-family:'DM Mono',monospace}
+.sb-user-info{flex:1;min-width:0}
+.sb-user-name{font-size:12px;font-weight:700;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-user-role{font-size:10px;color:var(--text-muted)}
+.sb-signout{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:11px;padding:4px;border-radius:4px;font-family:'DM Sans',sans-serif}
+.sb-signout:hover{color:var(--alert-red)}
+
+/* ── MAIN AREA ── */
+.main-area{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--brand);color:#fff;padding:0 20px;height:54px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(20,70,160,.3)}
+.topbar-title{font-size:16px;font-weight:700;flex:1}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.notif-btn{position:relative;background:rgba(255,255,255,.15);border:none;color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:background .2s}
+.notif-btn:hover{background:rgba(255,255,255,.25)}
+.notif-badge{position:absolute;top:0;right:0;background:var(--alert-red);color:#fff;font-size:9px;font-weight:800;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brand);display:none}
+.menu-toggle{display:none;background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:18px}
+.refresh-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:background .2s;flex-shrink:0}
+.refresh-btn:hover{background:rgba(255,255,255,.28)}
+.refresh-btn:active{background:rgba(255,255,255,.35)}
+.refresh-btn.spinning svg,.refresh-btn.spinning{animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── BOARD CONTENT ── */
+.board-content{flex:1;padding:20px;overflow-x:hidden}
+.board-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;color:var(--text-muted);gap:12px}
+.board-placeholder .icon{font-size:48px;opacity:.4}
+.board-placeholder h3{font-size:18px;font-weight:700;color:var(--text)}
+.board-placeholder p{font-size:13px;text-align:center;max-width:320px}
+
+/* ── BOARD HEADER ── */
+.board-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.board-header-left h2{font-size:18px;font-weight:800;letter-spacing:-.3px}
+.board-header-left p{font-size:12px;color:var(--text-muted);margin-top:2px}
+.board-header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* ── FILTER BAR ── */
+.filter-bar{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.filter-bar label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)}
+.filter-bar select,.filter-bar input[type="text"]{padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);background:#fff;outline:none;transition:border-color .2s}
+.filter-bar select:focus,.filter-bar input[type="text"]:focus{border-color:var(--brand)}
+.filter-bar input[type="text"]{min-width:140px}
+.filter-bar .filter-clear{font-size:11px;color:var(--text-muted);cursor:pointer;text-decoration:underline;background:none;border:none;font-family:'DM Sans',sans-serif}
+.filter-bar .filter-clear:hover{color:var(--brand)}
+
+/* ── LISTS CONTAINER ── */
+.lists-container{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+
+/* ── LIST COLUMN ── */
+.list-col{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);flex:1 1 300px;min-width:280px;max-width:400px;display:flex;flex-direction:column}
+.list-header{padding:12px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);background:var(--white);border-radius:var(--radius) var(--radius) 0 0;position:sticky;top:0}
+.list-color-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.list-title{flex:1;font-size:13px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list-count{font-size:10px;font-weight:700;background:var(--brand-light);color:var(--brand);padding:2px 7px;border-radius:10px}
+.list-menu-btn{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 4px;border-radius:4px;line-height:1}
+.list-menu-btn:hover{background:var(--bg);color:var(--text)}
+
+/* ── LIST BODY ── */
+.list-body{flex:1;overflow-y:auto;padding:8px}
+.list-add-btn{width:100%;padding:8px 12px;background:transparent;border:1.5px dashed var(--border);border-radius:var(--radius-sm);color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;text-align:left;transition:all .15s;display:flex;align-items:center;gap:6px;margin-top:6px}
+.list-add-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-light)}
+
+/* ── COMPLETED SECTION ── */
+.completed-toggle{width:100%;padding:6px 10px;background:transparent;border:none;color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;border-top:1px solid var(--border);margin-top:4px;border-radius:0 0 var(--radius-sm) var(--radius-sm)}
+.completed-toggle:hover{background:var(--bg)}
+.completed-toggle .arrow{transition:transform .2s;display:inline-block}
+.completed-toggle.open .arrow{transform:rotate(90deg)}
+.completed-list{display:none;padding:4px 0}
+.completed-list.open{display:block}
+
+/* ── TASK CARD ── */
+.task-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:all .15s;position:relative}
+.task-card:hover{border-color:var(--brand);box-shadow:var(--shadow);transform:translateY(-1px)}
+.task-card.completed-card{opacity:.65}
+.task-card.completed-card .task-title{text-decoration:line-through;color:var(--text-muted)}
+.task-card.priority-high{border-left:3px solid var(--alert-red)}
+.task-card.priority-medium{border-left:3px solid var(--alert-amber)}
+.task-card.priority-low{border-left:3px solid var(--success)}
+.task-title{font-size:13px;font-weight:600;line-height:1.4;margin-bottom:6px}
+.task-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700}
+.tag-priority-high{background:var(--alert-red-bg);color:var(--alert-red)}
+.tag-priority-medium{background:var(--alert-amber-bg);color:var(--alert-amber)}
+.tag-priority-low{background:var(--success-bg);color:var(--success)}
+.tag-yp{background:var(--adhoc-purple-bg);color:var(--adhoc-purple)}
+.tag-unit{background:var(--brand-light);color:var(--brand)}
+.task-due{font-size:10px;color:var(--text-muted);font-weight:600}
+.task-due.overdue{color:var(--alert-red)}
+.task-assignees{display:flex;gap:3px;margin-left:auto}
+.task-assignee-av{width:20px;height:20px;border-radius:50%;background:var(--brand);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;border:1.5px solid var(--white)}
+.task-comment-count{font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:3px}
+
+/* ── MODALS ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--white);border-radius:var(--radius);width:100%;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;max-height:90vh}
+.modal-sm{max-width:460px}
+.modal-md{max-width:580px}
+.modal-lg{max-width:720px}
+.modal-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-header h3{font-size:16px;font-weight:800;letter-spacing:-.2px}
+.modal-close{background:transparent;border:none;font-size:20px;color:var(--text-muted);cursor:pointer;line-height:1;padding:2px 6px;border-radius:4px}
+.modal-close:hover{background:var(--bg);color:var(--text)}
+.modal-body{padding:18px 20px;overflow-y:auto;flex:1}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;flex-wrap:wrap}
+
+/* ── TASK DETAIL MODAL ── */
+.task-detail-grid{display:grid;grid-template-columns:1fr 220px;gap:20px}
+.task-detail-main{}
+.task-detail-side{border-left:1px solid var(--border);padding-left:20px}
+.task-detail-title{font-size:17px;font-weight:800;margin-bottom:12px;line-height:1.35}
+.task-detail-desc{font-size:13px;color:var(--text-muted);line-height:1.6;white-space:pre-wrap}
+.detail-field{margin-bottom:14px}
+.detail-field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:5px}
+.detail-field-value{font-size:13px;font-weight:600}
+.activity-log{margin-top:16px;border-top:1px solid var(--border);padding-top:14px}
+.activity-log h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:10px}
+.activity-item{display:flex;gap:8px;margin-bottom:8px;font-size:12px;color:var(--text-muted)}
+.activity-av{width:22px;height:22px;border-radius:50%;background:var(--brand-light);color:var(--brand);font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'DM Mono',monospace}
+
+/* ── COMMENTS ── */
+.comments-section{margin-top:16px;border-top:1px solid var(--border);padding-top:14px}
+.comments-section h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:10px}
+.comment-item{display:flex;gap:8px;margin-bottom:12px}
+.comment-av{width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'DM Mono',monospace}
+.comment-bubble{background:var(--bg);border-radius:0 8px 8px 8px;padding:8px 12px;flex:1}
+.comment-meta{font-size:10px;color:var(--text-muted);margin-bottom:3px;display:flex;align-items:center;justify-content:space-between}
+.comment-author{font-weight:700;color:var(--text)}
+.comment-text{font-size:13px;line-height:1.5;white-space:pre-wrap}
+.comment-del{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:11px;padding:0 2px}
+.comment-del:hover{color:var(--alert-red)}
+.comment-input-row{display:flex;gap:8px;align-items:flex-start;margin-top:8px}
+.comment-input-row .comment-av{flex-shrink:0}
+.comment-input-row textarea{flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;resize:none;outline:none;transition:border-color .2s;min-height:60px}
+.comment-input-row textarea:focus{border-color:var(--brand)}
+
+/* ── NOTIFICATIONS PANEL ── */
+.notif-panel{position:fixed;top:54px;right:0;width:340px;background:var(--white);border-left:1px solid var(--border);border-bottom:1px solid var(--border);box-shadow:var(--shadow-lg);z-index:500;display:none;max-height:calc(100vh - 54px);flex-direction:column;border-radius:0 0 0 var(--radius)}
+.notif-panel.open{display:flex}
+.notif-panel-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.notif-panel-header h3{font-size:14px;font-weight:700}
+.notif-panel-body{flex:1;overflow-y:auto}
+.notif-item{padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;font-size:12px}
+.notif-item:hover{background:var(--bg)}
+.notif-item.unread{background:var(--brand-light)}
+.notif-item.unread:hover{background:#d0dcf4}
+.notif-item-title{font-weight:700;margin-bottom:2px;font-size:13px}
+.notif-item-body{color:var(--text-muted);line-height:1.4}
+.notif-item-time{color:var(--text-muted);font-size:10px;margin-top:4px}
+.notif-empty{padding:32px 16px;text-align:center;color:var(--text-muted);font-size:13px}
+
+/* ── TOASTS ── */
+#toastContainer{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--text);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);animation:slideUp .25s ease;max-width:300px}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--alert-red)}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── ADMIN PANEL ── */
+.admin-panel{padding:20px}
+.admin-panel h2{font-size:18px;font-weight:800;margin-bottom:16px}
+.admin-section{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+.admin-section h3{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.access-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.access-row:last-child{border-bottom:none}
+.access-row-name{flex:1;font-weight:600}
+.access-row-role{color:var(--text-muted);font-size:12px}
+.access-toggle{display:flex;align-items:center;gap:6px}
+
+/* ── EMPTY STATES ── */
+.list-empty{padding:16px 12px;text-align:center;color:var(--text-muted);font-size:12px}
+
+/* ── SECTION DIVIDER ── */
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);padding:4px 0 8px}
+
+/* ── PEOPLE PICKER ── */
+.people-picker{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:5px 8px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;position:relative;background:#fff;min-height:40px;cursor:text;transition:border-color .2s}
+.people-picker:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px rgba(20,70,160,.1)}
+.picker-chip{display:inline-flex;align-items:center;gap:4px;background:var(--brand-light);color:var(--brand);border-radius:20px;padding:3px 8px 3px 5px;font-size:12px;font-weight:600;white-space:nowrap}
+.picker-chip-av{width:18px;height:18px;border-radius:50%;background:var(--brand);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;flex-shrink:0}
+.picker-chip-remove{background:none;border:none;color:var(--brand);cursor:pointer;font-size:14px;line-height:1;padding:0 0 0 2px;opacity:.6;font-family:'DM Sans',sans-serif}
+.picker-chip-remove:hover{opacity:1}
+.picker-input-field{flex:1;min-width:90px;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:13px;background:transparent;padding:3px 4px;color:var(--text)}
+.picker-input-field::placeholder{color:var(--text-muted)}
+.picker-dropdown{position:absolute;top:calc(100% + 3px);left:0;right:0;background:var(--white);border:1.5px solid var(--brand);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);z-index:600;max-height:200px;overflow-y:auto;display:none}
+.picker-option{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:13px;transition:background .1s}
+.picker-option:hover,.picker-option.active{background:var(--brand-light)}
+.picker-option-av{width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;flex-shrink:0}
+.picker-option-name{font-weight:600;flex:1}
+.picker-option-role{font-size:11px;color:var(--text-muted)}
+.picker-empty{padding:10px 14px;font-size:12px;color:var(--text-muted);text-align:center}
+
+/* ── ACCESS MODE ── */
+.access-mode-btns{display:flex;gap:6px;margin-bottom:14px}
+.access-mode-btn{flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-muted);transition:all .15s;text-align:center}
+.access-mode-btn:hover{border-color:var(--brand);color:var(--brand)}
+.access-mode-btn.selected{background:var(--brand);color:#fff;border-color:var(--brand)}
+.access-hint{font-size:11px;color:var(--text-muted);margin-top:6px;padding:8px 10px;background:var(--bg);border-radius:6px;line-height:1.5}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main-area{margin-left:0}
+  .menu-toggle{display:flex}
+  .task-detail-grid{grid-template-columns:1fr}
+  .task-detail-side{border-left:none;padding-left:0;border-top:1px solid var(--border);padding-top:16px;margin-top:16px}
+  .lists-container{flex-direction:column;min-width:auto}
+  .list-col{width:100%;max-height:none}
+  .board-content{padding:12px}
+  .filter-bar{gap:8px}
+  .notif-panel{width:100%;right:0}
+  .modal-lg,.modal-md{max-width:100%}
+  .admin-panel{padding:12px}
+}
+@media(max-width:480px){
+  .login-card{padding:32px 20px}
+  .topbar{padding:0 12px;height:50px}
+  .board-header-right .btn span{display:none}
+}
+
+/* ── OVERLAY FOR MOBILE SIDEBAR ── */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:199}
+.sidebar-overlay.open{display:block}
+
+/* ── COLOR PICKER ROW ── */
+.color-options{display:flex;gap:8px;flex-wrap:wrap}
+.color-swatch{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:border-color .15s}
+.color-swatch.selected,.color-swatch:hover{border-color:var(--text)}
+
+/* ── CHECKBOX ── */
+.task-check{width:16px;height:16px;border-radius:4px;border:2px solid var(--border);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.task-check.checked{background:var(--success);border-color:var(--success);color:#fff}
+.task-check-row{display:flex;align-items:flex-start;gap:8px}
+.task-check-row .task-title{flex:1}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo-wrap">
+      <div class="login-logo-text">Connected Stars<span>Care Management</span></div>
+    </div>
+    <div class="login-badge">📋 Task Board</div>
+    <h1 class="login-title">Sign in</h1>
+    <p class="login-sub">Use your Connected Stars account</p>
+    <div class="login-err" id="loginError">Invalid username or password.</div>
+    <div class="form-group">
+      <label>Username or Email</label>
+      <input type="text" id="loginEmail" placeholder="username or email" autocomplete="username" onkeydown="if(event.key==='Enter')handleLogin()">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')handleLogin()">
+    </div>
+    <button class="login-btn" onclick="handleLogin()">Sign In</button>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+  <div class="app-layout">
+
+    <!-- Sidebar overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sb-header">
+        <div class="sb-brand">Connected Stars</div>
+        <div class="sb-title">Task <span>Board</span></div>
+      </div>
+      <div class="sb-body" id="sbBody">
+        <div class="sb-section-label">Unit Boards</div>
+        <div id="sbUnitBoards"><div style="padding:8px;color:var(--text-muted);font-size:12px">Loading…</div></div>
+        <div class="sb-section-label" style="margin-top:8px">Custom Boards</div>
+        <div id="sbCustomBoards"><div style="padding:8px;color:var(--text-muted);font-size:12px">Loading…</div></div>
+        <div id="sbAddBoardBtn" style="display:none;padding:6px 8px">
+          <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="openNewBoardModal()">+ New Board</button>
+        </div>
+      </div>
+      <div class="sb-footer">
+        <div class="sb-user-av" id="sbUserAv">??</div>
+        <div class="sb-user-info">
+          <div class="sb-user-name" id="sbUserName">—</div>
+          <div class="sb-user-role" id="sbUserRole">—</div>
+        </div>
+        <button class="sb-signout" onclick="handleLogout()" title="Sign out">↩</button>
+      </div>
+    </nav>
+
+    <!-- Main -->
+    <div class="main-area">
+      <div class="topbar">
+        <button class="menu-toggle" onclick="openSidebar()">☰</button>
+        <div class="topbar-title" id="topbarTitle">Task Board</div>
+        <div class="topbar-right">
+          <button class="refresh-btn" id="refreshBtn" onclick="refreshBoard()" title="Refresh board">
+            <svg id="refreshIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+              <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+            </svg>
+          </button>
+          <button class="notif-btn" id="notifBtn" onclick="toggleNotifPanel()" title="Notifications">
+            🔔
+            <span class="notif-badge" id="notifBadge"></span>
+          </button>
+          <div id="adminBoardBtn" style="display:none">
+            <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)" onclick="openBoardAdmin()">⚙ Edit Board</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Board content area -->
+      <div class="board-content" id="boardContent">
+        <div class="board-placeholder">
+          <div class="icon">📋</div>
+          <h3>Select a board</h3>
+          <p>Choose a unit board or custom board from the sidebar to get started.</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end app-layout -->
+
+  <!-- Notifications panel -->
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h3>Notifications</h3>
+      <button class="btn-icon" onclick="markAllNotifsRead()">✓ All read</button>
+    </div>
+    <div class="notif-panel-body" id="notifPanelBody">
+      <div class="notif-empty">No notifications yet.</div>
+    </div>
+  </div>
+</div><!-- end app -->
+
+<!-- Toast container -->
+<div id="toastContainer"></div>
+
+<!-- ══════════════════════════════
+     MODALS
+══════════════════════════════ -->
+
+<!-- Add Task Modal -->
+<div class="modal-overlay" id="addTaskModal">
+  <div class="modal modal-md">
+    <div class="modal-header">
+      <h3 id="addTaskModalTitle">Add Task</h3>
+      <button class="modal-close" onclick="closeModal('addTaskModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Title *</label>
+        <input type="text" id="taskTitle" placeholder="What needs to be done?">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="taskDesc" rows="3" placeholder="Optional details…"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label>Priority</label>
+          <select id="taskPriority">
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Due Date</label>
+          <input type="date" id="taskDue">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Assign To</label>
+        <div class="people-picker" id="taskAssigneePicker" onclick="pickerFocus('taskAssigneePicker')">
+          <input class="picker-input-field" id="taskAssigneeInput" placeholder="Type a name…" autocomplete="off"
+            oninput="pickerSearch('taskAssigneePicker','taskAssigneeInput','taskAssigneeDropdown')"
+            onkeydown="pickerKeydown(event,'taskAssigneePicker','taskAssigneeInput','taskAssigneeDropdown')"
+            onblur="pickerBlur('taskAssigneeDropdown')">
+          <div class="picker-dropdown" id="taskAssigneeDropdown"></div>
+        </div>
+      </div>
+      <div class="form-group" id="taskYPGroup" style="display:none">
+        <label>Young Person (optional)</label>
+        <select id="taskYP">
+          <option value="">None</option>
+        </select>
+      </div>
+      <!-- Recurrence (for handover-linked tasks) -->
+      <div id="taskRecurrenceGroup" style="display:none">
+        <div class="form-group">
+          <label>Schedule</label>
+          <select id="taskRecurrence" onchange="updateTaskRecurrenceUI()">
+            <option value="once">Once (specific date)</option>
+            <option value="today">Today only</option>
+            <option value="tomorrow">Tomorrow</option>
+            <option value="range">Date range</option>
+            <option value="recurring">Recurring (specific days)</option>
+          </select>
+        </div>
+        <div id="taskRecurRangeGroup" style="display:none;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group"><label>From</label><input type="date" id="taskRecurFrom"></div>
+          <div class="form-group"><label>To</label><input type="date" id="taskRecurTo"></div>
+        </div>
+        <div id="taskRecurDaysGroup" style="display:none">
+          <div class="form-group">
+            <label>Repeat on</label>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:400"><input type="checkbox" value="1" class="recurDay"> Mon</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:400"><input type="checkbox" value="2" class="recurDay"> Tue</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:400"><input type="checkbox" value="3" class="recurDay"> Wed</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:400"><input type="checkbox" value="4" class="recurDay"> Thu</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:400"><input type="checkbox" value="5" class="recurDay"> Fri</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:400"><input type="checkbox" value="6" class="recurDay"> Sat</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:400"><input type="checkbox" value="0" class="recurDay"> Sun</label>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group"><label>From date</label><input type="date" id="taskRecurStart"></div>
+            <div class="form-group"><label>Until (optional)</label><input type="date" id="taskRecurEnd"></div>
+          </div>
+        </div>
+        <div id="taskRecurMustGroup" class="form-group" style="margin-top:4px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="taskMustComplete"> <span style="font-weight:400">Must complete (cannot skip)</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('addTaskModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task Detail Modal -->
+<div class="modal-overlay" id="taskDetailModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="detailModalHeading">Task</h3>
+      <button class="modal-close" onclick="closeModal('taskDetailModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="task-detail-grid" id="taskDetailContent">
+        <!-- populated by JS -->
+      </div>
+    </div>
+    <div class="modal-footer" id="taskDetailFooter">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- Edit Task Modal -->
+<div class="modal-overlay" id="editTaskModal">
+  <div class="modal modal-md">
+    <div class="modal-header">
+      <h3>Edit Task</h3>
+      <button class="modal-close" onclick="closeModal('editTaskModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editTaskId">
+      <input type="hidden" id="editTaskType">
+      <div class="form-group">
+        <label>Title *</label>
+        <input type="text" id="editTaskTitle">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="editTaskDesc" rows="3"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label>Priority</label>
+          <select id="editTaskPriority">
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Due Date</label>
+          <input type="date" id="editTaskDue">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Assign To</label>
+        <div class="people-picker" id="editAssigneePicker" onclick="pickerFocus('editAssigneePicker')">
+          <input class="picker-input-field" id="editAssigneeInput" placeholder="Type a name…" autocomplete="off"
+            oninput="pickerSearch('editAssigneePicker','editAssigneeInput','editAssigneeDropdown')"
+            onkeydown="pickerKeydown(event,'editAssigneePicker','editAssigneeInput','editAssigneeDropdown')"
+            onblur="pickerBlur('editAssigneeDropdown')">
+          <div class="picker-dropdown" id="editAssigneeDropdown"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('editTaskModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveEditTask()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Complete Task Modal -->
+<div class="modal-overlay" id="completeTaskModal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3>Complete Task</h3>
+      <button class="modal-close" onclick="closeModal('completeTaskModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;margin-bottom:14px">Mark this task as completed?</p>
+      <div class="form-group">
+        <label>Completion Note <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+        <textarea id="completeNote" rows="2" placeholder="Any notes about completion…"></textarea>
+      </div>
+      <input type="hidden" id="completeTaskId">
+      <input type="hidden" id="completeTaskType">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('completeTaskModal')">Cancel</button>
+      <button class="btn btn-success btn-sm" onclick="confirmCompleteTask()">Mark Complete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Board Modal (unified: settings + access) -->
+<div class="modal-overlay" id="addBoardModal">
+  <div class="modal modal-md">
+    <div class="modal-header">
+      <h3 id="addBoardModalTitle">New Board</h3>
+      <button class="modal-close" onclick="closeModal('addBoardModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editBoardId">
+
+      <!-- Tab nav -->
+      <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px">
+        <button id="boardTabSettingsBtn" onclick="switchBoardTab('settings')" style="padding:8px 18px;background:none;border:none;border-bottom:2px solid var(--brand);margin-bottom:-2px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:var(--brand);cursor:pointer">⚙ Settings</button>
+        <button id="boardTabAccessBtn" onclick="switchBoardTab('access')" style="padding:8px 18px;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer">🔒 Access</button>
+      </div>
+
+      <!-- Settings tab -->
+      <div id="boardTabSettings">
+        <div class="form-group">
+          <label>Board Name *</label>
+          <input type="text" id="boardName" placeholder="e.g. Staff Rota, Incidents…">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" id="boardDesc" placeholder="Optional short description">
+        </div>
+        <div class="form-group">
+          <label>Color</label>
+          <div class="color-options" id="boardColorPicker">
+            <div class="color-swatch selected" data-color="#1446a0" style="background:#1446a0" onclick="selectBoardColor(this)"></div>
+            <div class="color-swatch" data-color="#7b2d8b" style="background:#7b2d8b" onclick="selectBoardColor(this)"></div>
+            <div class="color-swatch" data-color="#27ae60" style="background:#27ae60" onclick="selectBoardColor(this)"></div>
+            <div class="color-swatch" data-color="#e67e22" style="background:#e67e22" onclick="selectBoardColor(this)"></div>
+            <div class="color-swatch" data-color="#c0392b" style="background:#c0392b" onclick="selectBoardColor(this)"></div>
+            <div class="color-swatch" data-color="#2980b9" style="background:#2980b9" onclick="selectBoardColor(this)"></div>
+            <div class="color-swatch" data-color="#16a085" style="background:#16a085" onclick="selectBoardColor(this)"></div>
+            <div class="color-swatch" data-color="#8e44ad" style="background:#8e44ad" onclick="selectBoardColor(this)"></div>
+          </div>
+        </div>
+        <div id="boardDeleteSection" style="display:none;margin-top:8px;padding-top:14px;border-top:1px solid var(--border)">
+          <button class="btn btn-danger btn-sm" onclick="triggerDeleteBoard()">🗑 Delete This Board</button>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Permanently deletes the board. Lists and tasks will be archived.</div>
+        </div>
+      </div>
+
+      <!-- Access tab -->
+      <div id="boardTabAccess" style="display:none">
+        <div class="access-mode-btns">
+          <button class="access-mode-btn selected" id="accessModeOpen"   onclick="setAccessMode('open')">🌐 Open to all</button>
+          <button class="access-mode-btn"           id="accessModeInclude" onclick="setAccessMode('include')">✅ Include only</button>
+          <button class="access-mode-btn"           id="accessModeExclude" onclick="setAccessMode('exclude')">🚫 Exclude</button>
+        </div>
+
+        <!-- Open -->
+        <div id="accessPanelOpen" class="access-hint">
+          Everyone with access to this app can see this board. Admins always have full access.
+        </div>
+
+        <!-- Include -->
+        <div id="accessPanelInclude" style="display:none">
+          <div class="form-group" style="margin-bottom:6px">
+            <label>Only allow these people</label>
+            <div class="people-picker" id="accessIncludePicker" onclick="pickerFocus('accessIncludePicker')">
+              <input class="picker-input-field" id="accessIncludeInput" placeholder="Type a staff name…" autocomplete="off"
+                oninput="pickerSearch('accessIncludePicker','accessIncludeInput','accessIncludeDropdown')"
+                onkeydown="pickerKeydown(event,'accessIncludePicker','accessIncludeInput','accessIncludeDropdown')"
+                onblur="pickerBlur('accessIncludeDropdown')">
+              <div class="picker-dropdown" id="accessIncludeDropdown"></div>
+            </div>
+          </div>
+          <div class="access-hint">Only the staff you add here can access this board. Everyone else is blocked (admins are always allowed).</div>
+        </div>
+
+        <!-- Exclude -->
+        <div id="accessPanelExclude" style="display:none">
+          <div class="form-group" style="margin-bottom:6px">
+            <label>Block these people</label>
+            <div class="people-picker" id="accessExcludePicker" onclick="pickerFocus('accessExcludePicker')">
+              <input class="picker-input-field" id="accessExcludeInput" placeholder="Type a staff name…" autocomplete="off"
+                oninput="pickerSearch('accessExcludePicker','accessExcludeInput','accessExcludeDropdown')"
+                onkeydown="pickerKeydown(event,'accessExcludePicker','accessExcludeInput','accessExcludeDropdown')"
+                onblur="pickerBlur('accessExcludeDropdown')">
+              <div class="picker-dropdown" id="accessExcludeDropdown"></div>
+            </div>
+          </div>
+          <div class="access-hint">Everyone can access this board <strong>except</strong> the staff you add here. Admins are always allowed.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('addBoardModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="saveBoardBtn" onclick="saveBoard()">Create Board</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add List Modal (custom boards) -->
+<div class="modal-overlay" id="addListModal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3>New List</h3>
+      <button class="modal-close" onclick="closeModal('addListModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="addListBoardId">
+      <div class="form-group">
+        <label>List Name *</label>
+        <input type="text" id="listName" placeholder="e.g. To Do, In Progress…">
+      </div>
+      <div class="form-group">
+        <label>Color</label>
+        <div class="color-options" id="listColorPicker">
+          <div class="color-swatch selected" data-color="#1446a0" style="background:#1446a0" onclick="selectListColor(this)"></div>
+          <div class="color-swatch" data-color="#7b2d8b" style="background:#7b2d8b" onclick="selectListColor(this)"></div>
+          <div class="color-swatch" data-color="#27ae60" style="background:#27ae60" onclick="selectListColor(this)"></div>
+          <div class="color-swatch" data-color="#e67e22" style="background:#e67e22" onclick="selectListColor(this)"></div>
+          <div class="color-swatch" data-color="#c0392b" style="background:#c0392b" onclick="selectListColor(this)"></div>
+          <div class="color-swatch" data-color="#2980b9" style="background:#2980b9" onclick="selectListColor(this)"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('addListModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveList()">Add List</button>
+    </div>
+  </div>
+</div>
+
+<!-- Board Access Modal removed — now unified into addBoardModal -->
+
+<!-- Confirm Delete Modal -->
+<div class="modal-overlay" id="confirmDeleteModal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3>Confirm Delete</h3>
+      <button class="modal-close" onclick="closeModal('confirmDeleteModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p id="confirmDeleteMsg" style="font-size:13px">Are you sure you want to delete this item?</p>
+      <input type="hidden" id="confirmDeleteId">
+      <input type="hidden" id="confirmDeleteType">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('confirmDeleteModal')">Cancel</button>
+      <button class="btn btn-danger btn-sm" onclick="executeDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     FIREBASE + LOGIC
+══════════════════════════════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+  query, where, orderBy, serverTimestamp, onSnapshot, writeBatch }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCwHzZFibrc9SNP8vAV6Jr_NmQr4fVCEto",
+  authDomain: "connected-stars-handover.firebaseapp.com",
+  projectId: "connected-stars-handover",
+  storageBucket: "connected-stars-handover.firebasestorage.app",
+  messagingSenderId: "606134396217",
+  appId: "1:606134396217:web:6636e2fbe9b73b7723b4e8"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ── STATE ──
+let currentUser = null;
+let currentStaffProfile = null;
+let unitsCache = [];
+let serviceUsersCache = []; // all active SUs
+let staffCache = [];         // all staff profiles
+let customBoardsCache = [];
+let currentBoard = null;     // { type:'unit'|'custom', id, name, unitId?, color }
+let currentListeners = [];   // active Firestore unsubscribes
+let selectedBoardColor = '#1446a0';
+let selectedListColor = '#1446a0';
+// In-memory task cache per list — key = listId, value = { tasks[], taskType, unitId, serviceUserId }
+let listTaskCache = {};
+
+// ── WINDOW BINDINGS ──
+window.handleLogin = handleLogin;
+window.handleLogout = handleLogout;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.openSidebar = openSidebar;
+window.closeSidebar = closeSidebar;
+window.toggleNotifPanel = toggleNotifPanel;
+window.markAllNotifsRead = markAllNotifsRead;
+window.selectBoardColor = selectBoardColor;
+window.selectListColor = selectListColor;
+window.saveBoard = saveBoard;
+window.saveList = saveList;
+window.saveTask = saveTask;
+window.saveEditTask = saveEditTask;
+window.updateTaskRecurrenceUI = updateTaskRecurrenceUI;
+window.openBoardAdmin = openBoardAdmin;
+window.saveBoardAccess = saveBoardAccess;
+window.confirmCompleteTask = confirmCompleteTask;
+window.executeDelete = executeDelete;
+window.openAddTaskModal = openAddTaskModal;
+window.openTaskDetail = openTaskDetail;
+window.openEditTask = openEditTask;
+window.openCompleteTask = openCompleteTask;
+window.openDeleteConfirm = openDeleteConfirm;
+window.reopenTask = reopenTask;
+window.addComment = addComment;
+window.deleteComment = deleteComment;
+window.openAddListModal = openAddListModal;
+window.deleteList = deleteList;
+window.editBoard = editBoard;
+window.deleteBoard = deleteBoard;
+window.loadUnitBoard = loadUnitBoard;
+window.loadCustomBoard = loadCustomBoard;
+window.refreshBoard = refreshBoard;
+
+async function refreshBoard() {
+  const btn = document.getElementById('refreshBtn');
+  if (!btn || btn.classList.contains('spinning')) return;
+  btn.classList.add('spinning');
+  try {
+    // Re-load sidebar data (units + custom boards may have changed)
+    await Promise.all([loadUnits(), loadStaffList(), loadCustomBoards()]);
+    renderSidebar();
+    // Re-load current board if one is open
+    if (currentBoard) {
+      if (currentBoard.type === 'unit') await loadUnitBoard(currentBoard.unitId, currentBoard.name);
+      else await loadCustomBoard(currentBoard.id);
+    }
+    showToast('Refreshed', 'success');
+  } catch(e) {
+    showToast('Could not refresh', 'error');
+  } finally {
+    setTimeout(() => btn.classList.remove('spinning'), 500);
+  }
+}
+window.toggleCompleted = toggleCompleted;
+window.applyFilters = applyFilters;
+window.clearFilters = clearFilters;
+window.showListMenu = showListMenu;
+window.pickerSearch = pickerSearch;
+window.pickerKeydown = pickerKeydown;
+window.pickerBlur = pickerBlur;
+window.pickerFocus = pickerFocus;
+window.pickerSelect = pickerSelect;
+window.pickerRemove = pickerRemove;
+window.setAccessMode = setAccessMode;
+
+// ── PEOPLE PICKER ENGINE ──
+// Each picker stores its selected items in this map keyed by pickerId
+const pickerState = {}; // { pickerId: [ { uid, name, initials, role } ] }
+
+function pickerInit(pickerId) {
+  if (!pickerState[pickerId]) pickerState[pickerId] = [];
+}
+
+function pickerGetContainer(pickerId) {
+  return document.getElementById(pickerId);
+}
+
+function pickerRenderChips(pickerId) {
+  const container = pickerGetContainer(pickerId);
+  if (!container) return;
+  // Remove existing chips only
+  container.querySelectorAll('.picker-chip').forEach(c => c.remove());
+  const input = container.querySelector('.picker-input-field');
+  const dropdown = container.querySelector('.picker-dropdown');
+  const selected = pickerState[pickerId] || [];
+  selected.forEach((s, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'picker-chip';
+    chip.innerHTML = `<div class="picker-chip-av">${(s.initials||'??').slice(0,2).toUpperCase()}</div>${esc(s.name||s.initials||'?')}<button class="picker-chip-remove" type="button" onclick="pickerRemove('${pickerId}',${i})">×</button>`;
+    container.insertBefore(chip, input);
+  });
+}
+
+function pickerSearch(pickerId, inputId, dropdownId) {
+  const input = document.getElementById(inputId);
+  const dropdown = document.getElementById(dropdownId);
+  if (!input || !dropdown) return;
+  const q = (input.value || '').toLowerCase().trim();
+  const selected = pickerState[pickerId] || [];
+  const selectedUids = new Set(selected.map(s => s.uid));
+
+  const matches = staffCache.filter(s => {
+    const uid = s.id || s.uid || '';
+    if (selectedUids.has(uid)) return false;
+    if (!q) return true;
+    return (s.name||'').toLowerCase().includes(q) || (s.initials||'').toLowerCase().includes(q);
+  });
+
+  if (!matches.length) {
+    dropdown.innerHTML = `<div class="picker-empty">No staff found${q ? ` for "${q}"` : ''}</div>`;
+  } else {
+    dropdown.innerHTML = matches.map((s,i) => {
+      const uid = s.id || s.uid || '';
+      return `<div class="picker-option" data-uid="${uid}" data-i="${i}"
+        onmousedown="pickerSelect('${pickerId}','${uid}','${inputId}','${dropdownId}')">
+        <div class="picker-option-av">${(s.initials||'??').slice(0,2).toUpperCase()}</div>
+        <span class="picker-option-name">${esc(s.name||'Unknown')}</span>
+        <span class="picker-option-role">${esc(s.role||'')}</span>
+      </div>`;
+    }).join('');
+  }
+  dropdown.style.display = 'block';
+}
+
+function pickerSelect(pickerId, uid, inputId, dropdownId) {
+  pickerInit(pickerId);
+  const staff = staffCache.find(s => (s.id||s.uid) === uid);
+  if (!staff) return;
+  const already = pickerState[pickerId].some(s => s.uid === uid);
+  if (!already) {
+    pickerState[pickerId].push({ uid, name: staff.name||'', initials: staff.initials||'??', role: staff.role||'' });
+  }
+  const input = document.getElementById(inputId);
+  const dropdown = document.getElementById(dropdownId);
+  if (input) { input.value = ''; input.focus(); }
+  if (dropdown) dropdown.style.display = 'none';
+  pickerRenderChips(pickerId);
+}
+
+function pickerRemove(pickerId, index) {
+  pickerInit(pickerId);
+  pickerState[pickerId].splice(index, 1);
+  pickerRenderChips(pickerId);
+}
+
+function pickerBlur(dropdownId) {
+  // Slight delay so mousedown on option fires before blur hides dropdown
+  setTimeout(() => {
+    const d = document.getElementById(dropdownId);
+    if (d) d.style.display = 'none';
+  }, 160);
+}
+
+function pickerFocus(pickerId) {
+  const container = pickerGetContainer(pickerId);
+  if (container) container.querySelector('.picker-input-field')?.focus();
+}
+
+function pickerKeydown(e, pickerId, inputId, dropdownId) {
+  if (e.key === 'Escape') {
+    const d = document.getElementById(dropdownId);
+    if (d) d.style.display = 'none';
+  }
+}
+
+function pickerGetValues(pickerId) {
+  return (pickerState[pickerId] || []).map(s => s.uid);
+}
+
+function pickerGetInitials(pickerId) {
+  return (pickerState[pickerId] || []).map(s => s.initials);
+}
+
+function pickerSetByUids(pickerId, uids) {
+  pickerInit(pickerId);
+  pickerState[pickerId] = (uids||[]).map(uid => {
+    const s = staffCache.find(x => (x.id||x.uid) === uid);
+    return s ? { uid, name:s.name||'', initials:s.initials||'??', role:s.role||'' } : null;
+  }).filter(Boolean);
+  pickerRenderChips(pickerId);
+}
+
+function pickerSetByInitials(pickerId, initials) {
+  pickerInit(pickerId);
+  pickerState[pickerId] = (initials||[]).map(ini => {
+    const s = staffCache.find(x => x.initials === ini);
+    const uid = s ? (s.id||s.uid||ini) : ini;
+    return s ? { uid, name:s.name||ini, initials:ini, role:s.role||'' } : { uid:ini, name:ini, initials:ini, role:'' };
+  }).filter(Boolean);
+  pickerRenderChips(pickerId);
+}
+
+function pickerClear(pickerId) {
+  pickerState[pickerId] = [];
+  const input = document.getElementById(pickerId)?.querySelector('.picker-input-field');
+  if (input) input.value = '';
+  pickerRenderChips(pickerId);
+}
+
+// ── ACCESS MODE ──
+let currentAccessMode = 'open'; // 'open' | 'include' | 'exclude'
+
+function setAccessMode(mode) {
+  currentAccessMode = mode;
+  ['open','include','exclude'].forEach(m => {
+    document.getElementById('accessMode' + m.charAt(0).toUpperCase() + m.slice(1))
+      ?.classList.toggle('selected', m === mode);
+    document.getElementById('accessPanel' + m.charAt(0).toUpperCase() + m.slice(1))
+      ?.style.setProperty('display', m === mode ? '' : 'none');
+  });
+}
+
+// ── AUTH ──
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    await loadStaffProfile(user.uid);
+    await initApp();
+  } else {
+    showLogin();
+  }
+});
+
+async function loadStaffProfile(uid) {
+  try {
+    const snap = await getDoc(doc(db, 'staffProfiles', uid));
+    currentStaffProfile = snap.exists()
+      ? { id: snap.id, uid, ...snap.data() }
+      : { uid, name: currentUser.email, initials: '??', role: 'support' };
+  } catch(e) {
+    currentStaffProfile = { uid: currentUser.uid, name: currentUser.email, initials: '??', role: 'support' };
+  }
+}
+
+async function handleLogin() {
+  const raw = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pw  = document.getElementById('loginPassword').value;
+  const err = document.getElementById('loginError');
+  err.style.display = 'none';
+  if (!raw || !pw) { err.textContent='Please enter your username and password.'; err.style.display='block'; return; }
+  const email = raw.includes('@') ? raw : raw + '@connectedstars.co.uk';
+  try { await signInWithEmailAndPassword(auth, email, pw); }
+  catch(e) { err.textContent='Invalid username or password.'; err.style.display='block'; }
+}
+
+async function handleLogout() { await signOut(auth); }
+
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+async function initApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  const { name='', initials='??', role='support' } = currentStaffProfile;
+  document.getElementById('sbUserAv').textContent = initials;
+  document.getElementById('sbUserName').textContent = name;
+  document.getElementById('sbUserRole').textContent = role.charAt(0).toUpperCase() + role.slice(1);
+  if (role === 'admin' || role === 'superadmin') {
+    document.getElementById('sbAddBoardBtn').style.display = 'block';
+  }
+  await Promise.all([loadUnits(), loadStaffList(), loadCustomBoards()]);
+  renderSidebar();
+  subscribeNotifications();
+}
+
+// ── DATA LOADING ──
+async function loadUnits() {
+  const snap = await getDocs(query(collection(db,'units'), where('status','==','active')));
+  unitsCache = snap.docs.map(d => ({ id:d.id, ...d.data() })).sort((a,b) => a.name.localeCompare(b.name));
+  const snap2 = await getDocs(query(collection(db,'serviceUsers'), where('status','==','active')));
+  serviceUsersCache = snap2.docs.map(d => ({ id:d.id, ...d.data() }));
+}
+
+async function loadStaffList() {
+  try {
+    const snap = await getDocs(collection(db,'staffProfiles'));
+    staffCache = snap.docs.map(d => ({ id:d.id, ...d.data() })).sort((a,b) => (a.name||'').localeCompare(b.name||''));
+  } catch(e) { staffCache = []; }
+}
+
+async function loadCustomBoards() {
+  try {
+    const snap = await getDocs(query(collection(db,'taskBoards'), where('status','==','active')));
+    customBoardsCache = snap.docs.map(d => ({ id:d.id, ...d.data() }))
+      .sort((a,b) => {
+        const aT = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const bT = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return aT - bT;
+      });
+    // Filter by access if not admin
+    const role = currentStaffProfile?.role;
+    if (role !== 'admin' && role !== 'superadmin') {
+      const uid = currentStaffProfile?.uid || currentStaffProfile?.id || '';
+      customBoardsCache = customBoardsCache.filter(b => {
+        const mode = b.accessMode || 'open';
+        if (mode === 'open') return true;
+        if (mode === 'include') return (b.accessList||[]).includes(uid);
+        if (mode === 'exclude') return !(b.excludeList||[]).includes(uid);
+        return true;
+      });
+    }
+  } catch(e) { console.error('loadCustomBoards error:', e); customBoardsCache = []; }
+}
+
+// ── SIDEBAR RENDER ──
+function renderSidebar() {
+  const unitEl = document.getElementById('sbUnitBoards');
+  const custEl = document.getElementById('sbCustomBoards');
+
+  if (!unitsCache.length) {
+    unitEl.innerHTML = '<div style="padding:8px;color:var(--text-muted);font-size:12px">No units found.</div>';
+  } else {
+    unitEl.innerHTML = unitsCache.map(u => {
+      const suCount = serviceUsersCache.filter(s => s.currentUnitId === u.id).length;
+      const isActive = currentBoard?.type === 'unit' && currentBoard?.unitId === u.id;
+      return `<div class="sb-board-item ${isActive?'active':''}" onclick="loadUnitBoard('${u.id}','${esc(u.name)}')">
+        <div class="sb-board-dot" style="background:#1446a0"></div>
+        <span class="sb-board-name">${esc(u.name)}</span>
+        <span class="sb-board-badge">${suCount + 1}</span>
+      </div>`;
+    }).join('');
+  }
+
+  if (!customBoardsCache.length) {
+    custEl.innerHTML = '<div style="padding:8px;color:var(--text-muted);font-size:12px">No custom boards.</div>';
+  } else {
+    custEl.innerHTML = customBoardsCache.map(b => {
+      const isActive = currentBoard?.type === 'custom' && currentBoard?.id === b.id;
+      return `<div class="sb-board-item ${isActive?'active':''}" onclick="loadCustomBoard('${b.id}')">
+        <div class="sb-board-dot" style="background:${b.color||'#1446a0'}"></div>
+        <span class="sb-board-name">${esc(b.name)}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ── UNIT BOARD ──
+async function loadUnitBoard(unitId, unitName) {
+  clearListeners();
+  currentBoard = { type:'unit', unitId, name: unitName, id: 'unit_'+unitId };
+  renderSidebar();
+  document.getElementById('topbarTitle').textContent = unitName + ' — Task Board';
+
+  const isAdmin = ['admin','superadmin'].includes(currentStaffProfile?.role);
+  document.getElementById('adminBoardBtn').style.display = isAdmin ? 'block' : 'none';
+
+  const yps = serviceUsersCache.filter(s => s.currentUnitId === unitId)
+    .sort((a,b) => (a.name||'').localeCompare(b.name||''));
+
+  const lists = [
+    { id: 'unit_'+unitId, type:'unit', unitId, name:'Unit Tasks', color:'#1446a0' },
+    ...yps.map(yp => ({ id:'yp_'+yp.id, type:'yp', unitId, serviceUserId:yp.id, name:yp.name, color:'#7b2d8b' }))
+  ];
+
+  renderBoardFrame(lists, false);
+  lists.forEach(list => subscribeAdhocTasks(list));
+}
+
+function renderBoardFrame(lists, isCustom) {
+  const content = document.getElementById('boardContent');
+  const isAdmin = ['admin','superadmin'].includes(currentStaffProfile?.role);
+
+  let filterHtml = `
+    <div class="filter-bar">
+      <label>Filter:</label>
+      <select id="filterPriority" onchange="applyFilters()">
+        <option value="">All Priorities</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+      <select id="filterAssignee" onchange="applyFilters()">
+        <option value="">All Assignees</option>
+        ${staffCache.map(s=>`<option value="${s.initials}">${esc(s.name)}</option>`).join('')}
+      </select>
+      <input type="text" id="filterSearch" placeholder="Search tasks…" oninput="applyFilters()">
+      <button class="filter-clear" onclick="clearFilters()">Clear</button>
+    </div>`;
+
+  let addListBtn = isCustom && isAdmin
+    ? `<button class="btn btn-secondary btn-sm" onclick="openAddListModal('${currentBoard.id}')">+ Add List</button>` : '';
+
+  let editBoardBtn = isCustom && isAdmin
+    ? `<button class="btn btn-ghost btn-sm" onclick="editBoard('${currentBoard.id}')">Edit Board</button>` : '';
+
+  content.innerHTML = `
+    <div class="board-header">
+      <div class="board-header-left">
+        <h2>${esc(currentBoard.name)}</h2>
+        <p id="boardSubtitle">${isCustom ? (currentBoard.description||'') : 'Unit task board — linked to CS Handover'}</p>
+      </div>
+      <div class="board-header-right">
+        ${editBoardBtn}
+        ${addListBtn}
+      </div>
+    </div>
+    ${filterHtml}
+    <div class="lists-container" id="listsContainer">
+      ${lists.map(l => renderListColumn(l, isCustom)).join('')}
+    </div>`;
+}
+
+function renderListColumn(list, isCustom) {
+  const isAdmin = ['admin','superadmin'].includes(currentStaffProfile?.role);
+  const colorDot = list.color || '#1446a0';
+  const listMenuBtn = isCustom && isAdmin
+    ? `<button class="list-menu-btn" onclick="event.stopPropagation();showListMenu('${list.id}',this)" title="List options">⋯</button>` : '';
+
+  return `<div class="list-col" id="listCol_${list.id}">
+    <div class="list-header">
+      <div class="list-color-dot" style="background:${colorDot}"></div>
+      <div class="list-title">${esc(list.name)}</div>
+      <span class="list-count" id="listCount_${list.id}">0</span>
+      ${listMenuBtn}
+    </div>
+    <div class="list-body" id="listBody_${list.id}">
+      <div class="list-empty" id="listEmpty_${list.id}">No active tasks</div>
+    </div>
+    <div style="padding:0 8px 8px">
+      <button class="list-add-btn" onclick="openAddTaskModal('${list.id}','${list.type}','${list.unitId||''}','${list.serviceUserId||''}','${esc(list.name)}')">
+        + Add task
+      </button>
+      <button class="completed-toggle" id="compToggle_${list.id}" onclick="toggleCompleted('${list.id}')">
+        <span class="arrow">▶</span> Completed (<span id="compCount_${list.id}">0</span>)
+      </button>
+      <div class="completed-list" id="compList_${list.id}"></div>
+    </div>
+  </div>`;
+}
+
+// ── ADHOC TASK SUBSCRIPTION (unit & YP lists) ──
+function subscribeAdhocTasks(list) {
+  let q;
+  if (list.type === 'unit') {
+    q = query(collection(db,'adhocTasks'), where('unitId','==',list.unitId), where('scope','==','unit'), where('status','==','active'));
+  } else {
+    q = query(collection(db,'adhocTasks'), where('serviceUserId','==',list.serviceUserId), where('status','==','active'));
+  }
+
+  const unsub = onSnapshot(q, snap => {
+    const tasks = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    // Store in cache
+    listTaskCache[list.id] = { tasks, taskType:'adhoc', unitId:list.unitId||null, serviceUserId:list.serviceUserId||null };
+    renderTasksInList(list.id);
+  }, err => console.error('adhoc listener error', err));
+
+  currentListeners.push(unsub);
+}
+
+// ── CUSTOM BOARD ──
+async function loadCustomBoard(boardId) {
+  clearListeners();
+  const board = customBoardsCache.find(b => b.id === boardId);
+  if (!board) return;
+  currentBoard = { type:'custom', id:boardId, name:board.name, color:board.color||'#1446a0', description:board.description||'' };
+  renderSidebar();
+  document.getElementById('topbarTitle').textContent = board.name;
+
+  const isAdmin = ['admin','superadmin'].includes(currentStaffProfile?.role);
+  document.getElementById('adminBoardBtn').style.display = isAdmin ? 'block' : 'none';
+
+  // Load lists — sort client-side to avoid needing a composite Firestore index
+  const snap = await getDocs(query(collection(db,'taskLists'), where('boardId','==',boardId), where('status','==','active')));
+  const lists = snap.docs.map(d => ({ id:d.id, ...d.data() })).sort((a,b) => (a.order||0) - (b.order||0));
+
+  renderBoardFrame(lists, true);
+  lists.forEach(list => subscribeCustomListTasks(list));
+}
+
+function subscribeCustomListTasks(list) {
+  const q = query(collection(db,'taskBoardCards'), where('listId','==',list.id), where('status','==','active'));
+  const unsub = onSnapshot(q, snap => {
+    const tasks = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    // Store in cache
+    listTaskCache[list.id] = { tasks, taskType:'card', unitId:list.unitId||null, serviceUserId:list.serviceUserId||null };
+    renderTasksInList(list.id);
+  });
+  currentListeners.push(unsub);
+}
+
+// ── RENDER TASKS IN LIST ──
+// Reads from listTaskCache[listId] and applies current filter values
+function renderTasksInList(listId) {
+  const cached = listTaskCache[listId];
+  if (!cached) return;
+  const { tasks, taskType } = cached;
+
+  const body    = document.getElementById('listBody_'   + listId);
+  const empty   = document.getElementById('listEmpty_'  + listId);
+  const countEl = document.getElementById('listCount_'  + listId);
+  const compList= document.getElementById('compList_'   + listId);
+  const compCount=document.getElementById('compCount_'  + listId);
+  if (!body) return;
+
+  // Read current filter values (safe — elements may not exist yet)
+  const filterPriority = document.getElementById('filterPriority')?.value || '';
+  const filterAssignee = document.getElementById('filterAssignee')?.value || '';
+  const filterSearch   = (document.getElementById('filterSearch')?.value || '').toLowerCase().trim();
+
+  const active = tasks.filter(t => {
+    if (t.completed) return false;
+    if (filterPriority && t.priority !== filterPriority) return false;
+    if (filterAssignee) {
+      const assignees = Array.isArray(t.assignees) ? t.assignees : (t.addedBy ? [t.addedBy] : []);
+      if (!assignees.includes(filterAssignee)) return false;
+    }
+    if (filterSearch && !(t.title||'').toLowerCase().includes(filterSearch)) return false;
+    return isTaskVisible(t);
+  });
+
+  const completed = tasks.filter(t => t.completed);
+
+  countEl.textContent  = active.length;
+  compCount.textContent= completed.length;
+  empty.style.display  = active.length ? 'none' : 'block';
+
+  // Remove old active cards, keep the empty placeholder
+  body.querySelectorAll('.task-card').forEach(el => el.remove());
+
+  active
+    .sort((a,b) => { const o={high:0,medium:1,low:2}; return (o[a.priority]??1)-(o[b.priority]??1); })
+    .forEach(task => body.insertBefore(buildTaskCard(task, taskType, false), empty));
+
+  // Completed section
+  compList.innerHTML = '';
+  completed.forEach(task => compList.appendChild(buildTaskCard(task, taskType, true)));
+}
+
+function isTaskVisible(task) {
+  // For adhoc tasks: check if applicable today or active for range/recurring
+  if (!task.recurrence) return true; // custom card
+  const today = new Date().toISOString().slice(0,10);
+  const todayDay = new Date().getDay();
+  switch(task.recurrence) {
+    case 'today': return task.targetDate === today;
+    case 'tomorrow': return task.targetDate === today;
+    case 'once': return true; // persist until completed or deleted regardless of date
+    case 'range': return (!task.fromDate || task.fromDate <= today) && (!task.toDate || task.toDate >= today);
+    case 'recurring': {
+      const days = task.recurDays || [];
+      const inRange = (!task.recurFrom || task.recurFrom <= today) && (!task.recurTo || task.recurTo >= today);
+      return inRange && days.includes(todayDay);
+    }
+    default: return true;
+  }
+}
+
+function buildTaskCard(task, taskType, isCompleted) {
+  const el = document.createElement('div');
+  el.className = `task-card${isCompleted?' completed-card':''} priority-${task.priority||'medium'}`;
+  el.dataset.taskId = task.id;
+  el.dataset.taskType = taskType;
+
+  const dueStr = task.dueDate || task.targetDate || '';
+  const today = new Date().toISOString().slice(0,10);
+  const isOverdue = dueStr && dueStr < today && !isCompleted;
+
+  const assignees = task.assignees || (task.addedBy ? [task.addedBy] : []);
+  const assigneeHtml = assignees.slice(0,3).map(a =>
+    `<div class="task-assignee-av" title="${a}">${a.slice(0,2).toUpperCase()}</div>`
+  ).join('');
+
+  const ypName = task.serviceUserId ? (serviceUsersCache.find(s=>s.id===task.serviceUserId)?.name||'') : '';
+
+  el.innerHTML = `
+    <div class="task-check-row">
+      <div class="task-check ${isCompleted?'checked':''}" onclick="event.stopPropagation();${isCompleted?`reopenTask('${task.id}','${taskType}')`:`openCompleteTask('${task.id}','${taskType}')`}" title="${isCompleted?'Reopen':'Complete'}">
+        ${isCompleted?'✓':''}
+      </div>
+      <div class="task-title" onclick="openTaskDetail('${task.id}','${taskType}')">${esc(task.title||'Untitled')}</div>
+    </div>
+    <div class="task-meta" style="margin-top:6px">
+      ${task.priority ? `<span class="tag tag-priority-${task.priority}">${task.priority}</span>` : ''}
+      ${ypName ? `<span class="tag tag-yp">${esc(ypName)}</span>` : ''}
+      ${dueStr ? `<span class="task-due ${isOverdue?'overdue':''}">${isOverdue?'⚠ ':''}${dueStr}</span>` : ''}
+      <div class="task-assignees">${assigneeHtml}</div>
+    </div>`;
+
+  el.onclick = (e) => {
+    if (e.target.classList.contains('task-check') || e.target.closest('.task-check')) return;
+    openTaskDetail(task.id, taskType);
+  };
+  return el;
+}
+
+// ── TASK DETAIL MODAL ──
+async function openTaskDetail(taskId, taskType) {
+  const task = await fetchTask(taskId, taskType);
+  if (!task) return;
+
+  const isAdmin = ['admin','superadmin'].includes(currentStaffProfile?.role);
+  const isOwner = task.addedBy === currentStaffProfile?.initials;
+  const canEdit = isAdmin || isOwner;
+
+  document.getElementById('detailModalHeading').textContent = task.title || 'Task';
+
+  const dueStr = task.dueDate || task.targetDate || '';
+  const today = new Date().toISOString().slice(0,10);
+  const isOverdue = dueStr && dueStr < today && !task.completed;
+
+  const ypName = task.serviceUserId ? (serviceUsersCache.find(s=>s.id===task.serviceUserId)?.name||'') : '';
+  const unitName = task.unitId ? (unitsCache.find(u=>u.id===task.unitId)?.name||'') : '';
+  const assignees = task.assignees || (task.addedBy ? [task.addedBy] : []);
+
+  // Fetch comments — sort client-side to avoid needing a composite index
+  const commentsSnap = await getDocs(query(collection(db,'taskComments'), where('taskId','==',taskId)));
+  const comments = commentsSnap.docs.map(d => ({id:d.id,...d.data()}))
+    .sort((a,b) => {
+      const aT = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+      const bT = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+      return aT - bT;
+    });
+
+  const commentsHtml = comments.map(c => {
+    const canDel = c.addedBy === currentStaffProfile?.initials || isAdmin;
+    return `<div class="comment-item">
+      <div class="comment-av">${(c.addedBy||'??').slice(0,2).toUpperCase()}</div>
+      <div class="comment-bubble">
+        <div class="comment-meta">
+          <span class="comment-author">${esc(c.addedByName||c.addedBy||'Unknown')}</span>
+          <span>${formatTs(c.createdAt)}${canDel?` <button class="comment-del" onclick="deleteComment('${c.id}','${taskId}','${taskType}')">✕</button>`:''}</span>
+        </div>
+        <div class="comment-text">${esc(c.text)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const initials = currentStaffProfile?.initials || '??';
+  document.getElementById('taskDetailContent').innerHTML = `
+    <div class="task-detail-main">
+      <div class="task-detail-title">${esc(task.title||'Untitled')}</div>
+      ${task.description ? `<div class="task-detail-desc">${esc(task.description)}</div>` : ''}
+      ${task.completed ? `<div style="margin-top:10px;padding:8px 12px;background:var(--success-bg);border-radius:8px;font-size:12px;color:var(--success)">
+        ✅ Completed by <strong>${task.completedByName||task.completedBy||'—'}</strong> on ${formatTs(task.completedAt)}
+        ${task.completionNote ? `<div style="margin-top:4px;color:var(--text-muted)">${esc(task.completionNote)}</div>` : ''}
+      </div>` : ''}
+      <div class="comments-section">
+        <h4>Comments (${comments.length})</h4>
+        <div id="detailComments">${commentsHtml || '<div style="color:var(--text-muted);font-size:12px">No comments yet.</div>'}</div>
+        <div class="comment-input-row" style="margin-top:12px">
+          <div class="comment-av">${initials.slice(0,2).toUpperCase()}</div>
+          <textarea id="newCommentText" placeholder="Add a comment…" rows="2"></textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px">
+          <button class="btn btn-primary btn-sm" onclick="addComment('${taskId}','${taskType}')">Post Comment</button>
+        </div>
+      </div>
+    </div>
+    <div class="task-detail-side">
+      <div class="detail-field">
+        <label>Priority</label>
+        <div class="detail-field-value"><span class="tag tag-priority-${task.priority||'medium'}">${task.priority||'medium'}</span></div>
+      </div>
+      ${dueStr ? `<div class="detail-field">
+        <label>Due Date</label>
+        <div class="detail-field-value ${isOverdue?'':''}"><span style="${isOverdue?'color:var(--alert-red)':''}">${dueStr}${isOverdue?' ⚠':''}</span></div>
+      </div>` : ''}
+      ${assignees.length ? `<div class="detail-field">
+        <label>Assigned To</label>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">${assignees.map(a=>`<span class="tag" style="background:var(--brand-light);color:var(--brand)">${a}</span>`).join('')}</div>
+      </div>` : ''}
+      ${ypName ? `<div class="detail-field"><label>Young Person</label><div class="detail-field-value"><span class="tag tag-yp">${esc(ypName)}</span></div></div>` : ''}
+      ${unitName ? `<div class="detail-field"><label>Unit</label><div class="detail-field-value"><span class="tag tag-unit">${esc(unitName)}</span></div></div>` : ''}
+      <div class="detail-field">
+        <label>Added By</label>
+        <div class="detail-field-value" style="font-size:12px">${esc(task.addedByName||task.addedBy||'—')}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${formatTs(task.createdAt)}</div>
+      </div>
+    </div>`;
+
+  const footerBtns = [];
+  if (!task.completed && canEdit) footerBtns.push(`<button class="btn btn-ghost btn-sm" onclick="openEditTask('${taskId}','${taskType}')">Edit</button>`);
+  if (!task.completed) footerBtns.push(`<button class="btn btn-success btn-sm" onclick="openCompleteTask('${taskId}','${taskType}')">Mark Complete</button>`);
+  if (task.completed) footerBtns.push(`<button class="btn btn-secondary btn-sm" onclick="reopenTask('${taskId}','${taskType}')">Reopen Task</button>`);
+  if (canEdit) footerBtns.push(`<button class="btn btn-danger btn-sm" onclick="openDeleteConfirm('${taskId}','${taskType}','task')">Delete</button>`);
+
+  document.getElementById('taskDetailFooter').innerHTML = `<button class="btn btn-ghost btn-sm" onclick="closeModal('taskDetailModal')">Close</button>${footerBtns.join('')}`;
+  openModal('taskDetailModal');
+}
+
+async function fetchTask(taskId, taskType) {
+  try {
+    const coll = taskType === 'adhoc' ? 'adhocTasks' : 'taskBoardCards';
+    const snap = await getDoc(doc(db, coll, taskId));
+    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  } catch(e) { return null; }
+}
+
+// ── ADD TASK ──
+let addTaskContext = {}; // { listId, listType, unitId, serviceUserId, listName }
+
+function openAddTaskModal(listId, listType, unitId, serviceUserId, listName) {
+  addTaskContext = { listId, listType, unitId, serviceUserId, listName };
+  document.getElementById('addTaskModalTitle').textContent = `Add Task — ${listName}`;
+  document.getElementById('taskTitle').value = '';
+  document.getElementById('taskDesc').value = '';
+  document.getElementById('taskPriority').value = 'medium';
+  document.getElementById('taskDue').value = '';
+  const mc = document.getElementById('taskMustComplete');
+  if (mc) mc.checked = false;
+
+  // Clear assignee picker
+  pickerClear('taskAssigneePicker');
+
+  // YP selector for custom boards
+  const ypGroup = document.getElementById('taskYPGroup');
+  if (listType === 'card') {
+    ypGroup.style.display = 'block';
+    const ypSel = document.getElementById('taskYP');
+    const ypsForUnit = unitId ? serviceUsersCache.filter(s => s.currentUnitId === unitId) : serviceUsersCache;
+    ypSel.innerHTML = '<option value="">None</option>' + ypsForUnit.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  } else {
+    ypGroup.style.display = 'none';
+  }
+
+  // Recurrence only for handover-linked (adhoc) tasks
+  const recGroup = document.getElementById('taskRecurrenceGroup');
+  recGroup.style.display = (listType === 'unit' || listType === 'yp') ? 'block' : 'none';
+  if (recGroup.style.display === 'block') {
+    document.getElementById('taskRecurrence').value = 'once';
+    updateTaskRecurrenceUI();
+  }
+
+  openModal('addTaskModal');
+}
+
+function updateTaskRecurrenceUI() {
+  const val = document.getElementById('taskRecurrence').value;
+  document.getElementById('taskRecurRangeGroup').style.display = val === 'range' ? 'grid' : 'none';
+  document.getElementById('taskRecurDaysGroup').style.display = val === 'recurring' ? 'block' : 'none';
+  document.getElementById('taskDue').closest('.form-group').style.display =
+    (val === 'once' || val === 'today' || val === 'tomorrow') ? 'block' : 'none';
+}
+
+async function saveTask() {
+  const title = document.getElementById('taskTitle').value.trim();
+  if (!title) { showToast('Please enter a task title','error'); return; }
+
+  const { listId, listType, unitId, serviceUserId } = addTaskContext;
+  const priority = document.getElementById('taskPriority').value;
+  const dueDate  = document.getElementById('taskDue').value;
+  const assignees = pickerGetInitials('taskAssigneePicker'); // store initials to match existing adhocTask schema
+  const desc = document.getElementById('taskDesc').value.trim();
+
+  const initials = currentStaffProfile?.initials || '??';
+  const name = currentStaffProfile?.name || '';
+
+  try {
+    if (listType === 'unit' || listType === 'yp') {
+      // Save as adhocTask
+      const recurrence = document.getElementById('taskRecurrence')?.value || 'once';
+      const today = new Date().toISOString().slice(0,10);
+      const tomorrow = new Date(Date.now()+86400000).toISOString().slice(0,10);
+
+      const data = {
+        title,
+        description: desc,
+        priority,
+        assignees,
+        addedBy: initials,
+        addedByName: name,
+        recurrence,
+        completed: false,
+        status: 'active',
+        createdAt: serverTimestamp(),
+      };
+
+      if (listType === 'unit') { data.unitId = unitId; data.scope = 'unit'; }
+      else { data.serviceUserId = serviceUserId; data.unitId = unitId; }
+
+      if (recurrence === 'today') data.targetDate = today;
+      else if (recurrence === 'tomorrow') data.targetDate = tomorrow;
+      else if (recurrence === 'once') data.targetDate = dueDate || today;
+      else if (recurrence === 'range') {
+        data.fromDate = document.getElementById('taskRecurFrom').value;
+        data.toDate = document.getElementById('taskRecurTo').value;
+      } else if (recurrence === 'recurring') {
+        data.recurDays = Array.from(document.querySelectorAll('.recurDay:checked')).map(c => parseInt(c.value));
+        data.recurFrom = document.getElementById('taskRecurStart').value;
+        data.recurTo = document.getElementById('taskRecurEnd').value;
+      }
+
+      if (dueDate && (recurrence === 'once' || recurrence === 'today' || recurrence === 'tomorrow')) data.dueDate = dueDate;
+      if (document.getElementById('taskMustComplete')?.checked) data.mustComplete = true;
+
+      const ref = await addDoc(collection(db,'adhocTasks'), data);
+      await sendNotification(assignees, `New task assigned: ${title}`, `Added by ${name}`);
+    } else {
+      // Save as taskBoardCard
+      const ypId = document.getElementById('taskYP')?.value || '';
+      const data = {
+        listId,
+        boardId: currentBoard.id,
+        title,
+        description: desc,
+        priority,
+        assignees,
+        dueDate,
+        serviceUserId: ypId || null,
+        unitId: unitId || null,
+        addedBy: initials,
+        addedByName: name,
+        completed: false,
+        status: 'active',
+        createdAt: serverTimestamp(),
+      };
+      await addDoc(collection(db,'taskBoardCards'), data);
+      await sendNotification(assignees, `New task assigned: ${title}`, `Added by ${name}`);
+    }
+    closeModal('addTaskModal');
+    showToast('Task added','success');
+  } catch(e) { console.error(e); showToast('Could not save task','error'); }
+}
+
+// ── EDIT TASK ──
+async function openEditTask(taskId, taskType) {
+  const task = await fetchTask(taskId, taskType);
+  if (!task) return;
+  document.getElementById('editTaskId').value = taskId;
+  document.getElementById('editTaskType').value = taskType;
+  document.getElementById('editTaskTitle').value = task.title || '';
+  document.getElementById('editTaskDesc').value = task.description || '';
+  document.getElementById('editTaskPriority').value = task.priority || 'medium';
+  document.getElementById('editTaskDue').value = task.dueDate || task.targetDate || '';
+  // Populate assignee picker with current assignees (stored as initials)
+  pickerSetByInitials('editAssigneePicker', task.assignees || (task.addedBy ? [task.addedBy] : []));
+  closeModal('taskDetailModal');
+  openModal('editTaskModal');
+}
+
+async function saveEditTask() {
+  const taskId  = document.getElementById('editTaskId').value;
+  const taskType= document.getElementById('editTaskType').value;
+  const title   = document.getElementById('editTaskTitle').value.trim();
+  if (!title) { showToast('Title required','error'); return; }
+  const priority = document.getElementById('editTaskPriority').value;
+  const dueDate  = document.getElementById('editTaskDue').value;
+  const assignees= pickerGetInitials('editAssigneePicker');
+  const desc     = document.getElementById('editTaskDesc').value.trim();
+  const coll = taskType === 'adhoc' ? 'adhocTasks' : 'taskBoardCards';
+  try {
+    await updateDoc(doc(db, coll, taskId), {
+      title, description: desc, priority,
+      assignees, dueDate: dueDate || null,
+      editedBy: currentStaffProfile?.initials,
+      editedAt: serverTimestamp()
+    });
+    closeModal('editTaskModal');
+    showToast('Task updated','success');
+  } catch(e) { showToast('Could not update task','error'); }
+}
+
+// ── COMPLETE / REOPEN ──
+function openCompleteTask(taskId, taskType) {
+  document.getElementById('completeTaskId').value = taskId;
+  document.getElementById('completeTaskType').value = taskType;
+  document.getElementById('completeNote').value = '';
+  closeModal('taskDetailModal');
+  openModal('completeTaskModal');
+}
+
+async function confirmCompleteTask() {
+  const taskId = document.getElementById('completeTaskId').value;
+  const taskType = document.getElementById('completeTaskType').value;
+  const note = document.getElementById('completeNote').value.trim();
+  const coll = taskType === 'adhoc' ? 'adhocTasks' : 'taskBoardCards';
+  try {
+    await updateDoc(doc(db, coll, taskId), {
+      completed: true,
+      completionNote: note,
+      completedBy: currentStaffProfile?.initials,
+      completedByName: currentStaffProfile?.name,
+      completedAt: serverTimestamp()
+    });
+    closeModal('completeTaskModal');
+    showToast('Task completed ✓','success');
+  } catch(e) { showToast('Could not complete task','error'); }
+}
+
+async function reopenTask(taskId, taskType) {
+  const coll = taskType === 'adhoc' ? 'adhocTasks' : 'taskBoardCards';
+  try {
+    await updateDoc(doc(db, coll, taskId), {
+      completed: false, completionNote: null, completedBy: null, completedByName: null, completedAt: null
+    });
+    closeModal('taskDetailModal');
+    showToast('Task reopened','success');
+  } catch(e) { showToast('Could not reopen task','error'); }
+}
+
+// ── DELETE ──
+function openDeleteConfirm(id, type, category) {
+  document.getElementById('confirmDeleteId').value = id;
+  document.getElementById('confirmDeleteType').value = type + '_' + category;
+  document.getElementById('confirmDeleteMsg').textContent = `Are you sure you want to delete this ${category}? This cannot be undone.`;
+  closeModal('taskDetailModal');
+  openModal('confirmDeleteModal');
+}
+
+async function executeDelete() {
+  const id = document.getElementById('confirmDeleteId').value;
+  const typeRaw = document.getElementById('confirmDeleteType').value;
+  const [taskType, category] = typeRaw.split('_');
+  try {
+    if (category === 'task') {
+      const coll = taskType === 'adhoc' ? 'adhocTasks' : 'taskBoardCards';
+      await updateDoc(doc(db, coll, id), { status:'inactive' });
+      // Delete associated comments
+      const snap = await getDocs(query(collection(db,'taskComments'), where('taskId','==',id)));
+      const batch = writeBatch(db);
+      snap.docs.forEach(d => batch.delete(d.ref));
+      if (snap.docs.length) await batch.commit();
+    } else if (category === 'list') {
+      await updateDoc(doc(db,'taskLists',id), { status:'inactive' });
+    } else if (category === 'board') {
+      await updateDoc(doc(db,'taskBoards',id), { status:'inactive' });
+      await loadCustomBoards();
+      renderSidebar();
+      document.getElementById('boardContent').innerHTML = `<div class="board-placeholder"><div class="icon">📋</div><h3>Board deleted</h3><p>Select another board from the sidebar.</p></div>`;
+    }
+    closeModal('confirmDeleteModal');
+    showToast('Deleted','success');
+  } catch(e) { console.error(e); showToast('Could not delete','error'); }
+}
+
+// ── COMMENTS ──
+async function addComment(taskId, taskType) {
+  const text = document.getElementById('newCommentText').value.trim();
+  if (!text) return;
+  try {
+    await addDoc(collection(db,'taskComments'), {
+      taskId, text,
+      addedBy: currentStaffProfile?.initials,
+      addedByName: currentStaffProfile?.name,
+      createdAt: serverTimestamp()
+    });
+    document.getElementById('newCommentText').value = '';
+    // Notify task assignees
+    const task = await fetchTask(taskId, taskType);
+    if (task?.assignees?.length) {
+      await sendNotification(task.assignees, `New comment on: ${task.title}`, `${currentStaffProfile?.name}: ${text.slice(0,60)}`);
+    }
+    // Refresh detail modal
+    openTaskDetail(taskId, taskType);
+  } catch(e) { showToast('Could not add comment','error'); }
+}
+
+async function deleteComment(commentId, taskId, taskType) {
+  try {
+    await deleteDoc(doc(db,'taskComments', commentId));
+    openTaskDetail(taskId, taskType);
+    showToast('Comment deleted','success');
+  } catch(e) { showToast('Could not delete comment','error'); }
+}
+
+// ── BOARDS (custom) ──
+function openAddListModal(boardId) {
+  document.getElementById('addListBoardId').value = boardId;
+  document.getElementById('listName').value = '';
+  selectedListColor = '#1446a0';
+  document.querySelectorAll('#listColorPicker .color-swatch').forEach(s => s.classList.remove('selected'));
+  document.querySelector('#listColorPicker [data-color="#1446a0"]')?.classList.add('selected');
+  openModal('addListModal');
+}
+
+async function saveList() {
+  const boardId = document.getElementById('addListBoardId').value;
+  const name = document.getElementById('listName').value.trim();
+  if (!name) { showToast('Enter a list name','error'); return; }
+  try {
+    const snap = await getDocs(query(collection(db,'taskLists'), where('boardId','==',boardId), where('status','==','active')));
+    const order = snap.docs.length;
+    await addDoc(collection(db,'taskLists'), {
+      boardId, name, color: selectedListColor,
+      order, status:'active', createdAt: serverTimestamp()
+    });
+    closeModal('addListModal');
+    showToast('List added','success');
+    loadCustomBoard(boardId);
+  } catch(e) { showToast('Could not add list','error'); }
+}
+
+function deleteList(listId) {
+  document.getElementById('confirmDeleteId').value = listId;
+  document.getElementById('confirmDeleteType').value = 'custom_list';
+  document.getElementById('confirmDeleteMsg').textContent = 'Delete this list and all its tasks?';
+  openModal('confirmDeleteModal');
+}
+
+function showListMenu(listId, btn) {
+  // Simple inline dropdown
+  const existing = document.getElementById('listMenuDropdown');
+  if (existing) existing.remove();
+  const rect = btn.getBoundingClientRect();
+  const menu = document.createElement('div');
+  menu.id = 'listMenuDropdown';
+  menu.style.cssText = `position:fixed;top:${rect.bottom+4}px;left:${rect.left-80}px;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-lg);z-index:800;min-width:120px;padding:4px`;
+  menu.innerHTML = `<button onclick="deleteList('${listId}');document.getElementById('listMenuDropdown').remove()" style="width:100%;padding:8px 12px;background:none;border:none;text-align:left;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--alert-red);cursor:pointer;border-radius:4px">Delete List</button>`;
+  document.body.appendChild(menu);
+  setTimeout(() => document.addEventListener('click', () => menu.remove(), {once:true}), 50);
+}
+
+function selectBoardColor(el) {
+  document.querySelectorAll('#boardColorPicker .color-swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedBoardColor = el.dataset.color;
+}
+
+function selectListColor(el) {
+  document.querySelectorAll('#listColorPicker .color-swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedListColor = el.dataset.color;
+}
+
+// deleteBoard — kept as a standalone for sidebar context menus if needed
+function deleteBoard(boardId) {
+  document.getElementById('confirmDeleteId').value = boardId;
+  document.getElementById('confirmDeleteType').value = 'custom_board';
+  document.getElementById('confirmDeleteMsg').textContent = 'Delete this entire board? This cannot be undone.';
+  openModal('confirmDeleteModal');
+}
+
+// ── BOARD ADMIN — unified modal ──
+function switchBoardTab(tab) {
+  document.getElementById('boardTabSettings').style.display = tab === 'settings' ? 'block' : 'none';
+  document.getElementById('boardTabAccess').style.display = tab === 'access' ? 'block' : 'none';
+  document.getElementById('boardTabSettingsBtn').style.cssText = tab === 'settings'
+    ? 'padding:8px 18px;background:none;border:none;border-bottom:2px solid var(--brand);margin-bottom:-2px;font-family:DM Sans,sans-serif;font-size:13px;font-weight:700;color:var(--brand);cursor:pointer'
+    : 'padding:8px 18px;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:DM Sans,sans-serif;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer';
+  document.getElementById('boardTabAccessBtn').style.cssText = tab === 'access'
+    ? 'padding:8px 18px;background:none;border:none;border-bottom:2px solid var(--brand);margin-bottom:-2px;font-family:DM Sans,sans-serif;font-size:13px;font-weight:700;color:var(--brand);cursor:pointer'
+    : 'padding:8px 18px;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:DM Sans,sans-serif;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer';
+}
+
+// Load board access data into the include/exclude pickers
+function renderBoardAccessTab(boardData) {
+  // boardData = { accessMode, accessList, excludeList } or legacy { accessList[] }
+  const mode = boardData?.accessMode || 'open';
+  setAccessMode(mode);
+  if (mode === 'include') {
+    pickerSetByUids('accessIncludePicker', boardData?.accessList || []);
+    pickerClear('accessExcludePicker');
+  } else if (mode === 'exclude') {
+    pickerSetByUids('accessExcludePicker', boardData?.excludeList || []);
+    pickerClear('accessIncludePicker');
+  } else {
+    pickerClear('accessIncludePicker');
+    pickerClear('accessExcludePicker');
+  }
+}
+
+// Called from topbar "Edit Board" button
+async function openBoardAdmin() {
+  if (!currentBoard) return;
+  if (currentBoard.type === 'unit') {
+    document.getElementById('addBoardModalTitle').textContent = currentBoard.name + ' — Access Settings';
+    document.getElementById('editBoardId').value = currentBoard.id;
+    document.getElementById('boardTabSettingsBtn').style.display = 'none';
+    document.getElementById('boardDeleteSection').style.display = 'none';
+    document.getElementById('saveBoardBtn').textContent = 'Save Access';
+    openModal('addBoardModal');
+    switchBoardTab('access');
+    const snap = await getDocs(query(collection(db,'taskBoardAccess'), where('boardId','==',currentBoard.id)));
+    const accessList = snap.docs.map(d => d.data().userId);
+    renderBoardAccessTab({ accessMode: accessList.length ? 'include' : 'open', accessList });
+  } else {
+    editBoard(currentBoard.id);
+  }
+}
+
+async function editBoard(boardId) {
+  const board = customBoardsCache.find(b => b.id === boardId);
+  if (!board) return;
+  document.getElementById('editBoardId').value = boardId;
+  document.getElementById('addBoardModalTitle').textContent = 'Edit Board';
+  document.getElementById('boardName').value = board.name;
+  document.getElementById('boardDesc').value = board.description || '';
+  document.getElementById('boardTabSettingsBtn').style.display = '';
+  document.getElementById('boardDeleteSection').style.display = 'block';
+  document.getElementById('saveBoardBtn').textContent = 'Save Changes';
+  selectedBoardColor = board.color || '#1446a0';
+  document.querySelectorAll('#boardColorPicker .color-swatch').forEach(s =>
+    s.classList.toggle('selected', s.dataset.color === selectedBoardColor));
+  renderBoardAccessTab(board); // board has accessMode, accessList, excludeList
+  openModal('addBoardModal');
+  switchBoardTab('settings');
+}
+
+function triggerDeleteBoard() {
+  const boardId = document.getElementById('editBoardId').value;
+  closeModal('addBoardModal');
+  document.getElementById('confirmDeleteId').value = boardId;
+  document.getElementById('confirmDeleteType').value = 'custom_board';
+  document.getElementById('confirmDeleteMsg').textContent = 'Delete this entire board and all its lists? Tasks will be archived.';
+  openModal('confirmDeleteModal');
+}
+
+async function saveBoard() {
+  const editId = document.getElementById('editBoardId').value;
+  const isUnitBoard = editId.startsWith('unit_');
+
+  // Read access config from pickers
+  const accessMode    = currentAccessMode; // 'open' | 'include' | 'exclude'
+  const accessList    = accessMode === 'include' ? pickerGetValues('accessIncludePicker') : [];
+  const excludeList   = accessMode === 'exclude' ? pickerGetValues('accessExcludePicker') : [];
+
+  if (isUnitBoard) {
+    try {
+      // Unit boards store access in taskBoardAccess collection
+      const snap = await getDocs(query(collection(db,'taskBoardAccess'), where('boardId','==',editId)));
+      const batch = writeBatch(db);
+      snap.docs.forEach(d => batch.delete(d.ref));
+      if (accessMode === 'include') {
+        accessList.forEach(uid => {
+          const ref = doc(collection(db,'taskBoardAccess'));
+          batch.set(ref, { boardId:editId, userId:uid, accessMode:'include', grantedBy:currentStaffProfile?.initials, grantedAt:serverTimestamp() });
+        });
+      }
+      await batch.commit();
+      closeModal('addBoardModal');
+      resetBoardModal();
+      showToast('Access saved','success');
+    } catch(e) { console.error(e); showToast('Could not save access','error'); }
+    return;
+  }
+
+  const name = document.getElementById('boardName').value.trim();
+  if (!name) { showToast('Enter a board name','error'); switchBoardTab('settings'); return; }
+  const desc = document.getElementById('boardDesc').value.trim();
+
+  const accessPayload = { accessMode, accessList, excludeList };
+
+  try {
+    if (editId) {
+      await updateDoc(doc(db,'taskBoards',editId), { name, description:desc, color:selectedBoardColor, ...accessPayload });
+      const b = customBoardsCache.find(x => x.id === editId);
+      if (b) Object.assign(b, { name, description:desc, color:selectedBoardColor, ...accessPayload });
+    } else {
+      await addDoc(collection(db,'taskBoards'), {
+        name, description:desc, color:selectedBoardColor, ...accessPayload,
+        status:'active', createdBy:currentStaffProfile?.initials, createdAt:serverTimestamp()
+      });
+      await loadCustomBoards();
+    }
+    renderSidebar();
+    closeModal('addBoardModal');
+    resetBoardModal();
+    showToast(editId ? 'Board updated' : 'Board created','success');
+    if (editId && currentBoard?.id === editId) {
+      currentBoard.name = name; currentBoard.description = desc; currentBoard.color = selectedBoardColor;
+      document.getElementById('topbarTitle').textContent = name;
+    }
+  } catch(e) { console.error(e); showToast('Could not save board','error'); }
+}
+
+function resetBoardModal() {
+  document.getElementById('editBoardId').value = '';
+  document.getElementById('boardName').value = '';
+  document.getElementById('boardDesc').value = '';
+  document.getElementById('addBoardModalTitle').textContent = 'New Board';
+  document.getElementById('saveBoardBtn').textContent = 'Create Board';
+  document.getElementById('boardTabSettingsBtn').style.display = '';
+  document.getElementById('boardDeleteSection').style.display = 'none';
+  selectedBoardColor = '#1446a0';
+  document.querySelectorAll('#boardColorPicker .color-swatch').forEach(s =>
+    s.classList.toggle('selected', s.dataset.color === '#1446a0'));
+  pickerClear('accessIncludePicker');
+  pickerClear('accessExcludePicker');
+  setAccessMode('open');
+  switchBoardTab('settings');
+}
+
+async function saveBoardAccess() { await saveBoard(); }
+
+window.switchBoardTab = switchBoardTab;
+window.triggerDeleteBoard = triggerDeleteBoard;
+window.openNewBoardModal = openNewBoardModal;
+
+function openNewBoardModal() {
+  resetBoardModal();
+  openModal('addBoardModal');
+}
+
+// ── FILTERS ──
+// Re-render all cached lists with current filter values — no Firestore reload needed
+function applyFilters() {
+  Object.keys(listTaskCache).forEach(listId => renderTasksInList(listId));
+}
+
+function clearFilters() {
+  const p = document.getElementById('filterPriority');
+  const a = document.getElementById('filterAssignee');
+  const s = document.getElementById('filterSearch');
+  if (p) p.value = '';
+  if (a) a.value = '';
+  if (s) s.value = '';
+  applyFilters();
+}
+
+// ── COMPLETED TOGGLE ──
+function toggleCompleted(listId) {
+  const btn = document.getElementById('compToggle_'+listId);
+  const list = document.getElementById('compList_'+listId);
+  btn.classList.toggle('open');
+  list.classList.toggle('open');
+}
+
+// ── NOTIFICATIONS ──
+async function sendNotification(assigneeInitials, title, body) {
+  if (!assigneeInitials?.length) return;
+  // Map initials to UIDs
+  const targets = staffCache.filter(s => assigneeInitials.includes(s.initials) && s.initials !== currentStaffProfile?.initials);
+  for (const staff of targets) {
+    if (!staff.id && !staff.uid) continue;
+    await addDoc(collection(db,'taskNotifications'), {
+      recipientUid: staff.id || staff.uid,
+      title, body,
+      read: false,
+      createdAt: serverTimestamp()
+    });
+  }
+}
+
+function subscribeNotifications() {
+  if (!currentUser) return;
+  const q = query(collection(db,'taskNotifications'),
+    where('recipientUid','==',currentUser.uid), orderBy('createdAt','desc'));
+  const unsub = onSnapshot(q, snap => {
+    const notifs = snap.docs.map(d => ({id:d.id,...d.data()}));
+    renderNotifications(notifs);
+  });
+  currentListeners.push(unsub);
+}
+
+function renderNotifications(notifs) {
+  const unread = notifs.filter(n => !n.read).length;
+  const badge = document.getElementById('notifBadge');
+  badge.textContent = unread > 9 ? '9+' : unread;
+  badge.style.display = unread > 0 ? 'flex' : 'none';
+
+  const body = document.getElementById('notifPanelBody');
+  if (!notifs.length) { body.innerHTML = '<div class="notif-empty">No notifications yet.</div>'; return; }
+  body.innerHTML = notifs.slice(0,30).map(n => `
+    <div class="notif-item ${n.read?'':'unread'}" onclick="markNotifRead('${n.id}')">
+      <div class="notif-item-title">${esc(n.title||'')}</div>
+      <div class="notif-item-body">${esc(n.body||'')}</div>
+      <div class="notif-item-time">${formatTs(n.createdAt)}</div>
+    </div>`).join('');
+}
+
+async function markNotifRead(notifId) {
+  try { await updateDoc(doc(db,'taskNotifications',notifId), { read:true }); }
+  catch(e) {}
+}
+
+async function markAllNotifsRead() {
+  const q = query(collection(db,'taskNotifications'),
+    where('recipientUid','==',currentUser.uid), where('read','==',false));
+  const snap = await getDocs(q);
+  const batch = writeBatch(db);
+  snap.docs.forEach(d => batch.update(d.ref, {read:true}));
+  if (snap.docs.length) await batch.commit();
+}
+
+// ── HELPERS ──
+function clearListeners() {
+  currentListeners.forEach(u => u());
+  currentListeners = [];
+  listTaskCache = {};
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+function toggleNotifPanel() {
+  document.getElementById('notifPanel').classList.toggle('open');
+}
+
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function formatTs(ts) {
+  if (!ts) return '';
+  const d = ts?.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+}
+
+function showToast(message, type='default') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = type==='success' ? `✓ ${message}` : message;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// Close notif panel and list menus on outside click
+document.addEventListener('click', (e) => {
+  const panel = document.getElementById('notifPanel');
+  if (panel.classList.contains('open') && !panel.contains(e.target) && !document.getElementById('notifBtn').contains(e.target)) {
+    panel.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>

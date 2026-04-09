@@ -156,6 +156,12 @@
   .btn-danger:hover { background: #a93226; }
 
   .btn-success { background: var(--success); color: white; }
+
+  .refresh-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:background .2s;flex-shrink:0}
+  .refresh-btn:hover{background:rgba(255,255,255,.28)}
+  .refresh-btn:active{background:rgba(255,255,255,.35)}
+  .refresh-btn.spinning{animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
   .btn-success:hover { background: #219a52; }
 
   .btn-ghost { background: transparent; color: var(--text-muted); border: 1.5px solid var(--border); }
@@ -1210,6 +1216,12 @@
       <button class="mode-toggle" id="modeToggleBtn" onclick="toggleObserverMode()" style="display:none">
         👁 Observer Mode
       </button>
+      <button class="refresh-btn" id="refreshBtn" onclick="handleRefresh()" title="Refresh handover data">
+        <svg id="refreshIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+        </svg>
+      </button>
       <div class="user-badge">
         <div class="user-avatar" id="userAvatarTop">DJ</div>
         <span id="userNameTop">DJ</span>
@@ -2068,6 +2080,32 @@ window.closeConfigPage = closeConfigPage;
 window.toggleConfigUnit = toggleConfigUnit;
 window.toggleConfigUnitAll = toggleConfigUnitAll;
 window.toggleConfigSU = toggleConfigSU;
+window.handleRefresh = handleRefresh;
+
+async function handleRefresh() {
+  const btn = document.getElementById('refreshBtn');
+  if (!btn || btn.classList.contains('spinning')) return;
+  btn.classList.add('spinning');
+  try {
+    // Reload units and service users
+    await loadUnits();
+    // Reload handover data if a handover is currently open
+    if (currentHandover?.unitId) {
+      await loadServiceUsers();
+      if (currentHandover?.serviceUserId) {
+        await loadHandover();
+      }
+    }
+    // Reload notice board if on that tab
+    const nbUnit = document.getElementById('nbUnitSelect')?.value;
+    if (nbUnit) loadNoticeBoard();
+    showToast('Refreshed', 'success');
+  } catch(e) {
+    showToast('Could not refresh', 'error');
+  } finally {
+    setTimeout(() => btn.classList.remove('spinning'), 500);
+  }
+}
 
 // ── AUTH ──
 onAuthStateChanged(auth, async (user) => {
@@ -3030,7 +3068,25 @@ async function loadTasksHierarchy() {
       getDocs(query(collection(db,'serviceUsers'), where('status','==','active')))
     ]);
     const tasks = tasksSnap.docs.map(d => ({id:d.id,...d.data()}));
-    const sus = suSnap.docs.map(d => ({id:d.id,...d.data()}));
+    const allSus = suSnap.docs.map(d => ({id:d.id,...d.data()}));
+
+    // ── Apply handover config filtering ──────────────────────────────────
+    // Same rules as the main handover: only show units/SUs that are
+    // configured to appear in this handover.
+    const enabledUnitIds = handoverConfig.enabledUnits || [];
+    const visibleUnits = enabledUnitIds.length
+      ? unitsCache.filter(u => enabledUnitIds.includes(u.id))
+      : unitsCache;
+    const visibleUnitIds = new Set(visibleUnits.map(u => u.id));
+
+    const sus = allSus.filter(su => {
+      const unitId = su.currentUnitId || su.unitId;
+      if (!visibleUnitIds.has(unitId)) return false; // unit not in handover config
+      const configuredSUs = handoverConfig.unitSUs?.[unitId];
+      if (Array.isArray(configuredSUs)) return configuredSUs.includes(su.id);
+      return true; // unit is enabled, no per-SU restriction
+    });
+    // ─────────────────────────────────────────────────────────────────────
 
     // Global tasks
     const globalTasks = tasks.filter(t => t.level === 'global');
@@ -3038,15 +3094,15 @@ async function loadTasksHierarchy() {
     const gc = document.getElementById('globalTaskCount');
     if (gc) gc.textContent = globalTasks.length > 0 ? globalTasks.length : '';
 
-    // Service user tasks
+    // Service user tasks — only configured SUs
     const suContainer = document.getElementById('suTaskGroups');
     suContainer.innerHTML = '';
     if (sus.length === 0) {
-      suContainer.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:6px 0">No active service users found</div>';
+      suContainer.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:6px 0">No configured service users found</div>';
     } else {
       sus.forEach(su => {
         const suTasks = tasks.filter(t => t.level === 'serviceuser' && t.serviceUserId === su.id);
-        const unitName = unitsCache.find(u => u.id === su.unitId)?.name || '';
+        const unitName = unitsCache.find(u => u.id === (su.currentUnitId || su.unitId))?.name || '';
         const eName = su.name.replace(/'/g,"\\'");
         const div = document.createElement('div');
         div.className = 'task-hierarchy-item';
@@ -3069,13 +3125,13 @@ async function loadTasksHierarchy() {
       });
     }
 
-    // Unit tasks
+    // Unit tasks — only configured units
     const unitContainer = document.getElementById('unitTaskGroups');
     unitContainer.innerHTML = '';
-    if (unitsCache.length === 0) {
-      unitContainer.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:6px 0">No units found</div>';
+    if (visibleUnits.length === 0) {
+      unitContainer.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:6px 0">No configured units found</div>';
     } else {
-      unitsCache.forEach(unit => {
+      visibleUnits.forEach(unit => {
         const unitTasks = tasks.filter(t => t.level === 'unit' && t.unitId === unit.id);
         const eName = unit.name.replace(/'/g,"\\'");
         const div = document.createElement('div');
