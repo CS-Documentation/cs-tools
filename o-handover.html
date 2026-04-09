@@ -1619,30 +1619,40 @@ function downloadSampleCSV() {
 async function handleRotaCSV(ev) {
   const file=ev.target.files[0];
   const unitId=gv('rota-unit-sel'), month=gv('rota-month-inp');
-  if(!file||!unitId||!month){toast('Select a unit and month first','err');ev.target.value='';return;}
+  if(!file||!unitId){toast('Select a unit first','err');ev.target.value='';return;}
   const reader=new FileReader();
   reader.onload=async e=>{
-    const lines=e.target.result.trim().split('\n').slice(1); // skip header
-    const batch=writeBatch(db); let count=0;
+    // Normalise line endings (CRLF → LF)
+    const lines=e.target.result.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim().split('\n').slice(1);
     const shifts=['morning','evening','sleepin'];
+    const sets=[], dels=[];
+    let count=0;
     for(const line of lines){
+      if(!line.trim()) continue;
       const cols=line.split(',').map(s=>s.trim().replace(/^"|"$/g,''));
       const date=cols[0];
-      if(!date||date.slice(0,7)!==month) continue;
+      // Only accept YYYY-MM-DD format; skip header remnants or locale-formatted dates
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
+      const rowMonth=date.slice(0,7);
       for(let i=0;i<3;i++){
         const staffName=cols[i+1]||'';
         const shift=shifts[i];
         const docId=`${unitId}_${date}_${shift}`;
-        if(staffName){
-          batch.set(doc(db,'oShiftRota',docId),{unitId,date,shift,staffName,month,updatedAt:serverTimestamp()});
-          count++;
-        } else {
-          batch.delete(doc(db,'oShiftRota',docId));
-        }
+        if(staffName){ sets.push({docId,unitId,date,shift,staffName,month:rowMonth}); count++; }
+        else dels.push(docId);
       }
     }
-    await batch.commit();
-    toast(`Imported ${count} rota entries ✓`);
+    // Commit in chunks of 490 to stay under Firestore 500-op limit
+    const all=[...sets.map(s=>({op:'set',s})),...dels.map(d=>({op:'del',d}))];
+    for(let i=0;i<all.length;i+=490){
+      const batch=writeBatch(db);
+      all.slice(i,i+490).forEach(({op,s,d})=>{
+        if(op==='set') batch.set(doc(db,'oShiftRota',s.docId),{unitId:s.unitId,date:s.date,shift:s.shift,staffName:s.staffName,month:s.month,updatedAt:serverTimestamp()});
+        else batch.delete(doc(db,'oShiftRota',d));
+      });
+      try { await batch.commit(); } catch(err) { toast('Import failed: '+err.message,'err'); ev.target.value=''; return; }
+    }
+    toast(count?`Imported ${count} rota entries ✓`:'No valid entries found — check the date format is YYYY-MM-DD','ok');
     ev.target.value='';
     await renderRotaGrid();
   };
