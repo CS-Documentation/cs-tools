@@ -501,8 +501,8 @@ hr.modal-sep { border: none; border-top: 1px solid var(--border); margin: 16px 0
     <span class="header-title">📄 Documents</span>
 
     <div class="header-tabs">
-      <button class="header-tab active" id="tabFiles"   onclick="showTab('files')">👤 Young People</button>
-      <button class="header-tab"       id="tabTemplates" onclick="showTab('templates')">📋 Templates</button>
+      <button class="header-tab active" id="tabFiles">👤 Young People</button>
+      <button class="header-tab"       id="tabTemplates">📋 Templates</button>
     </div>
 
     <div class="header-right">
@@ -511,7 +511,7 @@ hr.modal-sep { border: none; border-top: 1px solid var(--border); margin: 16px 0
         <span class="user-name" id="userName">Loading…</span>
         <span id="adminBadge" class="badge-admin" style="display:none">Admin</span>
       </div>
-      <button class="btn-logout" onclick="logout()">Sign out</button>
+      <button class="btn-logout" id="signOutBtn">Sign out</button>
     </div>
   </header>
 
@@ -551,14 +551,14 @@ hr.modal-sep { border: none; border-top: 1px solid var(--border); margin: 16px 0
           <div class="templates-desc">Document templates available for young people's files</div>
         </div>
         <div class="cat-filter" id="catFilter">
-          <button class="cat-btn active" onclick="filterTemplates('')" data-cat="">All</button>
-          <button class="cat-btn" onclick="filterTemplates('Care Plans')" data-cat="Care Plans">Care Plans</button>
-          <button class="cat-btn" onclick="filterTemplates('Risk Assessments')" data-cat="Risk Assessments">Risk</button>
-          <button class="cat-btn" onclick="filterTemplates('Consent')" data-cat="Consent">Consent</button>
-          <button class="cat-btn" onclick="filterTemplates('Meeting Notes')" data-cat="Meeting Notes">Meetings</button>
-          <button class="cat-btn" onclick="filterTemplates('General')" data-cat="General">General</button>
+          <button class="cat-btn active" data-cat="">All</button>
+          <button class="cat-btn" data-cat="Care Plans">Care Plans</button>
+          <button class="cat-btn" data-cat="Risk Assessments">Risk</button>
+          <button class="cat-btn" data-cat="Consent">Consent</button>
+          <button class="cat-btn" data-cat="Meeting Notes">Meetings</button>
+          <button class="cat-btn" data-cat="General">General</button>
         </div>
-        <button class="btn-upload" onclick="openTemplateUpload()">📤 Upload Template</button>
+        <button class="btn-upload" id="uploadTemplateBtn">📤 Upload Template</button>
       </div>
       <div class="templates-grid" id="templatesGrid">
         <div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:40px;">Loading templates…</div>
@@ -650,7 +650,7 @@ hr.modal-sep { border: none; border-top: 1px solid var(--border); margin: 16px 0
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('templateUploadModal')">Cancel</button>
-      <button class="btn-save" id="uploadSaveBtn" onclick="saveUploadedTemplate()">Save Template</button>
+      <button class="btn-save" id="uploadSaveBtn">Save Template</button>
     </div>
   </div>
 </div>
@@ -664,10 +664,10 @@ hr.modal-sep { border: none; border-top: 1px solid var(--border); margin: 16px 0
         <div class="doc-viewer-title" id="docViewerTitle">Document</div>
         <div class="doc-viewer-meta" id="docViewerMeta"></div>
       </div>
-      <button class="btn-edit-toggle" id="docToggleEdit" onclick="toggleEditMode()">✏️ Edit</button>
-      <button class="btn-print" onclick="printCurrentDoc()">🖨️ Print</button>
-      <button class="btn-save" id="docSaveBtn" style="display:none" onclick="saveDocEdits()">💾 Save</button>
-      <button class="modal-close" onclick="closeDocModal()">✕</button>
+      <button class="btn-edit-toggle" id="docToggleEdit">✏️ Edit</button>
+      <button class="btn-print"       id="docPrintBtn">🖨️ Print</button>
+      <button class="btn-save"        id="docSaveBtn" style="display:none">💾 Save</button>
+      <button class="modal-close"     id="docCloseBtn">✕</button>
     </div>
     <div class="doc-frame-wrap" style="flex:1;">
       <iframe id="docFrame" title="Document"></iframe>
@@ -676,8 +676,8 @@ hr.modal-sep { border: none; border-top: 1px solid var(--border); margin: 16px 0
       <div class="edit-hint" id="editHint" style="display:none">Click Save when done</div>
     </div>
     <div class="modal-footer" style="justify-content:space-between;">
-      <button class="btn-danger" id="docDeleteBtn" onclick="confirmDeleteDoc()">🗑️ Delete document</button>
-      <button class="btn-secondary" onclick="closeDocModal()">Close</button>
+      <button class="btn-danger"    id="docDeleteBtn">🗑️ Delete document</button>
+      <button class="btn-secondary" id="docCloseBtn2">Close</button>
     </div>
   </div>
 </div>
@@ -785,9 +785,27 @@ window.closeDocModal        = closeDocModal;
 window.confirmDeleteDoc     = confirmDeleteDoc;
 window.isEditing            = false;
 
+// ── BUTTON WIRING (addEventListener — no onclick attrs, no window scope needed) ──
+document.getElementById('loginBtn')        .addEventListener('click', login);
+document.getElementById('signOutBtn')      .addEventListener('click', logout);
+document.getElementById('tabFiles')        .addEventListener('click', ()=>showTab('files'));
+document.getElementById('tabTemplates')    .addEventListener('click', ()=>showTab('templates'));
+document.getElementById('uploadTemplateBtn').addEventListener('click', openTemplateUpload);
+document.getElementById('docToggleEdit')   .addEventListener('click', toggleEditMode);
+document.getElementById('docPrintBtn')     .addEventListener('click', printCurrentDoc);
+document.getElementById('docSaveBtn')      .addEventListener('click', saveDocEdits);
+document.getElementById('docCloseBtn')     .addEventListener('click', closeDocModal);
+document.getElementById('docCloseBtn2')    .addEventListener('click', closeDocModal);
+document.getElementById('docDeleteBtn')    .addEventListener('click', confirmDeleteDoc);
+document.getElementById('uploadSaveBtn')   .addEventListener('click', saveUploadedTemplate);
+document.querySelectorAll('.cat-btn').forEach(btn =>
+  btn.addEventListener('click', ()=>filterTemplates(btn.dataset.cat||''))
+);
+['emailIn','passIn'].forEach(id =>
+  document.getElementById(id).addEventListener('keydown', e=>{ if(e.key==='Enter') login(); })
+);
+
 // ── AUTH ─────────────────────────────────────────────────────────────────────
-document.getElementById('loginBtn').addEventListener('click', login);
-['emailIn','passIn'].forEach(id => document.getElementById(id).addEventListener('keydown', e => { if(e.key==='Enter') login(); }));
 
 async function login() {
   const email = document.getElementById('emailIn').value.trim();
@@ -853,13 +871,18 @@ async function loadTemplates() {
 }
 
 async function loadYPDocuments(ypId) {
+  // No orderBy — avoids composite index requirement; sort client-side instead
   const snap = await getDocs(query(
     collection(db,'serviceUserDocuments'),
     where('serviceUserId','==',ypId),
-    where('status','==','active'),
-    orderBy('createdAt','desc')
+    where('status','==','active')
   ));
   ypDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  ypDocs.sort((a,b) => {
+    const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+    const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+    return tb - ta; // newest first
+  });
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -948,7 +971,7 @@ async function selectYP(ypId) {
     await loadYPDocuments(ypId);
   } catch(e) {
     console.error('loadYPDocuments error:', e);
-    toast('Could not load documents — check Firestore permissions', 'error');
+    toast('Could not load documents: ' + (e.message || e), 'error');
     ypDocs = [];
   }
   renderDocPanel();
@@ -1190,8 +1213,8 @@ async function saveDocEdits() {
     setDocMode(false, tmpl, serviceUsers.find(y=>y.id===selectedYPId), vals);
     renderDocPanel();
   } catch(e) {
-    console.error(e);
-    toast('Failed to save document', 'error');
+    console.error('saveDocEdits error:', e);
+    toast('Save failed: ' + (e.message || e), 'error');
   } finally {
     saveBtn.innerHTML = '💾 Save';
     saveBtn.disabled  = false;
