@@ -95,7 +95,12 @@ button{font-family:inherit;cursor:pointer}
 #s-viewer{background:#20242e}
 .viewer-topbar{background:var(--brand-dark);color:#fff;padding:0 20px;min-height:70px;display:flex;align-items:center;gap:14px;flex-shrink:0}
 .viewer-topbar h2{font-size:17px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#pdfFrame{flex:1;width:100%;border:none;background:#fff}
+.pdf-pages{flex:1;width:100%;overflow-y:auto;overflow-x:hidden;padding:20px;display:flex;flex-direction:column;align-items:center;gap:18px;-webkit-overflow-scrolling:touch}
+.pdf-page-canvas{max-width:100%;height:auto;background:#fff;box-shadow:0 4px 18px rgba(0,0,0,.35);border-radius:4px}
+.pdf-loading{color:#fff;font-size:14px;font-weight:600;text-align:center;padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.pdf-spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:pdfspin .8s linear infinite}
+@keyframes pdfspin{to{transform:rotate(360deg)}}
+.pdf-error{color:#fff;font-size:14px;text-align:center;padding:40px 20px;max-width:400px;line-height:1.6}
 
 /* Idle lock button visible everywhere except pin screen */
 .floating-lock{position:fixed;top:18px;right:18px;z-index:50}
@@ -177,12 +182,14 @@ button{font-family:inherit;cursor:pointer}
     <button class="kt-back" onclick="goBackFromViewer()">←</button>
     <h2 id="viewerTitle">Document</h2>
   </div>
-  <iframe id="pdfFrame"></iframe>
+  <div class="pdf-pages" id="pdfPages"></div>
 </div>
 
 <script type="module">
 import { initializeApp }                     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously }        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import * as pdfjsLib                         from "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs";
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
 import { getFirestore, collection, getDocs,
          query, where, orderBy }             from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -232,6 +239,7 @@ let unlocked = false;
 let currentTile = null;
 let tilesCache = [];
 let idleTimer = null;
+let viewerRenderToken = 0;
 const IDLE_LIMIT_MS = 10 * 60 * 1000; // 10 min
 
 // ── ANONYMOUS AUTH ──
@@ -291,7 +299,8 @@ window.goHome = async function() {
 };
 
 window.goBackFromViewer = function() {
-  document.getElementById('pdfFrame').src = 'about:blank';
+  viewerRenderToken++;
+  document.getElementById('pdfPages').innerHTML = '';
   showScreen('s-options');
 };
 
@@ -300,7 +309,8 @@ window.lockKiosk = function() {
   currentTile = null;
   enteredPin = '';
   sessionStorage.removeItem('hounslowUnlocked');
-  document.getElementById('pdfFrame').src = 'about:blank';
+  viewerRenderToken++;
+  document.getElementById('pdfPages').innerHTML = '';
   renderDots();
   showScreen('s-pin');
   clearTimeout(idleTimer);
@@ -372,10 +382,39 @@ async function openTile(tileId) {
   showScreen('s-options');
 }
 
-function openViewer(url, name) {
+async function openViewer(url, name) {
   document.getElementById('viewerTitle').textContent = name;
-  document.getElementById('pdfFrame').src = url;
+  const container = document.getElementById('pdfPages');
+  const myToken = ++viewerRenderToken;
+  container.innerHTML = `<div class="pdf-loading"><div class="pdf-spinner"></div>Opening document…</div>`;
   showScreen('s-viewer');
+
+  try {
+    const pdf = await pdfjsLib.getDocument(url).promise;
+    if (myToken !== viewerRenderToken) return; // navigated away while loading
+    container.innerHTML = '';
+    const pageWidth = container.clientWidth - 40; // minus horizontal padding
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      if (myToken !== viewerRenderToken) return;
+      const page = await pdf.getPage(pageNum);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const scale = Math.max(pageWidth / baseViewport.width, 0.1);
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      canvas.className = 'pdf-page-canvas';
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      container.appendChild(canvas);
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+    }
+  } catch (e) {
+    if (myToken !== viewerRenderToken) return;
+    container.innerHTML = `<div class="pdf-error">⚠️ Could not open this document.<br><br>${
+      String(e.message || e).toLowerCase().includes('cors') || String(e.name || '').toLowerCase().includes('network')
+        ? 'This looks like a network/CORS restriction on the file storage — an admin needs to check the CORS configuration.'
+        : 'Check the network connection and try again.'
+    }</div>`;
+  }
 }
 
 function esc(str) {

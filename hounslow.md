@@ -20,7 +20,8 @@ An on-site PIN-locked kiosk for an Android tablet at Hounslow. Staff tap through
 2. **PIN screen**: on-screen numeric keypad, 6-digit dot indicator. Entered PIN is compared directly against the `pin` field of every `status: 'active'` doc in `hounslowPins` — a match on any of them unlocks.
 3. **Home screen**: tiles from `hounslowTiles` (`status: 'active'`, ordered by `order`) — custom image or initials fallback, `displayName`.
 4. **Options screen**: tiles from `hounslowOptions` for the tapped `tileId` (`status: 'active'`, ordered by `order`). Options with no `fileUrl` yet render muted/disabled ("Not yet available") instead of a dead tap.
-5. **PDF viewer**: full-screen `<iframe>` over the option's `fileUrl`, with a persistent Back button — never opens a new tab.
+5. **PDF viewer**: renders the PDF itself, page by page, onto `<canvas>` elements via [PDF.js](https://mozilla.github.io/pdf.js/) (loaded from jsDelivr, pinned to `pdfjs-dist@4.10.38`), in a scrollable full-screen view with a persistent Back button — never opens a new tab. This replaced an `<iframe src="...">` approach: Android Chrome doesn't reliably render PDFs embedded in an iframe and was prompting a native "Download" dialog instead, breaking the kiosk's self-contained feel. Rendering to canvas sidesteps the browser's native PDF handling entirely, so behavior is consistent across platforms.
+   **Requires Firebase Storage CORS to be configured** — PDF.js fetches the file via `fetch()`, which is a cross-origin request from the GitHub Pages origin to the Storage bucket, and needs the bucket's CORS policy to allow it (this wasn't needed for the old iframe approach, since a simple iframe navigation doesn't go through fetch's CORS checks). The viewer's error screen calls this out specifically when it looks like the cause. Fix via `gsutil cors set cors.json gs://connected-stars-handover.firebasestorage.app` with a `cors.json` allowing GET from the site's origin — see the project chat history for the exact command, or Google Cloud Console → Cloud Storage → bucket → Permissions/CORS.
 6. **Back navigation**: always one level up (viewer → options → home).
 7. **Idle auto-lock**: 10 minutes of no touch/click/keydown/scroll re-locks to the PIN screen. A manual "🔒 Lock" button is always visible on the home/options screens.
 8. Registers `hounslow-manifest.json` + `hounslow-sw.js` for "Add to Home Screen" / offline app-shell caching. The service worker only caches the static shell (HTML/manifest/icon) — Firestore and Storage requests always go to the network so data and PDFs are never stale.
@@ -115,8 +116,8 @@ confirmAction                                 // async fn stored for the shared 
 | `checkPin()` | Compare entered PIN against active `hounslowPins`, unlock on match |
 | `goHome()` | Load active tiles, show home screen |
 | `openTile(tileId)` | Load active options for a tile, show options screen |
-| `openViewer(url, name)` | Show the PDF viewer iframe |
-| `goBackFromViewer()` | Return to options screen, clear iframe |
+| `openViewer(url, name)` | Load the PDF via PDF.js and render each page to a `<canvas>` in the viewer |
+| `goBackFromViewer()` | Return to options screen, clear rendered pages |
 | `lockKiosk()` | Re-lock: clear state, show PIN screen |
 | `resetIdleTimer()` | Restart the 10-minute idle auto-lock countdown |
 
