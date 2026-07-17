@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Hounslow On-Site Database</title>
+<meta name="theme-color" content="#1446a0">
+<link rel="manifest" href="hounslow-manifest.json">
+<link rel="icon" href="hounslow-icon.svg">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brand:#1446a0;--brand-dark:#0d3278;--brand-mid:#2d5bbf;--brand-light:#e8eef8;
+  --bg:#f4f6fb;--surface:#fff;
+  --text:#1a1a2e;--text2:#4a5568;--text3:#6b7280;
+  --border:#dde3ef;--border2:#b8c5e0;
+  --green:#27ae60;--amber:#e67e22;--red:#c0392b;
+  --r:16px;--rs:10px;
+  --sh:0 4px 20px rgba(20,70,160,.10);
+  --sh-lg:0 12px 40px rgba(20,70,160,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%;overscroll-behavior:none}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+button{font-family:inherit;cursor:pointer}
+.screen{position:fixed;inset:0;display:none;flex-direction:column}
+.screen.active{display:flex}
+
+/* ── PIN SCREEN ── */
+#s-pin{background:linear-gradient(135deg,var(--brand-dark) 0%,var(--brand) 55%,var(--brand-mid) 100%);align-items:center;justify-content:center;padding:24px}
+.pin-card{background:rgba(255,255,255,.97);border-radius:28px;padding:40px 44px 36px;width:100%;max-width:420px;box-shadow:var(--sh-lg);text-align:center}
+.pin-logo{width:64px;height:64px;border-radius:18px;background:var(--brand);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:var(--sh)}
+.pin-logo svg{width:34px;height:34px}
+.pin-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.4px}
+.pin-sub{font-size:14px;color:var(--text3);margin-top:4px;margin-bottom:26px}
+.pin-dots{display:flex;gap:14px;justify-content:center;margin-bottom:28px}
+.pin-dot{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--border2);transition:all .15s}
+.pin-dot.filled{background:var(--brand);border-color:var(--brand);transform:scale(1.1)}
+.pin-dot.err{background:var(--red);border-color:var(--red)}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pin-key{aspect-ratio:1/1;border-radius:50%;border:none;background:var(--brand-light);color:var(--brand);font-size:26px;font-weight:700;font-family:'DM Mono',monospace;display:flex;align-items:center;justify-content:center;transition:all .1s;min-height:64px}
+.pin-key:active{background:var(--brand);color:#fff;transform:scale(.94)}
+.pin-key.wide{background:transparent;color:var(--text3);font-size:15px;font-weight:600}
+.pin-key.wide:active{background:var(--surface2);transform:scale(.96)}
+.pin-error-msg{color:var(--red);font-size:13px;font-weight:700;margin-top:14px;height:16px}
+
+/* ── HOME / OPTIONS SCREENS ── */
+.kiosk-topbar{background:var(--brand);color:#fff;padding:0 24px;min-height:76px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 16px rgba(20,70,160,.25);flex-shrink:0}
+.kt-back{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;width:52px;height:52px;border-radius:50%;font-size:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kt-back:active{background:rgba(255,255,255,.3)}
+.kt-title{flex:1;min-width:0}
+.kt-title h1{font-size:20px;font-weight:800;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kt-title span{font-size:12px;opacity:.75;font-weight:500}
+.kt-lock{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;padding:10px 18px;border-radius:26px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.kt-lock:active{background:rgba(255,255,255,.3)}
+
+.kiosk-body{flex:1;overflow-y:auto;padding:28px}
+
+/* Home tiles */
+.su-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:22px;max-width:1400px;margin:0 auto}
+.su-tile{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;display:flex;flex-direction:column;transition:transform .12s,box-shadow .12s}
+.su-tile:active{transform:scale(.97);box-shadow:var(--sh-lg)}
+.su-img{width:100%;aspect-ratio:1/1;background:var(--brand-light);display:flex;align-items:center;justify-content:center;font-size:52px;font-weight:800;color:var(--brand);overflow:hidden}
+.su-img img{width:100%;height:100%;object-fit:cover}
+.su-tile-name{padding:16px 14px;font-size:17px;font-weight:700;text-align:center;color:var(--text);line-height:1.3}
+
+.empty-state{text-align:center;padding:80px 20px;color:var(--text3)}
+.empty-state .es-icon{font-size:48px;margin-bottom:14px}
+.empty-state h3{font-size:18px;font-weight:700;color:var(--text2);margin-bottom:6px}
+
+/* Options tiles */
+.opt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;max-width:1400px;margin:0 auto}
+.opt-tile{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);padding:26px 18px;display:flex;flex-direction:column;align-items:center;gap:14px;transition:transform .12s}
+.opt-tile:active{transform:scale(.96)}
+.opt-tile.disabled{opacity:.5}
+.opt-ic{width:64px;height:64px;border-radius:18px;background:var(--brand-light);color:var(--brand);display:flex;align-items:center;justify-content:center}
+.opt-ic svg{width:32px;height:32px}
+.opt-name{font-size:16px;font-weight:700;text-align:center;color:var(--text);line-height:1.3}
+.opt-status{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3)}
+.opt-status.avail{color:var(--green)}
+
+/* ── PDF VIEWER ── */
+#s-viewer{background:#20242e}
+.viewer-topbar{background:var(--brand-dark);color:#fff;padding:0 20px;min-height:70px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+.viewer-topbar h2{font-size:17px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pdfFrame{flex:1;width:100%;border:none;background:#fff}
+
+/* Idle lock button visible everywhere except pin screen */
+.floating-lock{position:fixed;top:18px;right:18px;z-index:50}
+
+/* Scrollbar tidy for tablet */
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:8px}
+
+@media(max-width:480px){
+  .pin-card{padding:30px 26px 28px}
+  .su-grid,.opt-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+}
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div class="screen active" id="s-pin">
+  <div class="pin-card">
+    <div class="pin-logo"><svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="rgba(255,255,255,0.15)"/><path d="M7 14l5 5 9-9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="pin-title">Hounslow On-Site Database</div>
+    <div class="pin-sub">Enter your 6-digit PIN to continue</div>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="pin-keypad" id="pinKeypad">
+      <button class="pin-key" data-k="1">1</button>
+      <button class="pin-key" data-k="2">2</button>
+      <button class="pin-key" data-k="3">3</button>
+      <button class="pin-key" data-k="4">4</button>
+      <button class="pin-key" data-k="5">5</button>
+      <button class="pin-key" data-k="6">6</button>
+      <button class="pin-key" data-k="7">7</button>
+      <button class="pin-key" data-k="8">8</button>
+      <button class="pin-key" data-k="9">9</button>
+      <button class="pin-key wide" data-k="clear">Clear</button>
+      <button class="pin-key" data-k="0">0</button>
+      <button class="pin-key wide" data-k="back">⌫</button>
+    </div>
+    <div class="pin-error-msg" id="pinErrMsg"></div>
+  </div>
+</div>
+
+<!-- HOME SCREEN -->
+<div class="screen" id="s-home">
+  <div class="kiosk-topbar">
+    <div class="kt-title">
+      <h1>Hounslow On-Site Database</h1>
+      <span>Tap a name to view their documents</span>
+    </div>
+    <button class="kt-lock" id="lockBtnHome">🔒 Lock</button>
+  </div>
+  <div class="kiosk-body">
+    <div class="su-grid" id="suGrid"></div>
+  </div>
+</div>
+
+<!-- OPTIONS SCREEN -->
+<div class="screen" id="s-options">
+  <div class="kiosk-topbar">
+    <button class="kt-back" onclick="goHome()">←</button>
+    <div class="kt-title">
+      <h1 id="optTitle">—</h1>
+      <span>Tap a category to open it</span>
+    </div>
+    <button class="kt-lock" id="lockBtnOptions">🔒 Lock</button>
+  </div>
+  <div class="kiosk-body">
+    <div class="opt-grid" id="optGrid"></div>
+  </div>
+</div>
+
+<!-- PDF VIEWER SCREEN -->
+<div class="screen" id="s-viewer" style="flex-direction:column">
+  <div class="viewer-topbar">
+    <button class="kt-back" onclick="goBackFromViewer()">←</button>
+    <h2 id="viewerTitle">Document</h2>
+  </div>
+  <iframe id="pdfFrame"></iframe>
+</div>
+
+<script type="module">
+import { initializeApp }                     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously }        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, getDocs,
+         query, where, orderBy }             from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCwHzZFibrc9SNP8vAV6Jr_NmQr4fVCEto",
+  authDomain: "connected-stars-handover.firebaseapp.com",
+  projectId: "connected-stars-handover",
+  storageBucket: "connected-stars-handover.firebasestorage.app",
+  messagingSenderId: "606134396217",
+  appId: "1:606134396217:web:6636e2fbe9b73b7723b4e8"
+};
+const fbApp = initializeApp(firebaseConfig);
+const auth  = getAuth(fbApp);
+const db    = getFirestore(fbApp);
+
+// ── ICON SET (shared shape with hounslow-admin.html) ──
+const ICONS = {
+  document:   '<path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/>',
+  shield:     '<path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z"/>',
+  heart:      '<path d="M12 20s-7-4.35-9.5-8.5C.7 8.2 2 4.5 5.5 4a5 5 0 0 1 6.5 2 5 5 0 0 1 6.5-2c3.5.5 4.8 4.2 3 7.5C19 15.65 12 20 12 20z"/>',
+  calendar:   '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  users:      '<circle cx="8" cy="8" r="3"/><path d="M2 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.2c2.6.5 4.5 2.5 4.5 5.8"/>',
+  clipboard:  '<rect x="6" y="4" width="12" height="17" rx="2"/><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 11h6M9 15h6"/>',
+  alert:      '<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4"/><circle cx="12" cy="17.3" r="1" fill="currentColor" stroke="none"/>',
+  book:       '<path d="M4 5c0-1 1-2 2-2h6v18H6c-1 0-2-1-2-2V5z"/><path d="M20 5c0-1-1-2-2-2h-6v18h6c1 0 2-1 2-2V5z"/>',
+  phone:      '<path d="M6 3h3l2 5-2.5 1.5a12 12 0 0 0 5 5L15 12l5 2v3c0 1-1 2-2 2C10 19 4 13 4 6c0-1 1-2 2-2z"/>',
+  home:       '<path d="M4 11 12 4l8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/>',
+  star:       '<path d="M12 3l2.7 5.9 6.3.6-4.8 4.3 1.4 6.2L12 16.9 6.4 20l1.4-6.2L3 9.5l6.3-.6L12 3z"/>',
+  filetext:   '<path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>',
+  briefcase:  '<rect x="3" y="7" width="18" height="12" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>',
+  chat:       '<path d="M4 5h16v11H8l-4 4V5z"/>'
+};
+function iconSvg(key, size) {
+  const p = ICONS[key] || ICONS.document;
+  return `<svg width="${size||32}" height="${size||32}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+}
+
+// ── STATE ──
+let enteredPin = '';
+let unlocked = false;
+let currentTile = null;
+let tilesCache = [];
+let idleTimer = null;
+const IDLE_LIMIT_MS = 10 * 60 * 1000; // 10 min
+
+// ── ANONYMOUS AUTH ──
+signInAnonymously(auth).catch(err => {
+  document.getElementById('pinErrMsg').textContent = 'Connection error — check network and reload';
+});
+
+// ── PIN ENTRY ──
+document.getElementById('pinKeypad').addEventListener('click', e => {
+  const btn = e.target.closest('.pin-key');
+  if (!btn) return;
+  const k = btn.dataset.k;
+  if (k === 'clear') { enteredPin = ''; renderDots(); return; }
+  if (k === 'back')  { enteredPin = enteredPin.slice(0, -1); renderDots(); return; }
+  if (enteredPin.length >= 6) return;
+  enteredPin += k;
+  renderDots();
+  if (enteredPin.length === 6) checkPin();
+});
+
+function renderDots() {
+  const dots = document.querySelectorAll('.pin-dot');
+  dots.forEach((d, i) => { d.classList.toggle('filled', i < enteredPin.length); d.classList.remove('err'); });
+  document.getElementById('pinErrMsg').textContent = '';
+}
+
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function checkPin() {
+  try {
+    const hash = await sha256Hex(enteredPin);
+    const snap = await getDocs(query(collection(db, 'hounslowPins'), where('status', '==', 'active')));
+    const match = snap.docs.some(d => d.data().pinHash === hash);
+    if (match) {
+      unlocked = true;
+      sessionStorage.setItem('hounslowUnlocked', String(Date.now()));
+      enteredPin = '';
+      await goHome();
+      resetIdleTimer();
+    } else {
+      document.querySelectorAll('.pin-dot').forEach(d => d.classList.add('err'));
+      document.getElementById('pinErrMsg').textContent = 'Incorrect PIN — try again';
+      setTimeout(() => { enteredPin = ''; renderDots(); }, 500);
+    }
+  } catch (e) {
+    document.getElementById('pinErrMsg').textContent = 'Could not verify PIN — check connection';
+    enteredPin = '';
+  }
+}
+
+// ── SCREEN SWITCHING ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+window.goHome = async function() {
+  await loadTiles();
+  showScreen('s-home');
+};
+
+window.goBackFromViewer = function() {
+  document.getElementById('pdfFrame').src = 'about:blank';
+  showScreen('s-options');
+};
+
+window.lockKiosk = function() {
+  unlocked = false;
+  currentTile = null;
+  enteredPin = '';
+  sessionStorage.removeItem('hounslowUnlocked');
+  document.getElementById('pdfFrame').src = 'about:blank';
+  renderDots();
+  showScreen('s-pin');
+  clearTimeout(idleTimer);
+};
+document.getElementById('lockBtnHome').addEventListener('click', lockKiosk);
+document.getElementById('lockBtnOptions').addEventListener('click', lockKiosk);
+
+// ── IDLE AUTO-LOCK ──
+function resetIdleTimer() {
+  clearTimeout(idleTimer);
+  if (!unlocked) return;
+  idleTimer = setTimeout(() => { if (unlocked) lockKiosk(); }, IDLE_LIMIT_MS);
+}
+['click', 'touchstart', 'keydown', 'scroll'].forEach(evt => document.addEventListener(evt, resetIdleTimer, { passive: true }));
+
+// ── DATA LOADING ──
+async function loadTiles() {
+  const grid = document.getElementById('suGrid');
+  try {
+    const snap = await getDocs(query(collection(db, 'hounslowTiles'), where('status', '==', 'active'), orderBy('order')));
+    tilesCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    grid.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div><h3>Could not load tiles</h3><p>Check the network connection and try again.</p></div>`;
+    return;
+  }
+  if (!tilesCache.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="es-icon">🗂️</div><h3>No tiles set up yet</h3><p>Ask an admin to add service user tiles.</p></div>`;
+    return;
+  }
+  grid.innerHTML = tilesCache.map(t => {
+    const initials = (t.displayName || '?').trim().slice(0, 2).toUpperCase();
+    return `<div class="su-tile" data-id="${t.id}">
+      <div class="su-img">${t.imageUrl ? `<img src="${esc(t.imageUrl)}" alt="">` : initials}</div>
+      <div class="su-tile-name">${esc(t.displayName)}</div>
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.su-tile').forEach(el => el.addEventListener('click', () => openTile(el.dataset.id)));
+}
+
+async function openTile(tileId) {
+  currentTile = tilesCache.find(t => t.id === tileId);
+  if (!currentTile) return;
+  document.getElementById('optTitle').textContent = currentTile.displayName;
+  const grid = document.getElementById('optGrid');
+  grid.innerHTML = '';
+  try {
+    const snap = await getDocs(query(collection(db, 'hounslowOptions'),
+      where('tileId', '==', tileId), where('status', '==', 'active'), orderBy('order')));
+    const opts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!opts.length) {
+      grid.innerHTML = `<div class="empty-state"><div class="es-icon">📄</div><h3>No documents set up yet</h3><p>Ask an admin to add categories for ${esc(currentTile.displayName)}.</p></div>`;
+    } else {
+      grid.innerHTML = opts.map(o => {
+        const has = !!o.fileUrl;
+        return `<div class="opt-tile ${has ? '' : 'disabled'}" data-id="${o.id}" data-url="${has ? esc(o.fileUrl) : ''}" data-name="${esc(o.name)}">
+          <div class="opt-ic">${iconSvg(o.icon)}</div>
+          <div class="opt-name">${esc(o.name)}</div>
+          <div class="opt-status ${has ? 'avail' : ''}">${has ? 'Available' : 'Not yet available'}</div>
+        </div>`;
+      }).join('');
+      grid.querySelectorAll('.opt-tile:not(.disabled)').forEach(el => {
+        el.addEventListener('click', () => openViewer(el.dataset.url, el.dataset.name));
+      });
+    }
+  } catch (e) {
+    grid.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div><h3>Could not load documents</h3><p>Check the network connection and try again.</p></div>`;
+  }
+  showScreen('s-options');
+}
+
+function openViewer(url, name) {
+  document.getElementById('viewerTitle').textContent = name;
+  document.getElementById('pdfFrame').src = url;
+  showScreen('s-viewer');
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── PWA SERVICE WORKER ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('hounslow-sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

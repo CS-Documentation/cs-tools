@@ -22,6 +22,9 @@ o-handover.html      — Overnight/operational handover (114 KB)
 super-admin.html     — Admin management panel (58 KB)
 task-board.html      — Kanban task manager (104 KB)
 cs-documents.html    — Document template manager (new)
+hounslow-kiosk.html  — On-site PIN-locked kiosk (Android tablet, new)
+hounslow-admin.html  — Admin panel for the Hounslow kiosk (new)
+hounslow-manifest.json / hounslow-sw.js / hounslow-icon.svg — PWA assets for the kiosk
 ```
 
 ## Tool Documentation
@@ -31,6 +34,7 @@ Read these instead of the full HTML files:
 - [super-admin.md](super-admin.md) — Super Admin panel
 - [task-board.md](task-board.md) — Task Board
 - [cs-documents.md](cs-documents.md) — Documents tool
+- [hounslow.md](hounslow.md) — Hounslow on-site kiosk + admin panel
 
 ## Shared Firestore Collections
 These collections are read/written by multiple tools:
@@ -44,6 +48,9 @@ These collections are read/written by multiple tools:
 | `adhocTasks` | cs-handover | task-board (reads/writes same collection) |
 | `documentTemplates` | cs-documents | cs-documents only |
 | `serviceUserDocuments` | cs-documents | cs-documents only |
+| `hounslowPins` | hounslow-admin | hounslow-kiosk (reads only), hounslow-admin |
+| `hounslowTiles` | hounslow-admin | hounslow-kiosk, hounslow-admin |
+| `hounslowOptions` | hounslow-admin | hounslow-kiosk, hounslow-admin |
 
 ### `staffProfiles` schema
 ```js
@@ -89,6 +96,11 @@ These collections are read/written by multiple tools:
 --r: 10px           --rs: 8px
 --sh / --sh-md / --sh-lg  (box-shadow tokens)
 ```
+
+## Brand Assets
+- **Official logo**: `https://raw.githubusercontent.com/CS-Documentation/invoice/refs/heads/main/front%20page%20header.png` — Connected Stars header logo, hosted in the `CS-Documentation/invoice` repo, used across other Connected Stars projects. Reference this URL directly rather than re-uploading a copy.
+- **Colors**: the CSS variable block above is the canonical source — the `--brand` blue (`#1446a0`) matches this logo. Don't re-derive a palette from scratch.
+- **Default for new tools**: unless told otherwise, new tools in this repo should reuse this logo and these CSS variables rather than inventing new branding.
 
 ## Cross-Tool Conventions
 - Attribution always stored as `initials` (2-3 char) from `staffProfiles`

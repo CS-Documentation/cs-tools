@@ -1,0 +1,15 @@
+{
+  "name": "Hounslow On-Site Database",
+  "short_name": "Hounslow",
+  "description": "On-site kiosk for viewing service user documents at Hounslow.",
+  "start_url": "./hounslow-kiosk.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1446a0",
+  "theme_color": "#1446a0",
+  "icons": [
+    { "src": "hounslow-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "hounslow-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

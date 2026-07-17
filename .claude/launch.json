@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cs-tools",
+      "runtimeExecutable": "py",
+      "runtimeArgs": ["-3", "-m", "http.server", "3333"],
+      "port": 3333
+    }
+  ]
+}

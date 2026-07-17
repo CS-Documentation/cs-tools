@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hounslow Admin — Connected Stars</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brand:#1446a0;--brand-dark:#0d3278;--brand-light:#e8eef8;--brand-mid:#2d5bbf;
+  --bg:#f4f6fb;--surface:#fff;--surface2:#f7f9fc;--surface3:#edf0f7;
+  --border:#dde3ef;--border2:#b8c5e0;
+  --text:#1a1a2e;--text2:#4a5568;--text3:#6b7280;
+  --green:#27ae60;--green-bg:#eafaf1;--green-bd:#a9dfbf;
+  --amber:#e67e22;--amber-bg:#fef9f0;--amber-bd:#fad7a0;
+  --red:#c0392b;--red-bg:#fdf0ef;--red-bd:#f5c6c2;
+  --purple:#7b2d8b;--purple-bg:#f5eef8;--purple-bd:#d7b8e0;
+  --teal:#0e7490;--teal-bg:#e7f6f8;--teal-bd:#a8d8e0;
+  --r:10px;--rs:8px;
+  --sh:0 2px 12px rgba(20,70,160,.08);
+  --sh-md:0 4px 16px rgba(20,70,160,.12);
+  --sidebar-w:240px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+
+/* LOGIN */
+#loginScreen{min-height:100vh;background:linear-gradient(135deg,var(--brand-dark) 0%,var(--brand) 50%,var(--brand-mid) 100%);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--surface);border-radius:20px;padding:48px 40px;width:100%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,.25);text-align:center}
+.login-logo-wrap{background:var(--brand);border-radius:10px;padding:14px 20px;margin:0 auto 28px;max-width:280px;display:flex;align-items:center;justify-content:center;gap:10px}
+.login-logo-wrap svg{flex-shrink:0}
+.login-logo-text{color:#fff;font-size:15px;font-weight:800;letter-spacing:-.3px;text-align:left;line-height:1.25}
+.login-logo-text span{display:block;font-size:10px;font-weight:500;opacity:.75;letter-spacing:1px;text-transform:uppercase}
+.login-badge{display:inline-flex;align-items:center;gap:5px;background:var(--red-bg);border:1px solid var(--red-bd);color:var(--red);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;margin-bottom:16px;letter-spacing:.5px;text-transform:uppercase}
+.login-title{font-size:22px;font-weight:700;color:var(--brand);margin-bottom:6px}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:28px}
+.login-err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd);border-radius:var(--rs);padding:10px 14px;font-size:13px;margin-bottom:16px;display:none;text-align:left}
+.form-group{margin-bottom:16px;text-align:left}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:#fff;outline:none;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(20,70,160,.1)}
+.login-btn{display:block;width:100%;padding:13px;background:var(--brand);color:#fff;border:none;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+.login-btn:hover{background:var(--brand-dark);transform:translateY(-1px)}
+.login-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+/* ACCESS DENIED */
+#accessDenied{display:none;min-height:100vh;background:linear-gradient(135deg,var(--brand-dark) 0%,var(--brand) 50%,var(--brand-mid) 100%);align-items:center;justify-content:center;padding:20px}
+.denied-card{background:var(--surface);border-radius:20px;padding:48px 40px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.25);text-align:center}
+.denied-icon{font-size:48px;margin-bottom:16px}
+.denied-title{font-size:22px;font-weight:700;color:var(--red);margin-bottom:8px}
+.denied-sub{font-size:14px;color:var(--text3);margin-bottom:24px}
+
+/* APP LAYOUT */
+#app{display:none;flex-direction:row;min-height:100vh}
+#sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200}
+#main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* SIDEBAR */
+.sb-header{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.sb-brand{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text3);margin-bottom:3px}
+.sb-title{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.4px}
+.sb-title span{color:var(--brand)}
+.sb-badge{margin-top:6px;display:inline-flex;align-items:center;gap:4px;background:var(--red-bg);border:1px solid var(--red-bd);color:var(--red);font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase}
+.sb-nav{padding:8px;flex:1;overflow-y:auto}
+.sb-sec{padding:10px 8px 4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3)}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--rs);cursor:pointer;color:var(--text2);font-weight:500;font-size:13px;transition:all .12s;margin-bottom:1px;user-select:none}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--brand-light);color:var(--brand);font-weight:700}
+.nav-item .ni{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.nav-count{margin-left:auto;background:var(--surface3);color:var(--text3);font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px}
+.nav-item.active .nav-count{background:rgba(20,70,160,.15);color:var(--brand)}
+.sb-user{padding:12px 14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:9px}
+.u-av{width:30px;height:30px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.u-name{font-size:12px;font-weight:700;line-height:1.3}
+.u-role{font-size:10px;color:var(--text3)}
+.u-signout{margin-left:auto;background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:4px;border-radius:4px;font-family:'DM Sans',sans-serif}
+.u-signout:hover{color:var(--red)}
+
+/* TOPBAR */
+#topbar{background:var(--brand);color:#fff;padding:0 20px;min-height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(20,70,160,.3)}
+.tb-title{font-size:16px;font-weight:700;flex:1}
+.tb-sub{font-size:12px;opacity:.75;margin-left:4px;font-weight:400}
+.tb-back{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.tb-back:hover{background:rgba(255,255,255,.25)}
+
+/* CONTENT */
+#content{padding:20px;flex:1}
+.view{display:none}.view.active{display:block}
+
+/* PAGE HEADER */
+.page-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.page-hdr h2{font-size:18px;font-weight:800;letter-spacing:-.3px}
+.page-hdr p{font-size:13px;color:var(--text3);margin-top:2px}
+
+/* TABLE */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--surface2)}
+th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.empty-row td{text-align:center;padding:32px;color:var(--text3);font-style:italic}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.badge-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+.badge-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+.badge-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd)}
+.badge-blue{background:var(--brand-light);color:var(--brand);border:1px solid #b8cae8}
+.badge-grey{background:var(--surface3);color:var(--text3);border:1px solid var(--border)}
+.badge-purple{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-bd)}
+.badge-teal{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-bd)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--rs);border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--brand-dark)}
+.btn-ghost{background:transparent;color:var(--text2);border:1.5px solid var(--border)}
+.btn-ghost:hover{background:var(--surface2);border-color:var(--border2)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+.btn-danger:hover{background:#fbe3e1}
+.btn-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd)}
+.btn-amber:hover{background:#fdefd8}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-icon{padding:5px 8px;font-size:14px;line-height:1}
+.actions-cell{display:flex;gap:5px;flex-wrap:wrap}
+
+/* TILE GRID (admin preview cards) */
+.tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.tile-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);cursor:pointer;transition:all .15s;display:flex;flex-direction:column}
+.tile-card:hover{border-color:var(--brand);transform:translateY(-2px);box-shadow:var(--sh-md)}
+.tile-card.inactive{opacity:.55}
+.tile-img{width:100%;aspect-ratio:1/1;background:var(--brand-light);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:var(--brand);overflow:hidden}
+.tile-img img{width:100%;height:100%;object-fit:cover}
+.tile-body{padding:10px 12px}
+.tile-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px}
+.tile-meta{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.tile-actions{padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:6px}
+.tile-actions .btn{flex:1;justify-content:center}
+.add-tile-card{border:2px dashed var(--border2);background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:center;min-height:180px;color:var(--text3);font-weight:700;font-size:13px;flex-direction:column;gap:8px}
+.add-tile-card:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-light)}
+
+/* OPTION LIST */
+.option-list{display:flex;flex-direction:column;gap:10px}
+.option-row{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh)}
+.option-row.inactive{opacity:.55}
+.option-ic{width:42px;height:42px;border-radius:10px;background:var(--brand-light);color:var(--brand);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.option-ic svg{width:22px;height:22px}
+.option-main{flex:1;min-width:0}
+.option-name{font-size:14px;font-weight:700;color:var(--text)}
+.option-file{font-size:11px;color:var(--text3);margin-top:2px}
+.option-ord{display:flex;flex-direction:column;gap:2px}
+.ord-btn{background:var(--surface2);border:1px solid var(--border);border-radius:4px;width:22px;height:18px;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;color:var(--text2)}
+.ord-btn:hover{background:var(--surface3)}
+.ord-btn:disabled{opacity:.3;cursor:not-allowed}
+
+/* ICON PICKER */
+.icon-picker{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:6px}
+.icon-opt{aspect-ratio:1/1;border:1.5px solid var(--border);border-radius:var(--rs);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:all .12s;background:#fff}
+.icon-opt svg{width:20px;height:20px}
+.icon-opt:hover{border-color:var(--border2);background:var(--surface2)}
+.icon-opt.sel{border-color:var(--brand);background:var(--brand-light);color:var(--brand)}
+
+/* UPLOAD DROPZONE */
+.dropzone{border:2px dashed var(--border2);border-radius:var(--r);padding:20px;text-align:center;cursor:pointer;transition:all .15s;background:var(--surface2)}
+.dropzone:hover,.dropzone.drag{border-color:var(--brand);background:var(--brand-light)}
+.dropzone .dz-icon{font-size:24px;margin-bottom:6px}
+.dropzone .dz-text{font-size:13px;color:var(--text2);font-weight:600}
+.dropzone .dz-hint{font-size:11px;color:var(--text3);margin-top:3px}
+.dz-preview{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);margin-top:8px}
+.dz-preview img{width:44px;height:44px;object-fit:cover;border-radius:6px}
+.dz-preview .dz-fname{flex:1;font-size:12px;color:var(--text2);word-break:break-all}
+.dz-remove{background:transparent;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:2px 6px}
+
+/* PIN INPUT */
+.pin-boxes{display:flex;gap:8px;justify-content:center}
+.pin-boxes input{width:44px;height:52px;text-align:center;font-size:22px;font-family:'DM Mono',monospace;font-weight:700;border:1.5px solid var(--border);border-radius:var(--rs);outline:none}
+.pin-boxes input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(20,70,160,.1)}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(26,26,46,.45);z-index:1000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border-radius:16px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;max-height:90vh;display:flex;flex-direction:column}
+.modal-lg{max-width:620px}
+.modal-hdr{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-hdr h3{font-size:16px;font-weight:700}
+.modal-close{background:transparent;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:2px 6px;border-radius:4px;line-height:1}
+.modal-close:hover{background:var(--surface2);color:var(--text)}
+.modal-body{padding:20px;overflow-y:auto;flex:1}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-hint{font-size:11px;color:var(--text3);margin-top:4px}
+.form-sep{border:none;border-top:1px solid var(--border);margin:16px 0}
+
+/* CONFIRM DIALOG */
+.confirm-icon{font-size:36px;text-align:center;margin-bottom:12px}
+.confirm-msg{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:4px}
+.confirm-warn{font-size:12px;color:var(--text3);margin-top:8px}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast-item{background:var(--text);color:#fff;padding:11px 16px;border-radius:var(--rs);font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.2);animation:toastIn .25s ease;max-width:320px}
+.toast-item.t-success{background:var(--green)}
+.toast-item.t-error{background:var(--red)}
+.toast-item.t-warn{background:var(--amber)}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  #sidebar{transform:translateX(-100%);transition:transform .25s}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}
+  .form-row{grid-template-columns:1fr}
+  .icon-picker{grid-template-columns:repeat(5,1fr)}
+  #sb-overlay{display:none;position:fixed;inset:0;background:rgba(26,26,46,.35);z-index:190}
+  #sb-overlay.show{display:block}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo-wrap">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="rgba(255,255,255,0.15)"/><path d="M7 14l5 5 9-9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="login-logo-text">Connected Stars<span>Care Management</span></div>
+    </div>
+    <div class="login-badge">🔒 Admin Only</div>
+    <h1 class="login-title">Hounslow Admin</h1>
+    <p class="login-sub">Manage the on-site kiosk tiles, options and PINs</p>
+    <div id="loginErr" class="login-err"></div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email / Username</label>
+        <input id="emailIn" type="text" placeholder="username or full email" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input id="passIn" type="password" placeholder="Password" autocomplete="current-password">
+      </div>
+      <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
+    </form>
+  </div>
+</div>
+
+<!-- ACCESS DENIED -->
+<div id="accessDenied">
+  <div class="denied-card">
+    <div class="denied-icon">🚫</div>
+    <h2 class="denied-title">Access Denied</h2>
+    <p class="denied-sub">This panel is restricted to administrators only. Please contact your system admin if you believe this is an error.</p>
+    <button class="btn btn-ghost" onclick="doSignOut()">Sign Out</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div id="sb-overlay" onclick="closeSidebar()"></div>
+  <div id="sidebar">
+    <div class="sb-header">
+      <div class="sb-brand">Connected Stars</div>
+      <div class="sb-title">Hounslow <span>Admin</span></div>
+      <div class="sb-badge">🔒 Kiosk Admin</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-sec">Kiosk</div>
+      <div class="nav-item active" onclick="showView('tiles')" id="nav-tiles">
+        <span class="ni">▦</span> Service User Tiles
+        <span class="nav-count" id="cnt-tiles">0</span>
+      </div>
+      <div class="sb-sec">Security</div>
+      <div class="nav-item" onclick="showView('pins')" id="nav-pins">
+        <span class="ni">🔑</span> Access PINs
+        <span class="nav-count" id="cnt-pins">0</span>
+      </div>
+    </nav>
+    <div class="sb-user">
+      <div class="u-av" id="userAv">A</div>
+      <div>
+        <div class="u-name" id="userName">Admin</div>
+        <div class="u-role">Administrator</div>
+      </div>
+      <button class="u-signout" onclick="doSignOut()" title="Sign out">Sign out</button>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="topbar">
+      <button class="tb-back" id="tbBack" style="display:none" onclick="showView('tiles')">← Back to Tiles</button>
+      <div class="tb-title" id="topbarTitle">Service User Tiles <span class="tb-sub">What appears on the kiosk home screen</span></div>
+    </div>
+    <div id="content">
+
+      <!-- PINS VIEW -->
+      <div class="view" id="v-pins">
+        <div class="page-hdr">
+          <div>
+            <h2>Access PINs</h2>
+            <p>Any active PIN below unlocks the kiosk. You can run several at once (e.g. one per shift) and revoke any of them independently.</p>
+          </div>
+          <button class="btn btn-primary" onclick="openPinModal()">＋ Add PIN</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Label</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="pinsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TILES VIEW -->
+      <div class="view active" id="v-tiles">
+        <div class="page-hdr">
+          <div>
+            <h2>Service User Tiles</h2>
+            <p>Add a tile per service user shown on the kiosk home screen. Tap a tile below to manage its document categories.</p>
+          </div>
+        </div>
+        <div class="tile-grid" id="tilesGrid"></div>
+      </div>
+
+      <!-- TILE DETAIL VIEW (options for one tile) -->
+      <div class="view" id="v-tile-detail">
+        <div class="page-hdr">
+          <div>
+            <h2 id="tdName">—</h2>
+            <p>Document categories shown when this tile is tapped on the kiosk.</p>
+          </div>
+          <div class="actions-cell">
+            <button class="btn btn-ghost" onclick="openDuplicateModal()">⧉ Duplicate from…</button>
+            <button class="btn btn-primary" onclick="openOptionModal()">＋ Add Option</button>
+          </div>
+        </div>
+        <div class="option-list" id="optionsList"></div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- PIN MODAL -->
+<div class="modal-bg" id="pinModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3>Add Access PIN</h3>
+      <button class="modal-close" onclick="closeModal('pinModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Label *</label>
+        <input id="pinLabel" type="text" placeholder="e.g. Reception, Night Staff">
+        <div class="form-hint">Shown to admins only — never the PIN itself. You can't view a PIN again after saving, only revoke it and add a new one.</div>
+      </div>
+      <div class="form-group">
+        <label>6-Digit PIN *</label>
+        <input id="pinValue" type="text" inputmode="numeric" maxlength="6" placeholder="••••••" style="font-family:'DM Mono',monospace;letter-spacing:4px">
+      </div>
+      <div class="form-group">
+        <label>Confirm PIN *</label>
+        <input id="pinConfirm" type="text" inputmode="numeric" maxlength="6" placeholder="••••••" style="font-family:'DM Mono',monospace;letter-spacing:4px">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('pinModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePin()">Save PIN</button>
+    </div>
+  </div>
+</div>
+
+<!-- TILE MODAL -->
+<div class="modal-bg" id="tileModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="tileModalTitle">Add Tile</h3>
+      <button class="modal-close" onclick="closeModal('tileModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Service User *</label>
+        <select id="tileSU"></select>
+        <div class="form-hint">The real profile this tile links to (for reference only)</div>
+      </div>
+      <div class="form-group">
+        <label>Display Name on Tile *</label>
+        <input id="tileDisplayName" type="text" placeholder="Name shown on the kiosk tile">
+      </div>
+      <div class="form-group">
+        <label>Tile Image (optional)</label>
+        <div class="dropzone" id="tileDz" onclick="document.getElementById('tileImgFile').click()">
+          <div class="dz-icon">🖼️</div>
+          <div class="dz-text">Click to choose an image</div>
+          <div class="dz-hint">JPG or PNG, square photos work best</div>
+        </div>
+        <input type="file" id="tileImgFile" accept="image/*" style="display:none">
+        <div id="tileImgPreviewWrap"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('tileModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTile()" id="tileSaveBtn">Save Tile</button>
+    </div>
+  </div>
+</div>
+
+<!-- OPTION MODAL -->
+<div class="modal-bg" id="optionModal">
+  <div class="modal modal-lg">
+    <div class="modal-hdr">
+      <h3 id="optionModalTitle">Add Option</h3>
+      <button class="modal-close" onclick="closeModal('optionModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Option Name *</label>
+        <input id="optName" type="text" placeholder="e.g. Support Plan">
+      </div>
+      <div class="form-group">
+        <label>Icon</label>
+        <div class="icon-picker" id="iconPicker"></div>
+      </div>
+      <div class="form-group">
+        <label>PDF Document</label>
+        <div class="dropzone" id="optDz" onclick="document.getElementById('optPdfFile').click()">
+          <div class="dz-icon">📄</div>
+          <div class="dz-text">Click to choose a PDF</div>
+          <div class="dz-hint">This is what opens when staff tap this option on the kiosk</div>
+        </div>
+        <input type="file" id="optPdfFile" accept="application/pdf" style="display:none">
+        <div id="optPdfPreviewWrap"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('optionModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveOption()" id="optSaveBtn">Save Option</button>
+    </div>
+  </div>
+</div>
+
+<!-- DUPLICATE OPTIONS MODAL -->
+<div class="modal-bg" id="duplicateModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3>Duplicate Options From…</h3>
+      <button class="modal-close" onclick="closeModal('duplicateModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Copies the option names, icons and order from another tile into this one. PDFs are left empty — you'll upload them separately for this service user.</p>
+      <div class="form-group">
+        <label>Copy From Tile *</label>
+        <select id="dupSourceTile"></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('duplicateModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmDuplicate()">Duplicate Options</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-bg" id="confirmModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="confirmTitle">Confirm</h3>
+      <button class="modal-close" onclick="closeModal('confirmModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-icon" id="confirmIcon">⚠️</div>
+      <p class="confirm-msg" id="confirmMsg"></p>
+      <p class="confirm-warn" id="confirmWarn"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('confirmModal')">Cancel</button>
+      <button class="btn btn-danger" id="confirmOkBtn" onclick="runConfirmAction()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp }                                          from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword,
+         onAuthStateChanged, signOut as fbSignOut }              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc,
+         getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+         query, where, orderBy, serverTimestamp }                 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref as sRef, uploadBytes,
+         getDownloadURL, deleteObject }                           from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCwHzZFibrc9SNP8vAV6Jr_NmQr4fVCEto",
+  authDomain: "connected-stars-handover.firebaseapp.com",
+  projectId: "connected-stars-handover",
+  storageBucket: "connected-stars-handover.firebasestorage.app",
+  messagingSenderId: "606134396217",
+  appId: "1:606134396217:web:6636e2fbe9b73b7723b4e8"
+};
+
+const fbApp   = initializeApp(firebaseConfig);
+const auth    = getAuth(fbApp);
+const db      = getFirestore(fbApp);
+const storage = getStorage(fbApp);
+
+// ── ICON SET (shared shape with hounslow-kiosk.html) ──
+const ICONS = {
+  document:   '<path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/>',
+  shield:     '<path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z"/>',
+  heart:      '<path d="M12 20s-7-4.35-9.5-8.5C.7 8.2 2 4.5 5.5 4a5 5 0 0 1 6.5 2 5 5 0 0 1 6.5-2c3.5.5 4.8 4.2 3 7.5C19 15.65 12 20 12 20z"/>',
+  calendar:   '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  users:      '<circle cx="8" cy="8" r="3"/><path d="M2 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.2c2.6.5 4.5 2.5 4.5 5.8"/>',
+  clipboard:  '<rect x="6" y="4" width="12" height="17" rx="2"/><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 11h6M9 15h6"/>',
+  alert:      '<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4"/><circle cx="12" cy="17.3" r="1" fill="currentColor" stroke="none"/>',
+  book:       '<path d="M4 5c0-1 1-2 2-2h6v18H6c-1 0-2-1-2-2V5z"/><path d="M20 5c0-1-1-2-2-2h-6v18h6c1 0 2-1 2-2V5z"/>',
+  phone:      '<path d="M6 3h3l2 5-2.5 1.5a12 12 0 0 0 5 5L15 12l5 2v3c0 1-1 2-2 2C10 19 4 13 4 6c0-1 1-2 2-2z"/>',
+  home:       '<path d="M4 11 12 4l8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/>',
+  star:       '<path d="M12 3l2.7 5.9 6.3.6-4.8 4.3 1.4 6.2L12 16.9 6.4 20l1.4-6.2L3 9.5l6.3-.6L12 3z"/>',
+  filetext:   '<path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>',
+  briefcase:  '<rect x="3" y="7" width="18" height="12" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>',
+  chat:       '<path d="M4 5h16v11H8l-4 4V5z"/>'
+};
+function iconSvg(key, size) {
+  const p = ICONS[key] || ICONS.document;
+  return `<svg width="${size||20}" height="${size||20}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+}
+
+// ── STATE ──
+let currentUser  = null;
+let currentStaff = null;
+let pins         = [];
+let tiles        = [];
+let serviceUsers = [];
+let options      = [];        // options for the currently-open tile
+let currentTileId = null;
+let editingTileId  = null;
+let editingOptionId = null;
+let pendingTileImageFile = null;
+let pendingOptPdfFile    = null;
+let selectedIcon = 'document';
+let confirmAction = null;
+
+// ── AUTH ──
+onAuthStateChanged(auth, async user => {
+  if (!user) { showScreen('login'); return; }
+  currentUser = user;
+  const snap = await getDoc(doc(db, 'staffProfiles', user.uid));
+  if (!snap.exists() || snap.data().role !== 'admin') { showScreen('denied'); return; }
+  currentStaff = { id: snap.id, ...snap.data() };
+  document.getElementById('userName').textContent = currentStaff.name || 'Admin';
+  document.getElementById('userAv').textContent   = (currentStaff.initials || currentStaff.name || 'A').slice(0,2).toUpperCase();
+  showScreen('app');
+  await loadAll();
+});
+
+document.getElementById('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  hideLoginErr();
+  let email = document.getElementById('emailIn').value.trim();
+  const pass = document.getElementById('passIn').value;
+  if (!email.includes('@')) email += '@connectedstars.co.uk';
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch (err) {
+    showLoginErr(friendlyAuthErr(err.code));
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+});
+
+window.doSignOut = async () => { await fbSignOut(auth); showScreen('login'); };
+
+// ── LOAD ──
+async function loadAll() {
+  await Promise.all([loadPins(), loadTiles(), loadServiceUsers()]);
+  updateCounts();
+}
+
+async function loadPins() {
+  const snap = await getDocs(query(collection(db, 'hounslowPins'), orderBy('createdAt', 'desc')));
+  pins = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderPins();
+}
+
+async function loadTiles() {
+  const snap = await getDocs(query(collection(db, 'hounslowTiles'), orderBy('order')));
+  tiles = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderTiles();
+}
+
+async function loadServiceUsers() {
+  const snap = await getDocs(query(collection(db, 'serviceUsers'), where('status', '==', 'active'), orderBy('name')));
+  serviceUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+async function loadOptions(tileId) {
+  const snap = await getDocs(query(collection(db, 'hounslowOptions'), where('tileId', '==', tileId), orderBy('order')));
+  options = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderOptions();
+}
+
+function updateCounts() {
+  document.getElementById('cnt-tiles').textContent = tiles.filter(t => t.status !== 'inactive').length;
+  document.getElementById('cnt-pins').textContent  = pins.filter(p => p.status !== 'inactive').length;
+}
+
+// ── PIN HASHING ──
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ── PINS ──
+window.renderPins = function() {
+  const tbody = document.getElementById('pinsTbody');
+  if (!pins.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No PINs yet — add one so staff can unlock the kiosk.</td></tr>'; return; }
+  tbody.innerHTML = pins.map(p => {
+    const active = p.status !== 'inactive';
+    return `<tr>
+      <td><strong>${esc(p.label)}</strong></td>
+      <td>${active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-grey">Inactive</span>'}</td>
+      <td style="color:var(--text3);font-size:12px">${fmtDate(p.createdAt)}</td>
+      <td><div class="actions-cell">
+        <button class="btn btn-ghost btn-sm" onclick="togglePin('${p.id}')">${active ? 'Deactivate' : 'Activate'}</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePin('${p.id}')">Delete</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+};
+
+window.openPinModal = function() {
+  document.getElementById('pinLabel').value = '';
+  document.getElementById('pinValue').value = '';
+  document.getElementById('pinConfirm').value = '';
+  openModal('pinModal');
+};
+
+window.savePin = async function() {
+  const label   = document.getElementById('pinLabel').value.trim();
+  const pin     = document.getElementById('pinValue').value.trim();
+  const confirm = document.getElementById('pinConfirm').value.trim();
+  if (!label) { toast('Label is required', 'error'); return; }
+  if (!/^\d{6}$/.test(pin)) { toast('PIN must be exactly 6 digits', 'error'); return; }
+  if (pin !== confirm) { toast('PINs do not match', 'error'); return; }
+  try {
+    const pinHash = await sha256Hex(pin);
+    await addDoc(collection(db, 'hounslowPins'), {
+      label, pinHash, status: 'active',
+      createdAt: serverTimestamp(), createdBy: currentStaff.initials || '',
+      updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
+    });
+    toast('PIN added', 'success');
+    closeModal('pinModal');
+    await loadPins();
+    updateCounts();
+  } catch (e) { toast(e.message, 'error'); }
+};
+
+window.togglePin = async function(id) {
+  const p = pins.find(x => x.id === id);
+  const newStatus = p.status === 'inactive' ? 'active' : 'inactive';
+  await updateDoc(doc(db, 'hounslowPins', id), { status: newStatus, updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || '' });
+  toast(`PIN "${p.label}" ${newStatus === 'inactive' ? 'deactivated' : 'activated'}`);
+  await loadPins();
+  updateCounts();
+};
+
+window.deletePin = function(id) {
+  const p = pins.find(x => x.id === id);
+  confirmAction = async () => {
+    await deleteDoc(doc(db, 'hounslowPins', id));
+    toast('PIN deleted');
+    await loadPins();
+    updateCounts();
+  };
+  showConfirm('Delete PIN', `Delete the "${p.label}" PIN?`, 'Anyone using this PIN will no longer be able to unlock the kiosk.', '🗑️');
+};
+
+// ── TILES ──
+window.renderTiles = function() {
+  const grid = document.getElementById('tilesGrid');
+  const cards = tiles.map(t => {
+    const active = t.status !== 'inactive';
+    const initials = (t.displayName || '?').trim().slice(0, 2).toUpperCase();
+    return `<div class="tile-card ${active ? '' : 'inactive'}" onclick="openTileDetail('${t.id}')">
+      <div class="tile-img">${t.imageUrl ? `<img src="${esc(t.imageUrl)}" alt="">` : initials}</div>
+      <div class="tile-body">
+        <div class="tile-name">${esc(t.displayName)}</div>
+        <div class="tile-meta">${active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-grey">Inactive</span>'}</div>
+      </div>
+      <div class="tile-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-ghost btn-sm" onclick="openTileModal('${t.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteTile('${t.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+  grid.innerHTML = cards + `<div class="tile-card add-tile-card" onclick="openTileModal()"><div style="font-size:26px">＋</div>Add Tile</div>`;
+};
+
+window.openTileModal = function(id) {
+  editingTileId = id || null;
+  pendingTileImageFile = null;
+  document.getElementById('tileModalTitle').textContent = id ? 'Edit Tile' : 'Add Tile';
+  document.getElementById('tileSaveBtn').textContent    = id ? 'Save Changes' : 'Add Tile';
+
+  const suSel = document.getElementById('tileSU');
+  suSel.innerHTML = serviceUsers.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+
+  document.getElementById('tileImgPreviewWrap').innerHTML = '';
+  document.getElementById('tileImgFile').value = '';
+
+  if (id) {
+    const t = tiles.find(x => x.id === id);
+    suSel.value = t.serviceUserId || '';
+    document.getElementById('tileDisplayName').value = t.displayName || '';
+    if (t.imageUrl) {
+      document.getElementById('tileImgPreviewWrap').innerHTML =
+        `<div class="dz-preview"><img src="${esc(t.imageUrl)}"><span class="dz-fname">Current image</span></div>`;
+    }
+  } else {
+    document.getElementById('tileDisplayName').value = '';
+  }
+  openModal('tileModal');
+};
+
+document.getElementById('tileImgFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  pendingTileImageFile = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('tileImgPreviewWrap').innerHTML =
+      `<div class="dz-preview"><img src="${ev.target.result}"><span class="dz-fname">${esc(file.name)}</span>
+       <button class="dz-remove" onclick="clearTileImage()">✕</button></div>`;
+  };
+  reader.readAsDataURL(file);
+});
+
+window.clearTileImage = function() {
+  pendingTileImageFile = null;
+  document.getElementById('tileImgFile').value = '';
+  document.getElementById('tileImgPreviewWrap').innerHTML = '';
+};
+
+window.saveTile = async function() {
+  const btn = document.getElementById('tileSaveBtn');
+  const serviceUserId = document.getElementById('tileSU').value;
+  const displayName   = document.getElementById('tileDisplayName').value.trim();
+  if (!serviceUserId) { toast('Please select a service user', 'error'); return; }
+  if (!displayName)   { toast('Display name is required', 'error'); return; }
+  btn.disabled = true;
+  try {
+    let tileId = editingTileId;
+    if (tileId) {
+      await updateDoc(doc(db, 'hounslowTiles', tileId), {
+        serviceUserId, displayName, updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
+      });
+    } else {
+      const nextOrder = tiles.length ? Math.max(...tiles.map(t => t.order || 0)) + 1 : 0;
+      const docRef = await addDoc(collection(db, 'hounslowTiles'), {
+        serviceUserId, displayName, imageUrl: null, order: nextOrder, status: 'active',
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
+      });
+      tileId = docRef.id;
+    }
+    if (pendingTileImageFile) {
+      const path = `hounslow/tiles/${tileId}/${Date.now()}_${pendingTileImageFile.name}`;
+      const fileRef = sRef(storage, path);
+      await uploadBytes(fileRef, pendingTileImageFile);
+      const url = await getDownloadURL(fileRef);
+      await updateDoc(doc(db, 'hounslowTiles', tileId), { imageUrl: url });
+    }
+    toast(editingTileId ? 'Tile updated' : 'Tile added', 'success');
+    closeModal('tileModal');
+    await loadTiles();
+    updateCounts();
+  } catch (e) { toast(e.message, 'error'); } finally { btn.disabled = false; }
+};
+
+window.deleteTile = function(id) {
+  const t = tiles.find(x => x.id === id);
+  confirmAction = async () => {
+    const optSnap = await getDocs(query(collection(db, 'hounslowOptions'), where('tileId', '==', id)));
+    for (const d of optSnap.docs) { await deleteDoc(doc(db, 'hounslowOptions', d.id)); }
+    await deleteDoc(doc(db, 'hounslowTiles', id));
+    toast('Tile and its options deleted');
+    await loadTiles();
+    updateCounts();
+  };
+  showConfirm('Delete Tile', `Delete "${t.displayName}"?`, 'This also removes all of its document options and PDFs from the kiosk. This cannot be undone.', '🗑️');
+};
+
+// ── TILE DETAIL / OPTIONS ──
+window.openTileDetail = async function(id) {
+  currentTileId = id;
+  const t = tiles.find(x => x.id === id);
+  document.getElementById('tdName').textContent = t.displayName;
+  await loadOptions(id);
+  showView('tile-detail');
+};
+
+window.renderOptions = function() {
+  const wrap = document.getElementById('optionsList');
+  if (!options.length) {
+    wrap.innerHTML = `<div class="table-wrap"><table><tbody><tr class="empty-row"><td>No options yet. Add one, or duplicate from another tile.</td></tr></tbody></table></div>`;
+    return;
+  }
+  wrap.innerHTML = options.map((o, i) => {
+    const active = o.status !== 'inactive';
+    return `<div class="option-row ${active ? '' : 'inactive'}">
+      <div class="option-ic">${iconSvg(o.icon)}</div>
+      <div class="option-main">
+        <div class="option-name">${esc(o.name)}</div>
+        <div class="option-file">${o.fileUrl ? `📄 ${esc(o.fileName || 'PDF uploaded')}` : 'No PDF uploaded yet'}</div>
+      </div>
+      <div class="option-ord">
+        <button class="ord-btn" ${i === 0 ? 'disabled' : ''} onclick="moveOption('${o.id}', -1)">▲</button>
+        <button class="ord-btn" ${i === options.length - 1 ? 'disabled' : ''} onclick="moveOption('${o.id}', 1)">▼</button>
+      </div>
+      <div class="actions-cell">
+        <button class="btn btn-ghost btn-sm" onclick="toggleOption('${o.id}')">${active ? 'Deactivate' : 'Activate'}</button>
+        <button class="btn btn-ghost btn-sm" onclick="openOptionModal('${o.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteOption('${o.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+};
+
+window.moveOption = async function(id, dir) {
+  const i = options.findIndex(o => o.id === id);
+  const j = i + dir;
+  if (j < 0 || j >= options.length) return;
+  const a = options[i], b = options[j];
+  await Promise.all([
+    updateDoc(doc(db, 'hounslowOptions', a.id), { order: b.order }),
+    updateDoc(doc(db, 'hounslowOptions', b.id), { order: a.order })
+  ]);
+  await loadOptions(currentTileId);
+};
+
+window.toggleOption = async function(id) {
+  const o = options.find(x => x.id === id);
+  const newStatus = o.status === 'inactive' ? 'active' : 'inactive';
+  await updateDoc(doc(db, 'hounslowOptions', id), { status: newStatus, updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || '' });
+  toast(`Option ${newStatus === 'inactive' ? 'deactivated' : 'activated'}`);
+  await loadOptions(currentTileId);
+};
+
+window.deleteOption = function(id) {
+  const o = options.find(x => x.id === id);
+  confirmAction = async () => {
+    if (o.fileUrl) { try { await deleteObject(sRef(storage, o.fileUrl)); } catch {} }
+    await deleteDoc(doc(db, 'hounslowOptions', id));
+    toast('Option deleted');
+    await loadOptions(currentTileId);
+  };
+  showConfirm('Delete Option', `Delete "${o.name}"?`, 'This also removes its uploaded PDF. This cannot be undone.', '🗑️');
+};
+
+// ── OPTION MODAL ──
+window.openOptionModal = function(id) {
+  editingOptionId = id || null;
+  pendingOptPdfFile = null;
+  selectedIcon = 'document';
+  document.getElementById('optionModalTitle').textContent = id ? 'Edit Option' : 'Add Option';
+  document.getElementById('optSaveBtn').textContent = id ? 'Save Changes' : 'Add Option';
+  document.getElementById('optPdfPreviewWrap').innerHTML = '';
+  document.getElementById('optPdfFile').value = '';
+
+  if (id) {
+    const o = options.find(x => x.id === id);
+    document.getElementById('optName').value = o.name || '';
+    selectedIcon = o.icon || 'document';
+    if (o.fileUrl) {
+      document.getElementById('optPdfPreviewWrap').innerHTML =
+        `<div class="dz-preview"><span style="font-size:22px">📄</span><span class="dz-fname">${esc(o.fileName || 'Current PDF')}</span></div>`;
+    }
+  } else {
+    document.getElementById('optName').value = '';
+  }
+  renderIconPicker();
+  openModal('optionModal');
+};
+
+function renderIconPicker() {
+  const wrap = document.getElementById('iconPicker');
+  wrap.innerHTML = Object.keys(ICONS).map(k =>
+    `<div class="icon-opt ${k === selectedIcon ? 'sel' : ''}" data-icon="${k}" onclick="pickIcon('${k}')">${iconSvg(k)}</div>`
+  ).join('');
+}
+window.pickIcon = function(k) {
+  selectedIcon = k;
+  document.querySelectorAll('.icon-opt').forEach(el => el.classList.toggle('sel', el.dataset.icon === k));
+};
+
+document.getElementById('optPdfFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.type !== 'application/pdf') { toast('Please choose a PDF file', 'error'); return; }
+  pendingOptPdfFile = file;
+  document.getElementById('optPdfPreviewWrap').innerHTML =
+    `<div class="dz-preview"><span style="font-size:22px">📄</span><span class="dz-fname">${esc(file.name)}</span>
+     <button class="dz-remove" onclick="clearOptPdf()">✕</button></div>`;
+});
+
+window.clearOptPdf = function() {
+  pendingOptPdfFile = null;
+  document.getElementById('optPdfFile').value = '';
+  document.getElementById('optPdfPreviewWrap').innerHTML = '';
+};
+
+window.saveOption = async function() {
+  const btn = document.getElementById('optSaveBtn');
+  const name = document.getElementById('optName').value.trim();
+  if (!name) { toast('Option name is required', 'error'); return; }
+  btn.disabled = true;
+  try {
+    let optionId = editingOptionId;
+    if (optionId) {
+      await updateDoc(doc(db, 'hounslowOptions', optionId), {
+        name, icon: selectedIcon, updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
+      });
+    } else {
+      const nextOrder = options.length ? Math.max(...options.map(o => o.order || 0)) + 1 : 0;
+      const docRef = await addDoc(collection(db, 'hounslowOptions'), {
+        tileId: currentTileId, serviceUserId: tiles.find(t => t.id === currentTileId)?.serviceUserId || '',
+        name, icon: selectedIcon, order: nextOrder, status: 'active',
+        fileUrl: null, fileName: null, fileType: 'pdf',
+        uploadedAt: null, uploadedBy: null,
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
+      });
+      optionId = docRef.id;
+    }
+    if (pendingOptPdfFile) {
+      const path = `hounslow/docs/${optionId}/${Date.now()}_${pendingOptPdfFile.name}`;
+      const fileRef = sRef(storage, path);
+      await uploadBytes(fileRef, pendingOptPdfFile);
+      const url = await getDownloadURL(fileRef);
+      await updateDoc(doc(db, 'hounslowOptions', optionId), {
+        fileUrl: url, fileName: pendingOptPdfFile.name,
+        uploadedAt: serverTimestamp(), uploadedBy: currentStaff.initials || ''
+      });
+    }
+    toast(editingOptionId ? 'Option updated' : 'Option added', 'success');
+    closeModal('optionModal');
+    await loadOptions(currentTileId);
+  } catch (e) { toast(e.message, 'error'); } finally { btn.disabled = false; }
+};
+
+// ── DUPLICATE OPTIONS ──
+window.openDuplicateModal = function() {
+  const sel = document.getElementById('dupSourceTile');
+  sel.innerHTML = tiles.filter(t => t.id !== currentTileId).map(t => `<option value="${t.id}">${esc(t.displayName)}</option>`).join('');
+  if (!sel.options.length) { toast('No other tiles to duplicate from yet', 'error'); return; }
+  openModal('duplicateModal');
+};
+
+window.confirmDuplicate = async function() {
+  const sourceId = document.getElementById('dupSourceTile').value;
+  if (!sourceId) { toast('Choose a tile to copy from', 'error'); return; }
+  const snap = await getDocs(query(collection(db, 'hounslowOptions'), where('tileId', '==', sourceId), orderBy('order')));
+  const sourceOptions = snap.docs.map(d => d.data());
+  if (!sourceOptions.length) { toast('That tile has no options to copy', 'error'); return; }
+  for (const o of sourceOptions) {
+    await addDoc(collection(db, 'hounslowOptions'), {
+      tileId: currentTileId, serviceUserId: tiles.find(t => t.id === currentTileId)?.serviceUserId || '',
+      name: o.name, icon: o.icon, order: o.order, status: 'active',
+      fileUrl: null, fileName: null, fileType: 'pdf', uploadedAt: null, uploadedBy: null,
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
+    });
+  }
+  toast(`${sourceOptions.length} option(s) duplicated`, 'success');
+  closeModal('duplicateModal');
+  await loadOptions(currentTileId);
+};
+
+// ── NAVIGATION ──
+window.showView = function(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('v-' + view).classList.add('active');
+  const backBtn = document.getElementById('tbBack');
+  if (view === 'tile-detail') {
+    document.getElementById('nav-tiles').classList.add('active');
+    document.getElementById('topbarTitle').innerHTML = 'Manage Options <span class="tb-sub">' + esc(document.getElementById('tdName').textContent) + '</span>';
+    backBtn.style.display = '';
+  } else {
+    const navEl = document.getElementById('nav-' + view);
+    if (navEl) navEl.classList.add('active');
+    const titles = {
+      tiles: 'Service User Tiles <span class="tb-sub">What appears on the kiosk home screen</span>',
+      pins: 'Access PINs <span class="tb-sub">Who can unlock the kiosk</span>'
+    };
+    document.getElementById('topbarTitle').innerHTML = titles[view] || view;
+    backBtn.style.display = 'none';
+  }
+  closeSidebar();
+};
+
+window.closeSidebar = function() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('show');
+};
+
+// ── MODAL HELPERS ──
+window.openModal  = id => { document.getElementById(id).classList.add('open'); };
+window.closeModal = id => { document.getElementById(id).classList.remove('open'); };
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+});
+
+// ── CONFIRM ──
+function showConfirm(title, msg, warn, icon) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent   = msg;
+  document.getElementById('confirmWarn').textContent  = warn || '';
+  document.getElementById('confirmIcon').textContent  = icon || '⚠️';
+  openModal('confirmModal');
+}
+window.runConfirmAction = async function() {
+  if (confirmAction) { closeModal('confirmModal'); await confirmAction(); confirmAction = null; }
+};
+
+// ── TOAST ──
+window.toast = function(msg, type = '') {
+  const wrap = document.getElementById('toast');
+  const el   = document.createElement('div');
+  el.className = 'toast-item' + (type ? ' t-' + type : '');
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+};
+
+// ── SCREEN SWITCHER ──
+function showScreen(screen) {
+  document.getElementById('loginScreen').style.display  = screen === 'login'  ? '' : 'none';
+  document.getElementById('accessDenied').style.display = screen === 'denied' ? 'flex' : 'none';
+  document.getElementById('app').style.display          = screen === 'app'    ? 'flex' : 'none';
+}
+function hideLoginErr() { const el = document.getElementById('loginErr'); el.style.display = 'none'; el.textContent = ''; }
+function showLoginErr(msg) { const el = document.getElementById('loginErr'); el.textContent = msg; el.style.display = 'block'; }
+
+// ── UTILITIES ──
+function esc(str) { return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(ts) {
+  if (!ts) return '—';
+  try { const d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); }
+  catch { return '—'; }
+}
+function friendlyAuthErr(code) {
+  const map = {
+    'auth/user-not-found':     'No account found with that email.',
+    'auth/wrong-password':     'Incorrect password.',
+    'auth/invalid-email':      'Invalid email address.',
+    'auth/too-many-requests':  'Too many attempts. Please try again later.',
+    'auth/invalid-credential': 'Invalid email or password.'
+  };
+  return map[code] || 'An error occurred. Please try again.';
+}
+</script>
+</body>
+</html>
