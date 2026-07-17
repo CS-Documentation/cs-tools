@@ -7,17 +7,27 @@
 <meta name="theme-color" content="#1446a0">
 <link rel="manifest" href="hounslow-manifest.json">
 <link rel="icon" href="hounslow-icon.svg">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@500&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
   --brand:#1446a0;--brand-dark:#0d3278;--brand-mid:#2d5bbf;--brand-light:#e8eef8;
-  --bg:#f4f6fb;--surface:#fff;
+  --bg:#fafbfc;--surface:#fff;
   --text:#1a1a2e;--text2:#4a5568;--text3:#6b7280;
   --border:#dde3ef;--border2:#b8c5e0;
   --green:#27ae60;--amber:#e67e22;--red:#c0392b;
-  --r:16px;--rs:10px;
+  --r:20px;--rs:10px;
   --sh:0 4px 20px rgba(20,70,160,.10);
   --sh-lg:0 12px 40px rgba(20,70,160,.18);
+  --font-display:'Space Grotesk',sans-serif;
+  /* Vibrant rotating palette for tiles — strong = AA-safe with white text, tint = pale background for icons/accents */
+  --c1-strong:#DC2626;--c1-tint:#FEE2E2;
+  --c2-strong:#C2410C;--c2-tint:#FFEDD5;
+  --c3-strong:#B45309;--c3-tint:#FEF3C7;
+  --c4-strong:#047857;--c4-tint:#D1FAE5;
+  --c5-strong:#0F766E;--c5-tint:#CCFBF1;
+  --c6-strong:#2563EB;--c6-tint:#DBEAFE;
+  --c7-strong:#7C3AED;--c7-tint:#EDE9FE;
+  --c8-strong:#DB2777;--c8-tint:#FCE7F3;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{height:100%;overscroll-behavior:none}
@@ -31,25 +41,27 @@ button{font-family:inherit;cursor:pointer}
 .pin-card{background:rgba(255,255,255,.97);border-radius:28px;padding:40px 44px 36px;width:100%;max-width:420px;box-shadow:var(--sh-lg);text-align:center}
 .pin-logo{width:64px;height:64px;border-radius:18px;background:var(--brand);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:var(--sh)}
 .pin-logo svg{width:34px;height:34px}
-.pin-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.4px}
+.pin-title{font-family:var(--font-display);font-size:23px;font-weight:800;color:var(--text);letter-spacing:-.4px}
 .pin-sub{font-size:14px;color:var(--text3);margin-top:4px;margin-bottom:26px}
 .pin-dots{display:flex;gap:14px;justify-content:center;margin-bottom:28px}
 .pin-dot{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--border2);transition:all .15s}
 .pin-dot.filled{background:var(--brand);border-color:var(--brand);transform:scale(1.1)}
 .pin-dot.err{background:var(--red);border-color:var(--red)}
 .pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.pin-key{aspect-ratio:1/1;border-radius:50%;border:none;background:var(--brand-light);color:var(--brand);font-size:26px;font-weight:700;font-family:'DM Mono',monospace;display:flex;align-items:center;justify-content:center;transition:all .1s;min-height:64px}
-.pin-key:active{background:var(--brand);color:#fff;transform:scale(.94)}
+.pin-key{aspect-ratio:1/1;border-radius:50%;border:none;background:var(--tc-bg,var(--brand-light));color:var(--tc,var(--brand));font-size:28px;font-weight:800;font-family:var(--font-display);display:flex;align-items:center;justify-content:center;transition:all .1s;min-height:68px}
+.pin-key:active{background:var(--tc,var(--brand));color:#fff;transform:scale(.92)}
 .pin-key.wide{background:transparent;color:var(--text3);font-size:15px;font-weight:600}
 .pin-key.wide:active{background:var(--surface2);transform:scale(.96)}
 .pin-error-msg{color:var(--red);font-size:13px;font-weight:700;margin-top:14px;height:16px}
 
 /* ── HOME / OPTIONS SCREENS ── */
-.kiosk-topbar{background:var(--brand);color:#fff;padding:0 24px;min-height:76px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 16px rgba(20,70,160,.25);flex-shrink:0}
+.kiosk-topbar{background:var(--brand);color:#fff;padding:0 24px;min-height:80px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 16px rgba(20,70,160,.25);flex-shrink:0}
+.kt-logo{width:44px;height:44px;border-radius:13px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kt-logo svg{width:24px;height:24px}
 .kt-back{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;width:52px;height:52px;border-radius:50%;font-size:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .kt-back:active{background:rgba(255,255,255,.3)}
 .kt-title{flex:1;min-width:0}
-.kt-title h1{font-size:20px;font-weight:800;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kt-title h1{font-family:var(--font-display);font-size:22px;font-weight:800;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kt-title span{font-size:12px;opacity:.75;font-weight:500}
 .kt-lock{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;padding:10px 18px;border-radius:26px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;flex-shrink:0}
 .kt-lock:active{background:rgba(255,255,255,.3)}
@@ -57,25 +69,25 @@ button{font-family:inherit;cursor:pointer}
 .kiosk-body{flex:1;overflow-y:auto;padding:28px}
 
 /* Home tiles */
-.su-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:22px;max-width:1400px;margin:0 auto}
-.su-tile{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;display:flex;flex-direction:column;transition:transform .12s,box-shadow .12s}
-.su-tile:active{transform:scale(.97);box-shadow:var(--sh-lg)}
-.su-img{width:100%;aspect-ratio:1/1;background:var(--brand-light);display:flex;align-items:center;justify-content:center;font-size:52px;font-weight:800;color:var(--brand);overflow:hidden}
+.su-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:26px;max-width:1500px;margin:0 auto}
+.su-tile{background:var(--surface);border-radius:var(--r);box-shadow:0 6px 24px -6px var(--tc,rgba(20,70,160,.25));overflow:hidden;display:flex;flex-direction:column;transition:transform .12s,box-shadow .12s;border-top:7px solid var(--tc,var(--brand))}
+.su-tile:active{transform:scale(.96)}
+.su-img{width:100%;aspect-ratio:1/1;background:var(--tc,var(--brand));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:64px;font-weight:800;color:#fff;overflow:hidden}
 .su-img img{width:100%;height:100%;object-fit:cover}
-.su-tile-name{padding:16px 14px;font-size:17px;font-weight:700;text-align:center;color:var(--text);line-height:1.3}
+.su-tile-name{padding:18px 14px;font-family:var(--font-display);font-size:20px;font-weight:800;text-align:center;color:var(--text);line-height:1.3}
 
 .empty-state{text-align:center;padding:80px 20px;color:var(--text3)}
 .empty-state .es-icon{font-size:48px;margin-bottom:14px}
 .empty-state h3{font-size:18px;font-weight:700;color:var(--text2);margin-bottom:6px}
 
 /* Options tiles */
-.opt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;max-width:1400px;margin:0 auto}
-.opt-tile{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);padding:26px 18px;display:flex;flex-direction:column;align-items:center;gap:14px;transition:transform .12s}
-.opt-tile:active{transform:scale(.96)}
+.opt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:22px;max-width:1500px;margin:0 auto}
+.opt-tile{background:var(--surface);border-radius:var(--r);box-shadow:0 6px 24px -8px var(--tc,rgba(20,70,160,.25));padding:30px 20px;display:flex;flex-direction:column;align-items:center;gap:16px;transition:transform .12s;border-top:7px solid var(--tc,var(--brand))}
+.opt-tile:active{transform:scale(.95)}
 .opt-tile.disabled{opacity:.5}
-.opt-ic{width:64px;height:64px;border-radius:18px;background:var(--brand-light);color:var(--brand);display:flex;align-items:center;justify-content:center}
-.opt-ic svg{width:32px;height:32px}
-.opt-name{font-size:16px;font-weight:700;text-align:center;color:var(--text);line-height:1.3}
+.opt-ic{width:76px;height:76px;border-radius:22px;background:var(--tc-bg,var(--brand-light));color:var(--tc,var(--brand));display:flex;align-items:center;justify-content:center}
+.opt-ic svg{width:38px;height:38px}
+.opt-name{font-family:var(--font-display);font-size:18px;font-weight:800;text-align:center;color:var(--text);line-height:1.3}
 .opt-status{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3)}
 .opt-status.avail{color:var(--green)}
 
@@ -111,17 +123,17 @@ button{font-family:inherit;cursor:pointer}
       <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
     </div>
     <div class="pin-keypad" id="pinKeypad">
-      <button class="pin-key" data-k="1">1</button>
-      <button class="pin-key" data-k="2">2</button>
-      <button class="pin-key" data-k="3">3</button>
-      <button class="pin-key" data-k="4">4</button>
-      <button class="pin-key" data-k="5">5</button>
-      <button class="pin-key" data-k="6">6</button>
-      <button class="pin-key" data-k="7">7</button>
-      <button class="pin-key" data-k="8">8</button>
-      <button class="pin-key" data-k="9">9</button>
+      <button class="pin-key" data-k="1" style="--tc:var(--c1-strong);--tc-bg:var(--c1-tint)">1</button>
+      <button class="pin-key" data-k="2" style="--tc:var(--c2-strong);--tc-bg:var(--c2-tint)">2</button>
+      <button class="pin-key" data-k="3" style="--tc:var(--c3-strong);--tc-bg:var(--c3-tint)">3</button>
+      <button class="pin-key" data-k="4" style="--tc:var(--c4-strong);--tc-bg:var(--c4-tint)">4</button>
+      <button class="pin-key" data-k="5" style="--tc:var(--c5-strong);--tc-bg:var(--c5-tint)">5</button>
+      <button class="pin-key" data-k="6" style="--tc:var(--c6-strong);--tc-bg:var(--c6-tint)">6</button>
+      <button class="pin-key" data-k="7" style="--tc:var(--c7-strong);--tc-bg:var(--c7-tint)">7</button>
+      <button class="pin-key" data-k="8" style="--tc:var(--c8-strong);--tc-bg:var(--c8-tint)">8</button>
+      <button class="pin-key" data-k="9" style="--tc:var(--c1-strong);--tc-bg:var(--c1-tint)">9</button>
       <button class="pin-key wide" data-k="clear">Clear</button>
-      <button class="pin-key" data-k="0">0</button>
+      <button class="pin-key" data-k="0" style="--tc:var(--c6-strong);--tc-bg:var(--c6-tint)">0</button>
       <button class="pin-key wide" data-k="back">⌫</button>
     </div>
     <div class="pin-error-msg" id="pinErrMsg"></div>
@@ -131,6 +143,7 @@ button{font-family:inherit;cursor:pointer}
 <!-- HOME SCREEN -->
 <div class="screen" id="s-home">
   <div class="kiosk-topbar">
+    <div class="kt-logo"><svg viewBox="0 0 28 28" fill="none"><path d="M7 14l5 5 9-9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     <div class="kt-title">
       <h1>Hounslow On-Site Database</h1>
       <span>Tap a name to view their documents</span>
@@ -146,6 +159,7 @@ button{font-family:inherit;cursor:pointer}
 <div class="screen" id="s-options">
   <div class="kiosk-topbar">
     <button class="kt-back" onclick="goHome()">←</button>
+    <div class="kt-logo"><svg viewBox="0 0 28 28" fill="none"><path d="M7 14l5 5 9-9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     <div class="kt-title">
       <h1 id="optTitle">—</h1>
       <span>Tap a category to open it</span>
@@ -204,6 +218,12 @@ const ICONS = {
 function iconSvg(key, size) {
   const p = ICONS[key] || ICONS.document;
   return `<svg width="${size||32}" height="${size||32}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+}
+
+// Rotating vibrant palette — each tile/option gets a distinct bold color, McDonald's-menu style
+function tileColorStyle(index) {
+  const n = (index % 8) + 1;
+  return `--tc:var(--c${n}-strong);--tc-bg:var(--c${n}-tint)`;
 }
 
 // ── STATE ──
@@ -310,9 +330,9 @@ async function loadTiles() {
     grid.innerHTML = `<div class="empty-state"><div class="es-icon">🗂️</div><h3>No tiles set up yet</h3><p>Ask an admin to add service user tiles.</p></div>`;
     return;
   }
-  grid.innerHTML = tilesCache.map(t => {
+  grid.innerHTML = tilesCache.map((t, i) => {
     const initials = (t.displayName || '?').trim().slice(0, 2).toUpperCase();
-    return `<div class="su-tile" data-id="${t.id}">
+    return `<div class="su-tile" data-id="${t.id}" style="${tileColorStyle(i)}">
       <div class="su-img">${t.imageUrl ? `<img src="${esc(t.imageUrl)}" alt="">` : initials}</div>
       <div class="su-tile-name">${esc(t.displayName)}</div>
     </div>`;
@@ -334,9 +354,9 @@ async function openTile(tileId) {
     if (!opts.length) {
       grid.innerHTML = `<div class="empty-state"><div class="es-icon">📄</div><h3>No documents set up yet</h3><p>Ask an admin to add categories for ${esc(currentTile.displayName)}.</p></div>`;
     } else {
-      grid.innerHTML = opts.map(o => {
+      grid.innerHTML = opts.map((o, i) => {
         const has = !!o.fileUrl;
-        return `<div class="opt-tile ${has ? '' : 'disabled'}" data-id="${o.id}" data-url="${has ? esc(o.fileUrl) : ''}" data-name="${esc(o.name)}">
+        return `<div class="opt-tile ${has ? '' : 'disabled'}" data-id="${o.id}" data-url="${has ? esc(o.fileUrl) : ''}" data-name="${esc(o.name)}" style="${tileColorStyle(i)}">
           <div class="opt-ic">${iconSvg(o.icon)}</div>
           <div class="opt-name">${esc(o.name)}</div>
           <div class="opt-status ${has ? 'avail' : ''}">${has ? 'Available' : 'Not yet available'}</div>

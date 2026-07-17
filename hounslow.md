@@ -7,6 +7,14 @@ An on-site PIN-locked kiosk for an Android tablet at Hounslow. Staff tap through
 - **`hounslow-kiosk.html`**: no staff login. Signs in to Firebase anonymously in the background; a 6-digit PIN (any active PIN in `hounslowPins`) is the UI-level gate. This is an app-level lock for a shared on-site device, not per-user authentication — anyone with the PIN and physical access to the tablet can view documents.
 - **`hounslow-admin.html`**: normal staff Firebase email/password login + `staffProfiles/{uid}.role === 'admin'` check (same pattern as `super-admin.html`). Non-admins see an Access Denied screen.
 
+## Visual style — kiosk only
+`hounslow-kiosk.html` deliberately breaks from the rest of the repo's `--brand` blue design system, at the user's request: the young people using it are used to self-order kiosks (McDonald's-style), so the tile UI is bright, bold and colorful rather than corporate. `hounslow-admin.html` is unaffected and stays on the standard Connected Stars palette, since it's a staff tool.
+
+- Adds `Space Grotesk` (700/800) as a display font for titles/tile names/numbers, layered on top of the existing DM Sans.
+- Adds an 8-color rotating palette (`--c1-strong/tint` … `--c8-strong/tint` in `:root`) — each service-user tile, option tile, and PIN-pad digit gets a distinct color via `tileColorStyle(index)`, cycling through the 8. `strong` shades are chosen to stay AA-contrast-safe under white text/icons (fallback avatar initials, solid fills); `tint` shades are pale backgrounds for icon circles where the icon is drawn in the matching `strong` color.
+- Tiles are bigger (260px+ home, 230px+ options), bolder (800-weight Space Grotesk names), with a 7px colored top border and a color-tinted shadow.
+- The Connected Stars checkmark logo mark is kept in the PIN screen and both topbars, so branding is still present within the more playful skin.
+
 ## `hounslow-kiosk.html` flow
 1. Anonymous sign-in on load.
 2. **PIN screen**: on-screen numeric keypad, 6-digit dot indicator. Entered PIN is compared directly against the `pin` field of every `status: 'active'` doc in `hounslowPins` — a match on any of them unlocks.
