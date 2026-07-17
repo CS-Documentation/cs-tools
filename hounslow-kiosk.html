@@ -409,11 +409,8 @@ async function openViewer(url, name) {
     }
   } catch (e) {
     if (myToken !== viewerRenderToken) return;
-    container.innerHTML = `<div class="pdf-error">⚠️ Could not open this document.<br><br>${
-      String(e.message || e).toLowerCase().includes('cors') || String(e.name || '').toLowerCase().includes('network')
-        ? 'This looks like a network/CORS restriction on the file storage — an admin needs to check the CORS configuration.'
-        : 'Check the network connection and try again.'
-    }</div>`;
+    container.innerHTML = `<div class="pdf-error">⚠️ Could not open this document.<br><br>
+      Either the network connection dropped, or the file storage isn't allowing this site to fetch files yet (CORS not configured) — browsers show the exact same generic error for both, so this can't tell them apart. If this happens for every document, ask an admin to check the Firebase Storage CORS setup.</div>`;
   }
 }
 
