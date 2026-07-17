@@ -307,6 +307,7 @@ tr:hover td{background:var(--surface2)}
           <table>
             <thead><tr>
               <th>Label</th>
+              <th>PIN</th>
               <th>Status</th>
               <th>Created</th>
               <th></th>
@@ -350,14 +351,13 @@ tr:hover td{background:var(--surface2)}
 <div class="modal-bg" id="pinModal">
   <div class="modal">
     <div class="modal-hdr">
-      <h3>Add Access PIN</h3>
+      <h3 id="pinModalTitle">Add Access PIN</h3>
       <button class="modal-close" onclick="closeModal('pinModal')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
         <label>Label *</label>
         <input id="pinLabel" type="text" placeholder="e.g. Reception, Night Staff">
-        <div class="form-hint">Shown to admins only — never the PIN itself. You can't view a PIN again after saving, only revoke it and add a new one.</div>
       </div>
       <div class="form-group">
         <label>6-Digit PIN *</label>
@@ -370,7 +370,7 @@ tr:hover td{background:var(--surface2)}
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('pinModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="savePin()">Save PIN</button>
+      <button class="btn btn-primary" onclick="savePin()" id="pinSaveBtn">Save PIN</button>
     </div>
   </div>
 </div>
@@ -537,6 +537,8 @@ let options      = [];        // options for the currently-open tile
 let currentTileId = null;
 let editingTileId  = null;
 let editingOptionId = null;
+let editingPinId = null;
+let revealedPins = new Set();
 let pendingTileImageFile = null;
 let pendingOptPdfFile    = null;
 let selectedIcon = 'document';
@@ -604,23 +606,23 @@ function updateCounts() {
   document.getElementById('cnt-pins').textContent  = pins.filter(p => p.status !== 'inactive').length;
 }
 
-// ── PIN HASHING ──
-async function sha256Hex(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 // ── PINS ──
 window.renderPins = function() {
   const tbody = document.getElementById('pinsTbody');
-  if (!pins.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No PINs yet — add one so staff can unlock the kiosk.</td></tr>'; return; }
+  if (!pins.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No PINs yet — add one so staff can unlock the kiosk.</td></tr>'; return; }
   tbody.innerHTML = pins.map(p => {
     const active = p.status !== 'inactive';
+    const revealed = revealedPins.has(p.id);
     return `<tr>
       <td><strong>${esc(p.label)}</strong></td>
+      <td>
+        <span style="font-family:'DM Mono',monospace;letter-spacing:2px">${revealed ? esc(p.pin) : '••••••'}</span>
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="togglePinReveal('${p.id}')" title="${revealed ? 'Hide' : 'Show'} PIN">${revealed ? '🙈' : '👁️'}</button>
+      </td>
       <td>${active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-grey">Inactive</span>'}</td>
       <td style="color:var(--text3);font-size:12px">${fmtDate(p.createdAt)}</td>
       <td><div class="actions-cell">
+        <button class="btn btn-ghost btn-sm" onclick="openPinModal('${p.id}')">Edit</button>
         <button class="btn btn-ghost btn-sm" onclick="togglePin('${p.id}')">${active ? 'Deactivate' : 'Activate'}</button>
         <button class="btn btn-danger btn-sm" onclick="deletePin('${p.id}')">Delete</button>
       </div></td>
@@ -628,10 +630,25 @@ window.renderPins = function() {
   }).join('');
 };
 
-window.openPinModal = function() {
-  document.getElementById('pinLabel').value = '';
-  document.getElementById('pinValue').value = '';
-  document.getElementById('pinConfirm').value = '';
+window.togglePinReveal = function(id) {
+  if (revealedPins.has(id)) revealedPins.delete(id); else revealedPins.add(id);
+  renderPins();
+};
+
+window.openPinModal = function(id) {
+  editingPinId = id || null;
+  document.getElementById('pinModalTitle').textContent = id ? 'Edit Access PIN' : 'Add Access PIN';
+  document.getElementById('pinSaveBtn').textContent     = id ? 'Save Changes' : 'Save PIN';
+  if (id) {
+    const p = pins.find(x => x.id === id);
+    document.getElementById('pinLabel').value   = p.label || '';
+    document.getElementById('pinValue').value   = p.pin || '';
+    document.getElementById('pinConfirm').value = p.pin || '';
+  } else {
+    document.getElementById('pinLabel').value = '';
+    document.getElementById('pinValue').value = '';
+    document.getElementById('pinConfirm').value = '';
+  }
   openModal('pinModal');
 };
 
@@ -643,13 +660,19 @@ window.savePin = async function() {
   if (!/^\d{6}$/.test(pin)) { toast('PIN must be exactly 6 digits', 'error'); return; }
   if (pin !== confirm) { toast('PINs do not match', 'error'); return; }
   try {
-    const pinHash = await sha256Hex(pin);
-    await addDoc(collection(db, 'hounslowPins'), {
-      label, pinHash, status: 'active',
-      createdAt: serverTimestamp(), createdBy: currentStaff.initials || '',
-      updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
-    });
-    toast('PIN added', 'success');
+    if (editingPinId) {
+      await updateDoc(doc(db, 'hounslowPins', editingPinId), {
+        label, pin, updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
+      });
+      toast('PIN updated', 'success');
+    } else {
+      await addDoc(collection(db, 'hounslowPins'), {
+        label, pin, status: 'active',
+        createdAt: serverTimestamp(), createdBy: currentStaff.initials || '',
+        updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
+      });
+      toast('PIN added', 'success');
+    }
     closeModal('pinModal');
     await loadPins();
     updateCounts();

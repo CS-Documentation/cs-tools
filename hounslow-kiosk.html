@@ -238,16 +238,10 @@ function renderDots() {
   document.getElementById('pinErrMsg').textContent = '';
 }
 
-async function sha256Hex(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 async function checkPin() {
   try {
-    const hash = await sha256Hex(enteredPin);
     const snap = await getDocs(query(collection(db, 'hounslowPins'), where('status', '==', 'active')));
-    const match = snap.docs.some(d => d.data().pinHash === hash);
+    const match = snap.docs.some(d => d.data().pin === enteredPin);
     if (match) {
       unlocked = true;
       sessionStorage.setItem('hounslowUnlocked', String(Date.now()));
