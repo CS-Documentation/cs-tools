@@ -19,7 +19,7 @@ An on-site PIN-locked kiosk for an Android tablet at Hounslow. Staff tap through
 
 ## `hounslow-admin.html` flow
 - **Access PINs** view: create/deactivate/delete PINs (label + 6-digit value, hashed before writing). Multiple PINs can be active at once; the PIN value itself is never shown again after creation.
-- **Service User Tiles** view: add/edit/delete tiles — pick an existing `serviceUsers` doc, set a `displayName` (independent of the real name, since the tablet is semi-public), optionally upload a tile image (Firebase Storage), soft activate/deactivate. Deleting a tile hard-deletes it and all of its options + their uploaded PDFs.
+- **Service User Tiles** view: add/edit/delete tiles — set a freeform `displayName` (not linked to the `serviceUsers` collection) and optionally upload a tile image (Firebase Storage), soft activate/deactivate. Deleting a tile hard-deletes it and all of its options + their uploaded PDFs.
 - **Manage Options** (drill into a tile): add/edit/delete option tiles for that specific service user (name, icon from a small inline SVG set, PDF upload), reorder via up/down buttons, activate/deactivate. **"Duplicate from…"** copies name/icon/order from another tile's options (PDFs left empty) so staff aren't rebuilding the same categories from scratch for every new service user — options are still fully independent per service user after duplicating.
 
 ## Firestore Collections
@@ -38,20 +38,19 @@ An on-site PIN-locked kiosk for an Android tablet at Hounslow. Staff tap through
 ### `hounslowTiles`
 ```js
 {
-  serviceUserId: string,   // ref to serviceUsers
-  displayName: string,     // independent of serviceUsers.name
+  displayName: string,     // freeform — not linked to the serviceUsers collection
   imageUrl: string | null, // Firebase Storage download URL
   order: number,
   status: 'active' | 'inactive',
   createdAt: Timestamp, updatedAt: Timestamp, updatedBy: string
 }
 ```
+Tiles are intentionally standalone — no `serviceUserId` reference. An earlier version linked each tile to a `serviceUsers` doc via a required dropdown, but that dropdown query hit a Firestore composite-index issue and was removed at the user's request rather than fixed, since the link added a hard dependency without being needed for the kiosk to function.
 
 ### `hounslowOptions`
 ```js
 {
   tileId: string,          // ref to hounslowTiles
-  serviceUserId: string,   // denormalized
   name: string,
   icon: string,             // key into the inline SVG icon set (see below)
   order: number,
@@ -93,7 +92,7 @@ idleTimer        // setTimeout handle for the 10-min auto-lock
 
 ## State Variables (admin)
 ```js
-pins[], tiles[], serviceUsers[], options[]   // options = current open tile's hounslowOptions
+pins[], tiles[], options[]   // options = current open tile's hounslowOptions
 currentTileId                                 // tile being managed in "Manage Options"
 editingTileId, editingOptionId                // null = creating new
 pendingTileImageFile, pendingOptPdfFile       // File objects staged before upload

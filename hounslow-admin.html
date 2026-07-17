@@ -384,11 +384,6 @@ tr:hover td{background:var(--surface2)}
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label>Service User *</label>
-        <select id="tileSU"></select>
-        <div class="form-hint">The real profile this tile links to (for reference only)</div>
-      </div>
-      <div class="form-group">
         <label>Display Name on Tile *</label>
         <input id="tileDisplayName" type="text" placeholder="Name shown on the kiosk tile">
       </div>
@@ -538,7 +533,6 @@ let currentUser  = null;
 let currentStaff = null;
 let pins         = [];
 let tiles        = [];
-let serviceUsers = [];
 let options      = [];        // options for the currently-open tile
 let currentTileId = null;
 let editingTileId  = null;
@@ -582,7 +576,7 @@ window.doSignOut = async () => { await fbSignOut(auth); showScreen('login'); };
 
 // ── LOAD ──
 async function loadAll() {
-  await Promise.all([loadPins(), loadTiles(), loadServiceUsers()]);
+  await Promise.all([loadPins(), loadTiles()]);
   updateCounts();
 }
 
@@ -598,10 +592,6 @@ async function loadTiles() {
   renderTiles();
 }
 
-async function loadServiceUsers() {
-  const snap = await getDocs(query(collection(db, 'serviceUsers'), orderBy('name')));
-  serviceUsers = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(s => s.status !== 'moved-on');
-}
 
 async function loadOptions(tileId) {
   const snap = await getDocs(query(collection(db, 'hounslowOptions'), where('tileId', '==', tileId)));
@@ -713,15 +703,11 @@ window.openTileModal = function(id) {
   document.getElementById('tileModalTitle').textContent = id ? 'Edit Tile' : 'Add Tile';
   document.getElementById('tileSaveBtn').textContent    = id ? 'Save Changes' : 'Add Tile';
 
-  const suSel = document.getElementById('tileSU');
-  suSel.innerHTML = serviceUsers.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
-
   document.getElementById('tileImgPreviewWrap').innerHTML = '';
   document.getElementById('tileImgFile').value = '';
 
   if (id) {
     const t = tiles.find(x => x.id === id);
-    suSel.value = t.serviceUserId || '';
     document.getElementById('tileDisplayName').value = t.displayName || '';
     if (t.imageUrl) {
       document.getElementById('tileImgPreviewWrap').innerHTML =
@@ -754,21 +740,19 @@ window.clearTileImage = function() {
 
 window.saveTile = async function() {
   const btn = document.getElementById('tileSaveBtn');
-  const serviceUserId = document.getElementById('tileSU').value;
-  const displayName   = document.getElementById('tileDisplayName').value.trim();
-  if (!serviceUserId) { toast('Please select a service user', 'error'); return; }
-  if (!displayName)   { toast('Display name is required', 'error'); return; }
+  const displayName = document.getElementById('tileDisplayName').value.trim();
+  if (!displayName) { toast('Display name is required', 'error'); return; }
   btn.disabled = true;
   try {
     let tileId = editingTileId;
     if (tileId) {
       await updateDoc(doc(db, 'hounslowTiles', tileId), {
-        serviceUserId, displayName, updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
+        displayName, updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
       });
     } else {
       const nextOrder = tiles.length ? Math.max(...tiles.map(t => t.order || 0)) + 1 : 0;
       const docRef = await addDoc(collection(db, 'hounslowTiles'), {
-        serviceUserId, displayName, imageUrl: null, order: nextOrder, status: 'active',
+        displayName, imageUrl: null, order: nextOrder, status: 'active',
         createdAt: serverTimestamp(), updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
       });
       tileId = docRef.id;
@@ -933,7 +917,7 @@ window.saveOption = async function() {
     } else {
       const nextOrder = options.length ? Math.max(...options.map(o => o.order || 0)) + 1 : 0;
       const docRef = await addDoc(collection(db, 'hounslowOptions'), {
-        tileId: currentTileId, serviceUserId: tiles.find(t => t.id === currentTileId)?.serviceUserId || '',
+        tileId: currentTileId,
         name, icon: selectedIcon, order: nextOrder, status: 'active',
         fileUrl: null, fileName: null, fileType: 'pdf',
         uploadedAt: null, uploadedBy: null,
@@ -973,7 +957,7 @@ window.confirmDuplicate = async function() {
   if (!sourceOptions.length) { toast('That tile has no options to copy', 'error'); return; }
   for (const o of sourceOptions) {
     await addDoc(collection(db, 'hounslowOptions'), {
-      tileId: currentTileId, serviceUserId: tiles.find(t => t.id === currentTileId)?.serviceUserId || '',
+      tileId: currentTileId,
       name: o.name, icon: o.icon, order: o.order, status: 'active',
       fileUrl: null, fileName: null, fileType: 'pdf', uploadedAt: null, uploadedBy: null,
       createdAt: serverTimestamp(), updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
