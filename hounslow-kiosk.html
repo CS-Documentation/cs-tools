@@ -306,8 +306,8 @@ function resetIdleTimer() {
 async function loadTiles() {
   const grid = document.getElementById('suGrid');
   try {
-    const snap = await getDocs(query(collection(db, 'hounslowTiles'), where('status', '==', 'active'), orderBy('order')));
-    tilesCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await getDocs(query(collection(db, 'hounslowTiles'), where('status', '==', 'active')));
+    tilesCache = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.order || 0) - (b.order || 0));
   } catch (e) {
     grid.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div><h3>Could not load tiles</h3><p>Check the network connection and try again.</p></div>`;
     return;
@@ -333,9 +333,10 @@ async function openTile(tileId) {
   const grid = document.getElementById('optGrid');
   grid.innerHTML = '';
   try {
-    const snap = await getDocs(query(collection(db, 'hounslowOptions'),
-      where('tileId', '==', tileId), where('status', '==', 'active'), orderBy('order')));
-    const opts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await getDocs(query(collection(db, 'hounslowOptions'), where('tileId', '==', tileId)));
+    const opts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .filter(o => o.status === 'active')
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
     if (!opts.length) {
       grid.innerHTML = `<div class="empty-state"><div class="es-icon">📄</div><h3>No documents set up yet</h3><p>Ask an admin to add categories for ${esc(currentTile.displayName)}.</p></div>`;
     } else {

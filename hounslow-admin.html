@@ -599,13 +599,13 @@ async function loadTiles() {
 }
 
 async function loadServiceUsers() {
-  const snap = await getDocs(query(collection(db, 'serviceUsers'), where('status', '==', 'active'), orderBy('name')));
-  serviceUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const snap = await getDocs(query(collection(db, 'serviceUsers'), orderBy('name')));
+  serviceUsers = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(s => s.status !== 'moved-on');
 }
 
 async function loadOptions(tileId) {
-  const snap = await getDocs(query(collection(db, 'hounslowOptions'), where('tileId', '==', tileId), orderBy('order')));
-  options = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const snap = await getDocs(query(collection(db, 'hounslowOptions'), where('tileId', '==', tileId)));
+  options = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.order || 0) - (b.order || 0));
   renderOptions();
 }
 
@@ -968,8 +968,8 @@ window.openDuplicateModal = function() {
 window.confirmDuplicate = async function() {
   const sourceId = document.getElementById('dupSourceTile').value;
   if (!sourceId) { toast('Choose a tile to copy from', 'error'); return; }
-  const snap = await getDocs(query(collection(db, 'hounslowOptions'), where('tileId', '==', sourceId), orderBy('order')));
-  const sourceOptions = snap.docs.map(d => d.data());
+  const snap = await getDocs(query(collection(db, 'hounslowOptions'), where('tileId', '==', sourceId)));
+  const sourceOptions = snap.docs.map(d => d.data()).sort((a, b) => (a.order || 0) - (b.order || 0));
   if (!sourceOptions.length) { toast('That tile has no options to copy', 'error'); return; }
   for (const o of sourceOptions) {
     await addDoc(collection(db, 'hounslowOptions'), {
