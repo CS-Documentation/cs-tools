@@ -25,7 +25,7 @@ An on-site PIN-locked kiosk for an Android tablet at Hounslow. Staff tap through
    **Rendered at device pixel ratio, with zoom controls** — each page canvas is rendered at `fit-to-width scale × zoom × window.devicePixelRatio`, with the CSS display size held at the lower `scale × zoom` value. Rendering 1:1 with CSS pixels (ignoring DPR) produced visibly blurry/low-res text on tablets with a pixel ratio above 1, since the canvas buffer had fewer actual pixels than the screen was displaying it at. `+`/`−` buttons in the viewer topbar adjust `currentZoom` (0.5×–3×, steps of 0.25) and re-render the already-loaded `currentPdf` from memory — no re-fetch — so zooming stays fast and every zoom level is rendered freshly from the PDF's vector data rather than stretching a fixed-resolution raster.
 6. **Back navigation**: always one level up (viewer → options → home).
 7. **Idle auto-lock**: 10 minutes of no touch/click/keydown/scroll re-locks to the PIN screen. A manual "🔒 Lock" button is always visible on the home/options screens.
-8. Registers `hounslow-manifest.json` + `hounslow-sw.js` for "Add to Home Screen" / offline app-shell caching. The service worker only caches the static shell (HTML/manifest/icon) — Firestore and Storage requests always go to the network so data and PDFs are never stale.
+8. Registers `hounslow-manifest.json` + `hounslow-sw.js` for "Add to Home Screen" / offline app-shell caching. Firestore and Storage requests always go straight to the network so data and PDFs are never stale. `hounslow-kiosk.html` itself is **network-first** (try network, fall back to cache only if offline) — an earlier version cached it cache-first, which meant every code update silently never reached a device that had already loaded it once, since it kept serving the frozen first-ever copy indefinitely. Only `hounslow-manifest.json`/`hounslow-icon.svg` (genuinely static, rarely change) are cache-first. `CACHE_NAME` is bumped (`hounslow-shell-v2`) whenever the caching strategy itself changes, to force old installed caches to be dropped.
 
 ## `hounslow-admin.html` flow
 - **Access PINs** view: create/edit/deactivate/delete PINs (label + 6-digit value). The PIN column is masked (••••••) with a per-row show/hide toggle. Multiple PINs can be active at once and each can be edited or revoked independently.
@@ -87,7 +87,7 @@ Both files define the same inline SVG icon dictionary (`ICONS` object, 14 outlin
 | File | Purpose |
 |---|---|
 | `hounslow-manifest.json` | Web app manifest — name, brand colors, `display: standalone`, icon references. Linked only from `hounslow-kiosk.html`. |
-| `hounslow-sw.js` | Service worker — cache-first for the static shell, network-only passthrough for everything else. |
+| `hounslow-sw.js` | Service worker — network-first for `hounslow-kiosk.html` (falls back to cache offline), cache-first for `hounslow-manifest.json`/`hounslow-icon.svg`, network-only passthrough for everything else (Firestore/Storage/fonts). |
 | `hounslow-icon.svg` | Brand-colored app icon (blue gradient square + checkmark mark, matching the existing login logo motif). |
 
 Not yet built: a wrapper Android APK (Trusted Web Activity via PWABuilder/Bubblewrap) pointed at the hosted kiosk URL — a follow-up packaging step once the PWA is live on GitHub Pages, not part of this repo.
