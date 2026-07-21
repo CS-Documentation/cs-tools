@@ -95,7 +95,11 @@ button{font-family:inherit;cursor:pointer}
 #s-viewer{background:#20242e}
 .viewer-topbar{background:var(--brand-dark);color:#fff;padding:0 20px;min-height:70px;display:flex;align-items:center;gap:14px;flex-shrink:0}
 .viewer-topbar h2{font-size:17px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pdf-pages{flex:1;width:100%;overflow-y:auto;overflow-x:hidden;padding:20px;display:flex;flex-direction:column;align-items:center;gap:18px;-webkit-overflow-scrolling:touch}
+.zoom-controls{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.zoom-btn{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.zoom-btn:active{background:rgba(255,255,255,.3)}
+.zoom-label{color:#fff;font-size:13px;font-weight:600;min-width:42px;text-align:center}
+.pdf-pages{flex:1;width:100%;overflow:auto;padding:20px;display:flex;flex-direction:column;align-items:center;gap:18px;-webkit-overflow-scrolling:touch}
 .pdf-page-canvas{max-width:100%;height:auto;background:#fff;box-shadow:0 4px 18px rgba(0,0,0,.35);border-radius:4px}
 .pdf-loading{color:#fff;font-size:14px;font-weight:600;text-align:center;padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:12px}
 .pdf-spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:pdfspin .8s linear infinite}
@@ -181,6 +185,11 @@ button{font-family:inherit;cursor:pointer}
   <div class="viewer-topbar">
     <button class="kt-back" onclick="goBackFromViewer()">←</button>
     <h2 id="viewerTitle">Document</h2>
+    <div class="zoom-controls">
+      <button class="zoom-btn" onclick="zoomOut()">−</button>
+      <span class="zoom-label" id="zoomLabel">100%</span>
+      <button class="zoom-btn" onclick="zoomIn()">+</button>
+    </div>
   </div>
   <div class="pdf-pages" id="pdfPages"></div>
 </div>
@@ -240,6 +249,8 @@ let currentTile = null;
 let tilesCache = [];
 let idleTimer = null;
 let viewerRenderToken = 0;
+let currentPdf = null;
+let currentZoom = 1;
 const IDLE_LIMIT_MS = 10 * 60 * 1000; // 10 min
 
 // ── ANONYMOUS AUTH ──
@@ -300,6 +311,7 @@ window.goHome = async function() {
 
 window.goBackFromViewer = function() {
   viewerRenderToken++;
+  currentPdf = null;
   document.getElementById('pdfPages').innerHTML = '';
   showScreen('s-options');
 };
@@ -310,6 +322,7 @@ window.lockKiosk = function() {
   enteredPin = '';
   sessionStorage.removeItem('hounslowUnlocked');
   viewerRenderToken++;
+  currentPdf = null;
   document.getElementById('pdfPages').innerHTML = '';
   renderDots();
   showScreen('s-pin');
@@ -386,32 +399,66 @@ async function openViewer(url, name) {
   document.getElementById('viewerTitle').textContent = name;
   const container = document.getElementById('pdfPages');
   const myToken = ++viewerRenderToken;
+  currentPdf = null;
+  currentZoom = 1;
+  updateZoomLabel();
   container.innerHTML = `<div class="pdf-loading"><div class="pdf-spinner"></div>Opening document…</div>`;
   showScreen('s-viewer');
 
   try {
     const pdf = await pdfjsLib.getDocument(url).promise;
     if (myToken !== viewerRenderToken) return; // navigated away while loading
-    container.innerHTML = '';
-    const pageWidth = container.clientWidth - 40; // minus horizontal padding
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      if (myToken !== viewerRenderToken) return;
-      const page = await pdf.getPage(pageNum);
-      const baseViewport = page.getViewport({ scale: 1 });
-      const scale = Math.max(pageWidth / baseViewport.width, 0.1);
-      const viewport = page.getViewport({ scale });
-      const canvas = document.createElement('canvas');
-      canvas.className = 'pdf-page-canvas';
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      container.appendChild(canvas);
-      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-    }
+    currentPdf = pdf;
+    await renderAllPages(myToken);
   } catch (e) {
     if (myToken !== viewerRenderToken) return;
     container.innerHTML = `<div class="pdf-error">⚠️ Could not open this document.<br><br>
       Either the network connection dropped, or the file storage isn't allowing this site to fetch files yet (CORS not configured) — browsers show the exact same generic error for both, so this can't tell them apart. If this happens for every document, ask an admin to check the Firebase Storage CORS setup.</div>`;
   }
+}
+
+// Renders every page of currentPdf at the fit-to-width scale times currentZoom,
+// at full device pixel density so text stays crisp on high-DPI tablets instead
+// of being upscaled from a low-res canvas.
+async function renderAllPages(myToken) {
+  const container = document.getElementById('pdfPages');
+  const dpr = window.devicePixelRatio || 1;
+  const cssPageWidth = (container.clientWidth - 40) * currentZoom;
+  container.innerHTML = '';
+  for (let pageNum = 1; pageNum <= currentPdf.numPages; pageNum++) {
+    if (myToken !== viewerRenderToken) return;
+    const page = await currentPdf.getPage(pageNum);
+    const baseViewport = page.getViewport({ scale: 1 });
+    const cssScale = Math.max(cssPageWidth / baseViewport.width, 0.1);
+    const renderViewport = page.getViewport({ scale: cssScale * dpr });
+    const canvas = document.createElement('canvas');
+    canvas.className = 'pdf-page-canvas';
+    canvas.width = renderViewport.width;
+    canvas.height = renderViewport.height;
+    canvas.style.width = (renderViewport.width / dpr) + 'px';
+    canvas.style.height = (renderViewport.height / dpr) + 'px';
+    container.appendChild(canvas);
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport: renderViewport }).promise;
+  }
+}
+
+window.zoomIn = function() {
+  if (!currentPdf) return;
+  currentZoom = Math.min(currentZoom + 0.25, 3);
+  updateZoomLabel();
+  renderAllPages(viewerRenderToken);
+};
+
+window.zoomOut = function() {
+  if (!currentPdf) return;
+  currentZoom = Math.max(currentZoom - 0.25, 0.5);
+  updateZoomLabel();
+  renderAllPages(viewerRenderToken);
+};
+
+function updateZoomLabel() {
+  const el = document.getElementById('zoomLabel');
+  if (el) el.textContent = Math.round(currentZoom * 100) + '%';
 }
 
 function esc(str) {
