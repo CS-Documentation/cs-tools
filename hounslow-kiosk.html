@@ -304,6 +304,14 @@ function showScreen(id) {
   document.getElementById(id).classList.add('active');
 }
 
+// Pinch-zoom is locked off everywhere else in the kiosk for the app-like feel,
+// but the PDF viewer needs it re-enabled so people can pinch into small print.
+const VIEWPORT_LOCKED    = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+const VIEWPORT_ZOOMABLE  = 'width=device-width, initial-scale=1.0, maximum-scale=6.0, user-scalable=yes, viewport-fit=cover';
+function setViewportZoomable(zoomable) {
+  document.querySelector('meta[name="viewport"]').setAttribute('content', zoomable ? VIEWPORT_ZOOMABLE : VIEWPORT_LOCKED);
+}
+
 window.goHome = async function() {
   await loadTiles();
   showScreen('s-home');
@@ -313,6 +321,7 @@ window.goBackFromViewer = function() {
   viewerRenderToken++;
   currentPdf = null;
   document.getElementById('pdfPages').innerHTML = '';
+  setViewportZoomable(false);
   showScreen('s-options');
 };
 
@@ -324,6 +333,7 @@ window.lockKiosk = function() {
   viewerRenderToken++;
   currentPdf = null;
   document.getElementById('pdfPages').innerHTML = '';
+  setViewportZoomable(false);
   renderDots();
   showScreen('s-pin');
   clearTimeout(idleTimer);
@@ -403,6 +413,7 @@ async function openViewer(url, name) {
   currentZoom = 1;
   updateZoomLabel();
   container.innerHTML = `<div class="pdf-loading"><div class="pdf-spinner"></div>Opening document…</div>`;
+  setViewportZoomable(true);
   showScreen('s-viewer');
 
   try {
