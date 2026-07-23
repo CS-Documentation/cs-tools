@@ -1,7 +1,7 @@
 # hounslow-kiosk.html / hounslow-admin.html — Hounslow On-Site Database
 
 ## Purpose
-An on-site PIN-locked kiosk for an Android tablet at Hounslow. Staff tap through **service user → document category → PDF** without the usual staff login. A separate admin panel controls which service users appear, their tile image/name, the document categories per service user, and the PDF behind each one.
+An on-site PIN-locked kiosk for an Android tablet at Hounslow. Staff tap through **tile → document category → PDF** without the usual staff login. A separate admin panel controls which tiles appear (freeform name + image, not linked to the `serviceUsers` collection — see note under `hounslowTiles` below), the document categories per tile, and the PDF behind each one.
 
 ## Access
 - **`hounslow-kiosk.html`**: no staff login. Signs in to Firebase anonymously in the background; a 6-digit PIN (any active PIN in `hounslowPins`) is the UI-level gate. This is an app-level lock for a shared on-site device, not per-user authentication — anyone with the PIN and physical access to the tablet can view documents.
@@ -23,6 +23,7 @@ An on-site PIN-locked kiosk for an Android tablet at Hounslow. Staff tap through
 5. **PDF viewer**: renders the PDF itself, page by page, onto `<canvas>` elements via [PDF.js](https://mozilla.github.io/pdf.js/) (loaded from jsDelivr, pinned to `pdfjs-dist@4.10.38`), in a scrollable full-screen view with a persistent Back button — never opens a new tab. This replaced an `<iframe src="...">` approach: Android Chrome doesn't reliably render PDFs embedded in an iframe and was prompting a native "Download" dialog instead, breaking the kiosk's self-contained feel. Rendering to canvas sidesteps the browser's native PDF handling entirely, so behavior is consistent across platforms.
    **Requires Firebase Storage CORS to be configured** — PDF.js fetches the file via `fetch()`, which is a cross-origin request from the GitHub Pages origin to the Storage bucket, and needs the bucket's CORS policy to allow it (this wasn't needed for the old iframe approach, since a simple iframe navigation doesn't go through fetch's CORS checks). The viewer's error screen calls this out when a document fails to open — browsers give the identical generic error for a CORS block and a real network failure, so it can't distinguish which one occurred. Fix via `gsutil cors set cors.json gs://connected-stars-handover.firebasestorage.app` with a `cors.json` allowing GET from the site's origin — see the project chat history for the exact command, or Google Cloud Console → Cloud Storage → bucket → Permissions/CORS.
    **Rendered at device pixel ratio, with zoom controls** — each page canvas is rendered at `fit-to-width scale × zoom × window.devicePixelRatio`, with the CSS display size held at the lower `scale × zoom` value. Rendering 1:1 with CSS pixels (ignoring DPR) produced visibly blurry/low-res text on tablets with a pixel ratio above 1, since the canvas buffer had fewer actual pixels than the screen was displaying it at. `+`/`−` buttons in the viewer topbar adjust `currentZoom` (0.5×–3×, steps of 0.25) and re-render the already-loaded `currentPdf` from memory — no re-fetch — so zooming stays fast and every zoom level is rendered freshly from the PDF's vector data rather than stretching a fixed-resolution raster.
+   **Pinch-zoom is re-enabled just for the viewer** — the kiosk locks pinch-zoom everywhere else (`user-scalable=no` in the viewport meta, for the app-like feel), which meant there was no way to pinch into a document even with the buttons present. `setViewportZoomable(true/false)` swaps the `<meta name="viewport">` content between a locked and a zoomable (`user-scalable=yes`, up to 6×) variant on entering/leaving the viewer.
 6. **Back navigation**: always one level up (viewer → options → home).
 7. **Idle auto-lock**: 10 minutes of no touch/click/keydown/scroll re-locks to the PIN screen. A manual "🔒 Lock" button is always visible on the home/options screens.
 8. Registers `hounslow-manifest.json` + `hounslow-sw.js` for "Add to Home Screen" / offline app-shell caching. Firestore and Storage requests always go straight to the network so data and PDFs are never stale. `hounslow-kiosk.html` itself is **network-first** (try network, fall back to cache only if offline) — an earlier version cached it cache-first, which meant every code update silently never reached a device that had already loaded it once, since it kept serving the frozen first-ever copy indefinitely. Only `hounslow-manifest.json`/`hounslow-icon.svg` (genuinely static, rarely change) are cache-first. `CACHE_NAME` is bumped (`hounslow-shell-v2`) whenever the caching strategy itself changes, to force old installed caches to be dropped.
@@ -101,6 +102,7 @@ tilesCache[]     // active hounslowTiles, loaded on unlock/home
 idleTimer        // setTimeout handle for the 10-min auto-lock
 currentPdf       // the PDF.js document object for whatever's open in the viewer, or null
 currentZoom      // number, 0.5-3, multiplier on top of fit-to-width scale
+viewerRenderToken // incrementing counter; a render loop bails if this changes mid-await (navigated away)
 ```
 
 ## State Variables (admin)
@@ -111,6 +113,8 @@ editingTileId, editingOptionId                // null = creating new
 pendingTileImageFile, pendingOptPdfFile       // File objects staged before upload
 selectedIcon                                  // icon key chosen in the option modal's icon picker
 confirmAction                                 // async fn stored for the shared confirm dialog
+editingPinId                                  // null = creating a new PIN, else the doc id being edited
+revealedPins                                  // Set of PIN doc ids currently shown un-masked in the table
 ```
 
 ## Key Functions (kiosk)
@@ -122,7 +126,8 @@ confirmAction                                 // async fn stored for the shared 
 | `openViewer(url, name)` | Load the PDF via PDF.js into `currentPdf`, call `renderAllPages()` |
 | `renderAllPages(token)` | Render every page of `currentPdf` at `fit-width × currentZoom × devicePixelRatio` |
 | `zoomIn()` / `zoomOut()` | Adjust `currentZoom`, re-render `currentPdf` from memory (no re-fetch) |
-| `goBackFromViewer()` | Return to options screen, clear rendered pages and `currentPdf` |
+| `setViewportZoomable(bool)` | Swap the viewport meta between locked and pinch-zoomable, for the viewer screen |
+| `goBackFromViewer()` | Return to options screen, clear rendered pages and `currentPdf`, re-lock viewport |
 | `lockKiosk()` | Re-lock: clear state, show PIN screen |
 | `resetIdleTimer()` | Restart the 10-minute idle auto-lock countdown |
 
