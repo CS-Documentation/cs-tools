@@ -10,7 +10,7 @@ Kanban-style task management linked to the handover system. Supports two board t
 - Board-level access control: `open` (all staff), `include` (allowlist), or `exclude` (blocklist)
 
 ## Layout
-**Sidebar** (fixed left, 260px): boards list grouped by type + user footer  
+**Sidebar** (fixed left, 260px): logo (links to `index.html`/home) + boards list grouped by type + user footer  
 **Topbar**: title, notification bell (badge), refresh, mobile menu toggle  
 **Board content**: filter bar + lists container
 

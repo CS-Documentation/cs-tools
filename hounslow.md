@@ -14,6 +14,7 @@ An on-site PIN-locked kiosk for an Android tablet at Hounslow. Staff tap through
 - Adds an 8-color rotating palette (`--c1-strong/tint` … `--c8-strong/tint` in `:root`) — each service-user tile, option tile, and PIN-pad digit gets a distinct color via `tileColorStyle(index)`, cycling through the 8. `strong` shades are chosen to stay AA-contrast-safe under white text/icons (fallback avatar initials, solid fills); `tint` shades are pale backgrounds for icon circles where the icon is drawn in the matching `strong` color.
 - Tiles are bigger (260px+ home, 230px+ options), bolder (800-weight Space Grotesk names), with a 7px colored top border and a color-tinted shadow.
 - The Connected Stars checkmark logo mark is kept in the PIN screen and both topbars, so branding is still present within the more playful skin.
+- Unlike every other tool in the repo, neither `hounslow-kiosk.html` nor its logo links back to `index.html` — it's a locked-down on-site kiosk, not a staff navigation surface. `hounslow-admin.html`'s sidebar logo does link to `index.html`/home, consistent with the other staff tools.
 
 ## `hounslow-kiosk.html` flow
 1. Anonymous sign-in on load.

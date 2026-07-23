@@ -9,7 +9,7 @@ Admin-only management panel for all master data: care units, service users, staf
 - Firebase email/password auth → `staffProfiles/{uid}` role check
 
 ## Layout
-**Sidebar** (fixed left, 240px): navigation + admin user badge + sign out  
+**Sidebar** (fixed left, 240px): logo (links to `index.html`/home) + navigation + admin user badge + sign out  
 **Topbar**: page title + subtitle (updates per view)  
 **Content area** (`#content`): `.view` divs, one active at a time
 

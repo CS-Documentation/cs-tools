@@ -201,6 +201,29 @@
     height: 36px;
   }
 
+  .topbar-home {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .home-btn {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .2s;
+    flex-shrink: 0;
+    text-decoration: none;
+  }
+  .home-btn:hover { background: rgba(255,255,255,0.28); }
+
   .topbar-right {
     display: flex;
     align-items: center;
@@ -1209,10 +1232,15 @@
 
   <!-- Top Bar -->
   <div class="topbar">
-    <img src="https://raw.githubusercontent.com/CS-Documentation/invoice/refs/heads/main/front%20page%20header.png"
-         alt="Connected Stars" class="topbar-logo" onerror="this.style.display='none'; document.querySelector('.topbar-fallback').style.display='block'">
-    <span class="topbar-fallback" style="display:none;color:white;font-weight:700;font-size:16px;">Connected Stars</span>
+    <a href="index.html" class="topbar-home" title="Home">
+      <img src="https://raw.githubusercontent.com/CS-Documentation/invoice/refs/heads/main/front%20page%20header.png"
+           alt="Connected Stars" class="topbar-logo" onerror="this.style.display='none'; document.querySelector('.topbar-fallback').style.display='block'">
+      <span class="topbar-fallback" style="display:none;color:white;font-weight:700;font-size:16px;">Connected Stars</span>
+    </a>
     <div class="topbar-right">
+      <a href="index.html" class="home-btn" title="Home">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>
+      </a>
       <button class="mode-toggle" id="modeToggleBtn" onclick="toggleObserverMode()" style="display:none">
         👁 Observer Mode
       </button>

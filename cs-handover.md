@@ -9,7 +9,7 @@ Daily care handover notes for Connected Stars residential care. Staff record act
 - Observer mode: toggle to view-only (no edits); shown via `.observing` class on topbar button and orange banner
 
 ## Layout
-**Topbar**: Logo, unit selector (admin), date picker, user badge, observer toggle, refresh button  
+**Topbar**: Logo (links to `index.html`/home), unit selector (admin), date picker, user badge, observer toggle, refresh button  
 **Nav Tabs**: Handover · Notice Board · Tasks (admin only) · Config (admin only)
 
 ---

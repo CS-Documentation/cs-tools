@@ -64,6 +64,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* ── SIDEBAR ── */
 .sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform .25s}
 .sb-header{padding:16px;border-bottom:1px solid var(--border)}
+.sb-home{display:block;text-decoration:none;cursor:pointer}
 .sb-brand{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);margin-bottom:2px}
 .sb-title{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.3px}
 .sb-title span{color:var(--brand)}
@@ -94,6 +95,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .notif-badge{position:absolute;top:0;right:0;background:var(--alert-red);color:#fff;font-size:9px;font-weight:800;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--brand);display:none}
 .menu-toggle{display:none;background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:18px}
 .refresh-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:background .2s;flex-shrink:0}
+.home-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s;flex-shrink:0;text-decoration:none}
+.home-btn:hover{background:rgba(255,255,255,.28)}
 .refresh-btn:hover{background:rgba(255,255,255,.28)}
 .refresh-btn:active{background:rgba(255,255,255,.35)}
 .refresh-btn.spinning svg,.refresh-btn.spinning{animation:spin .7s linear infinite}
@@ -347,8 +350,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
       <div class="sb-header">
-        <div class="sb-brand">Connected Stars</div>
-        <div class="sb-title">Task <span>Board</span></div>
+        <a href="index.html" class="sb-home" title="Home">
+          <div class="sb-brand">Connected Stars</div>
+          <div class="sb-title">Task <span>Board</span></div>
+        </a>
       </div>
       <div class="sb-body" id="sbBody">
         <div class="sb-section-label">Unit Boards</div>
@@ -375,6 +380,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <button class="menu-toggle" onclick="openSidebar()">☰</button>
         <div class="topbar-title" id="topbarTitle">Task Board</div>
         <div class="topbar-right">
+          <a href="index.html" class="home-btn" title="Home">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>
+          </a>
           <button class="refresh-btn" id="refreshBtn" onclick="refreshBoard()" title="Refresh board">
             <svg id="refreshIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>

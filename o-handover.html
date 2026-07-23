@@ -48,7 +48,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 #sb-overlay.show{display:block}
 
 /* ── SIDEBAR ── */
-.sidebar-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border)}
+.sidebar-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);display:block;text-decoration:none;cursor:pointer}
 .sidebar-logo .org{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text3);margin-bottom:2px}
 .sidebar-logo .sys{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.5px}
 .sidebar-logo .sys span{color:var(--brand)}
@@ -77,6 +77,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .tb-av{width:24px;height:24px;background:#fff;color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
 .refresh-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;flex-shrink:0;transition:background .2s}
 .refresh-btn:hover{background:rgba(255,255,255,.28)}
+.home-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .2s;text-decoration:none}
+.home-btn:hover{background:rgba(255,255,255,.28)}
 .refresh-btn:active{background:rgba(255,255,255,.35)}
 .refresh-btn.spinning{animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -379,10 +381,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div id="app">
 
 <aside id="sidebar">
-  <div class="sidebar-logo">
+  <a href="index.html" class="sidebar-logo" title="Home">
     <div class="org">Connected Stars</div>
     <div class="sys"><span>O</span>-Handover</div>
-  </div>
+  </a>
   <div class="sidebar-nav">
     <div class="sb-sec">Main</div>
     <div class="nav-item active" onclick="showView('handover');closeSB()"><span class="ni">📋</span>Handover</div>
@@ -408,6 +410,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <button class="tb-menu-btn" onclick="toggleSB()">☰</button>
     <img src="https://raw.githubusercontent.com/CS-Documentation/invoice/refs/heads/main/front%20page%20header.png"
          alt="Connected Stars" class="topbar-logo" onerror="this.style.display='none'">
+    <a href="index.html" class="home-btn" title="Home">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>
+    </a>
     <div class="tb-left">
       <select class="tb-sel" id="unit-sel" onchange="onUnitChange()"><option value="">Select unit…</option></select>
       <input type="date" class="tb-date" id="date-inp" onchange="loadShiftData()">

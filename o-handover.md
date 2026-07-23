@@ -8,7 +8,7 @@ Overnight / operational shift handover log. Tracks shift notes, alerts, reminder
 - Firebase email/password auth → `staffProfiles/{uid}`
 
 ## Layout
-**Sidebar** (fixed left, 228px): navigation + unit selector at bottom  
+**Sidebar** (fixed left, 228px): logo (links to `index.html`/home) + navigation + unit selector at bottom  
 **Topbar**: hamburger (mobile), logo, unit `<select>`, date `<input>`, shift tabs, user badge, refresh, sign out  
 **Content area** (`#content`): one `.view` active at a time
 
