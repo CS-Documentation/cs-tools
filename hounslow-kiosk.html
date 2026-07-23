@@ -278,10 +278,11 @@ const IDLE_LIMIT_MS = 10 * 60 * 1000; // 10 min
 
 // Screensaver state — photos/settings come from hounslow-admin.html
 let screensaverPhotos = [];
-let screensaverSettings = { idleSeconds: 60, photoSeconds: 8, transition: 'fade' };
+let screensaverSettings = { idleSeconds: 60, photoSeconds: 8, transition: 'fade', randomOrder: false };
 let screensaverActive = false;
 let ssTimer = null;
-let ssIndex = 0;
+let ssOrder = [];   // sequence of screensaverPhotos indices to play, shuffled when randomOrder is on
+let ssPos = 0;       // current position within ssOrder
 let ssFront = 'A';
 let pinIdleTimer = null;
 
@@ -302,7 +303,8 @@ async function loadScreensaverConfig() {
       screensaverSettings = {
         idleSeconds: d.idleSeconds || 60,
         photoSeconds: d.photoSeconds || 8,
-        transition: d.transition || 'fade'
+        transition: d.transition || 'fade',
+        randomOrder: !!d.randomOrder
       };
     }
     screensaverPhotos = photosSnap.docs.map(d => ({ id: d.id, ...d.data() }))
@@ -323,6 +325,22 @@ function resetPinIdleTimer() {
   pinIdleTimer = setTimeout(() => { if (!unlocked && !screensaverActive) startScreensaver(); }, secs * 1000);
 }
 
+// Builds the play order for one pass through screensaverPhotos — shuffled
+// (Fisher-Yates) when randomOrder is on, sequential otherwise. avoidFirst lets
+// a reshuffle dodge putting the just-shown photo right back at the front, so a
+// loop boundary doesn't show the same photo twice in a row.
+function buildSsOrder(avoidFirst) {
+  const idxs = screensaverPhotos.map((_, i) => i);
+  if (screensaverSettings.randomOrder) {
+    for (let i = idxs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [idxs[i], idxs[j]] = [idxs[j], idxs[i]];
+    }
+    if (idxs.length > 1 && idxs[0] === avoidFirst) [idxs[0], idxs[1]] = [idxs[1], idxs[0]];
+  }
+  return idxs;
+}
+
 function startScreensaver() {
   if (!screensaverPhotos.length || screensaverActive) return;
   clearTimeout(idleTimer);
@@ -330,7 +348,8 @@ function startScreensaver() {
   enteredPin = '';
   renderDots();
   screensaverActive = true;
-  ssIndex = 0;
+  ssOrder = buildSsOrder();
+  ssPos = 0;
   ssFront = 'A';
   ['ssPhotoA', 'ssPhotoB'].forEach(id => {
     const el = document.getElementById(id);
@@ -338,11 +357,15 @@ function startScreensaver() {
     el.removeAttribute('src');
   });
   showScreen('s-screensaver');
-  showSsPhoto(0);
+  showSsPhoto(ssOrder[0]);
   clearInterval(ssTimer);
   ssTimer = setInterval(() => {
-    ssIndex = (ssIndex + 1) % screensaverPhotos.length;
-    showSsPhoto(ssIndex);
+    ssPos++;
+    if (ssPos >= ssOrder.length) {
+      ssOrder = buildSsOrder(ssOrder[ssOrder.length - 1]);
+      ssPos = 0;
+    }
+    showSsPhoto(ssOrder[ssPos]);
   }, Math.max(3, screensaverSettings.photoSeconds || 8) * 1000);
 }
 

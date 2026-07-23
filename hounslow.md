@@ -26,7 +26,7 @@ An on-site PIN-locked kiosk for an Android tablet at Hounslow. Staff tap through
    **Pinch-zoom is re-enabled just for the viewer** — the kiosk locks pinch-zoom everywhere else (`user-scalable=no` in the viewport meta, for the app-like feel), which meant there was no way to pinch into a document even with the buttons present. `setViewportZoomable(true/false)` swaps the `<meta name="viewport">` content between a locked and a zoomable (`user-scalable=yes`, up to 6×) variant on entering/leaving the viewer.
 6. **Back navigation**: viewer → options is one level up (same service user, no re-lock). Options → home instead calls `lockKiosk()` (same as tapping the manual "🔒 Lock" button) rather than just showing the tile grid — going back out of one service user's documents and into another's **always** requires the PIN again, not just after the 10-minute idle timeout. This was a deliberate change from the original "options → home is free navigation" behavior, at the user's request, since different tiles hold different service users' sensitive documents.
 7. **Idle auto-lock**: 10 minutes of no touch/click/keydown/scroll while unlocked re-locks to the PIN screen. A manual "🔒 Lock" button is always visible on the home/options screens.
-8. **Screensaver**: a "🖼️ Screensaver" button sits on the PIN screen (hidden if no active photos are configured). Tapping it, or leaving the kiosk idle on the PIN screen for `idleSeconds` (from `hounslowScreensaverSettings/config`, default 60s), shows a full-screen photo slideshow cycling through active `hounslowScreensaverPhotos`, crossfading every `photoSeconds` (default 8s) using the configured `transition` (`fade` / `slide` / `zoom` — a subtle Ken Burns scale). Touching the screen anywhere during playback stops it and returns to the PIN screen. All photos, ordering, and these timing/transition settings are managed entirely from `hounslow-admin.html` — the kiosk only reads them. A single `handleActivity()` dispatcher on `click`/`touchstart`/`keydown`/`scroll` routes activity to whichever timer applies to the current state: the 10-min auto-lock while unlocked, the screensaver idle countdown while sitting on the PIN screen, or an immediate `stopScreensaver()` while the screensaver is playing.
+8. **Screensaver**: a "🖼️ Screensaver" button sits on the PIN screen (hidden if no active photos are configured). Tapping it, or leaving the kiosk idle on the PIN screen for `idleSeconds` (from `hounslowScreensaverSettings/config`, default 60s), shows a full-screen photo slideshow cycling through active `hounslowScreensaverPhotos`, crossfading every `photoSeconds` (default 8s) using the configured `transition` (`fade` / `slide` / `zoom` — a subtle Ken Burns scale). Play order follows the admin ▲▼ order by default, or is shuffled (Fisher-Yates) when `randomOrder` is on — reshuffled at each loop boundary, with a swap guard so the same photo can't land back-to-back across the seam. Touching the screen anywhere during playback stops it and returns to the PIN screen. All photos, ordering, and these timing/transition settings are managed entirely from `hounslow-admin.html` — the kiosk only reads them. A single `handleActivity()` dispatcher on `click`/`touchstart`/`keydown`/`scroll` routes activity to whichever timer applies to the current state: the 10-min auto-lock while unlocked, the screensaver idle countdown while sitting on the PIN screen, or an immediate `stopScreensaver()` while the screensaver is playing.
 9. Registers `hounslow-manifest.json` + `hounslow-sw.js` for "Add to Home Screen" / offline app-shell caching. Firestore and Storage requests always go straight to the network so data and PDFs are never stale. `hounslow-kiosk.html` itself is **network-first** (try network, fall back to cache only if offline) — an earlier version cached it cache-first, which meant every code update silently never reached a device that had already loaded it once, since it kept serving the frozen first-ever copy indefinitely. Only `hounslow-manifest.json`/`hounslow-icon.svg` (genuinely static, rarely change) are cache-first. `CACHE_NAME` is bumped (`hounslow-shell-v2`) whenever the caching strategy itself changes, to force old installed caches to be dropped.
 
 ## `hounslow-admin.html` flow
@@ -34,7 +34,7 @@ An on-site PIN-locked kiosk for an Android tablet at Hounslow. Staff tap through
 - **Service User Tiles** view: add/edit/delete tiles — set a freeform `displayName` (not linked to the `serviceUsers` collection) and optionally upload a tile image (Firebase Storage), soft activate/deactivate. Deleting a tile hard-deletes it and all of its options + their uploaded PDFs.
 - **Manage Options** (drill into a tile): add/edit/delete option tiles for that specific service user (name, icon from a small inline SVG set, PDF upload), reorder via up/down buttons, activate/deactivate. **"Duplicate from…"** copies name/icon/order from another tile's options (PDFs left empty) so staff aren't rebuilding the same categories from scratch for every new service user — options are still fully independent per service user after duplicating.
 - **Screensaver** view: two parts on one page —
-  - **Settings**: transition style (Fade / Slide / Zoom), seconds per photo, and idle seconds before the kiosk auto-starts the screensaver on its own. Saved as a single `hounslowScreensaverSettings/config` doc via `setDoc(..., {merge:true})`.
+  - **Settings**: transition style (Fade / Slide / Zoom), seconds per photo, idle seconds before the kiosk auto-starts the screensaver on its own, and a "play photos in random order" checkbox. Saved as a single `hounslowScreensaverSettings/config` doc via `setDoc(..., {merge:true})`.
   - **Photos**: a dropzone with `<input type="file" multiple>` for **bulk upload** — selecting several images at once uploads each as its own `hounslowScreensaverPhotos` doc (Firestore doc created first, then the file streamed to Storage, then the doc patched with the resulting URL — matching the tile/option upload pattern elsewhere in this file). Reorder via ▲▼, soft on/off toggle, hard delete (also removes the Storage object).
 
 ## Firestore Collections
@@ -97,6 +97,7 @@ Single fixed-id doc, `hounslowScreensaverSettings/config`:
   transition: 'fade' | 'slide' | 'zoom',
   photoSeconds: number,   // how long each photo displays before crossfading, default 8
   idleSeconds: number,    // seconds of inactivity on the kiosk PIN screen before auto-start, default 60
+  randomOrder: boolean,   // shuffle play order (Fisher-Yates) instead of the admin ▲▼ order, default false
   updatedAt: Timestamp, updatedBy: string
 }
 ```
@@ -131,10 +132,11 @@ currentPdf       // the PDF.js document object for whatever's open in the viewer
 currentZoom      // number, 0.5-3, multiplier on top of fit-to-width scale
 viewerRenderToken // incrementing counter; a render loop bails if this changes mid-await (navigated away)
 screensaverPhotos[]   // active hounslowScreensaverPhotos, loaded once on app start
-screensaverSettings   // { idleSeconds, photoSeconds, transition }, defaults merged with hounslowScreensaverSettings/config
+screensaverSettings   // { idleSeconds, photoSeconds, transition, randomOrder }, defaults merged with hounslowScreensaverSettings/config
 screensaverActive     // boolean, true while the screensaver screen is showing
 ssTimer               // setInterval handle cycling to the next photo
-ssIndex, ssFront       // current photo index; which of the two crossfade <img> layers is currently "front"
+ssOrder, ssPos         // play-order array of screensaverPhotos indices for the current pass, and position within it — sequential or shuffled per screensaverSettings.randomOrder
+ssFront                // which of the two crossfade <img> layers is currently "front"
 pinIdleTimer          // setTimeout handle for the screensaver auto-start countdown while on the PIN screen
 ```
 
@@ -168,8 +170,9 @@ screensaverSettings     // raw hounslowScreensaverSettings/config doc data
 | `handleActivity()` | Single listener for click/touchstart/keydown/scroll; routes to `stopScreensaver()`, `resetIdleTimer()`, or `resetPinIdleTimer()` depending on current state |
 | `loadScreensaverConfig()` | Load `hounslowScreensaverSettings/config` + active `hounslowScreensaverPhotos` once on app start; show/hide the PIN screen's Screensaver button |
 | `resetPinIdleTimer()` | Restart the screensaver auto-start countdown (only while on the PIN screen, not mid-screensaver, and only if photos exist) |
-| `startScreensaver()` | Show the screensaver screen, begin cycling photos every `photoSeconds` |
-| `showSsPhoto(index)` | Crossfade to a given photo using the configured transition, alternating between the two layered `<img>` elements |
+| `buildSsOrder(avoidFirst)` | Build one pass's play order — shuffled when `randomOrder` is on, sequential otherwise; nudges the shuffle so `avoidFirst` (the last photo shown) doesn't land first again |
+| `startScreensaver()` | Show the screensaver screen, build the initial `ssOrder`, begin cycling photos every `photoSeconds`, reshuffling at each loop boundary when `randomOrder` is on |
+| `showSsPhoto(index)` | Crossfade to a given photo (by index into `screensaverPhotos`) using the configured transition, alternating between the two layered `<img>` elements |
 | `stopScreensaver()` | Stop the interval, return to the PIN screen, re-arm `resetPinIdleTimer()` |
 
 ## Key Functions (admin)

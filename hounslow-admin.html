@@ -361,6 +361,13 @@ tr:hover td{background:var(--surface2)}
             <input id="ssIdleSeconds" type="number" min="10" max="900" value="60" style="max-width:200px">
             <p class="form-hint">How long the kiosk sits untouched on the PIN screen before the screensaver starts on its own.</p>
           </div>
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:14px;font-weight:600;color:var(--text)">
+              <input type="checkbox" id="ssRandomOrder" style="width:16px;height:16px;margin:0">
+              Play photos in random order
+            </label>
+            <p class="form-hint">Off shuffles nothing — photos play in the ▲▼ order below. On shuffles the order each time round.</p>
+          </div>
           <button class="btn btn-primary" onclick="saveScreensaverSettings()">Save Settings</button>
         </div>
 
@@ -667,18 +674,20 @@ async function loadScreensaverSettings() {
   document.getElementById('ssTransition').value    = screensaverSettings.transition || 'fade';
   document.getElementById('ssPhotoSeconds').value  = screensaverSettings.photoSeconds || 8;
   document.getElementById('ssIdleSeconds').value   = screensaverSettings.idleSeconds || 60;
+  document.getElementById('ssRandomOrder').checked = !!screensaverSettings.randomOrder;
 }
 
 window.saveScreensaverSettings = async function() {
   const transition   = document.getElementById('ssTransition').value;
   const photoSeconds = Math.min(120, Math.max(3, parseInt(document.getElementById('ssPhotoSeconds').value, 10) || 8));
   const idleSeconds  = Math.min(900, Math.max(10, parseInt(document.getElementById('ssIdleSeconds').value, 10) || 60));
+  const randomOrder  = document.getElementById('ssRandomOrder').checked;
   try {
     await setDoc(doc(db, 'hounslowScreensaverSettings', 'config'), {
-      transition, photoSeconds, idleSeconds,
+      transition, photoSeconds, idleSeconds, randomOrder,
       updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
     }, { merge: true });
-    screensaverSettings = { transition, photoSeconds, idleSeconds };
+    screensaverSettings = { transition, photoSeconds, idleSeconds, randomOrder };
     toast('Screensaver settings saved', 'success');
   } catch (e) { toast(e.message, 'error'); }
 };
