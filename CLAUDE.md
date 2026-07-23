@@ -51,6 +51,8 @@ These collections are read/written by multiple tools:
 | `hounslowPins` | hounslow-admin | hounslow-kiosk (reads only), hounslow-admin |
 | `hounslowTiles` | hounslow-admin | hounslow-kiosk, hounslow-admin |
 | `hounslowOptions` | hounslow-admin | hounslow-kiosk, hounslow-admin |
+| `hounslowScreensaverPhotos` | hounslow-admin | hounslow-kiosk (reads only), hounslow-admin |
+| `hounslowScreensaverSettings` | hounslow-admin | hounslow-kiosk (reads only), hounslow-admin |
 
 ### `staffProfiles` schema
 ```js

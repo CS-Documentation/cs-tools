@@ -53,6 +53,8 @@ button{font-family:inherit;cursor:pointer}
 .pin-key.wide{background:transparent;color:var(--text3);font-size:15px;font-weight:600}
 .pin-key.wide:active{background:var(--surface2);transform:scale(.96)}
 .pin-error-msg{color:var(--red);font-size:13px;font-weight:700;margin-top:14px;height:16px}
+.pin-ss-btn{margin-top:18px;background:transparent;border:1.5px solid var(--border2);color:var(--text3);padding:10px 20px;border-radius:24px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:7px}
+.pin-ss-btn:active{background:var(--surface2,#f4f6fb)}
 
 /* ── HOME / OPTIONS SCREENS ── */
 .kiosk-topbar{background:var(--brand);color:#fff;padding:0 24px;min-height:80px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 16px rgba(20,70,160,.25);flex-shrink:0}
@@ -106,6 +108,17 @@ button{font-family:inherit;cursor:pointer}
 @keyframes pdfspin{to{transform:rotate(360deg)}}
 .pdf-error{color:#fff;font-size:14px;text-align:center;padding:40px 20px;max-width:400px;line-height:1.6}
 
+/* ── SCREENSAVER ── */
+#s-screensaver{background:#000}
+.ss-photo-wrap{position:relative;flex:1;width:100%;overflow:hidden}
+.ss-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0}
+.ss-photo.active{opacity:1}
+.ss-photo.tr-slide{transform:translateX(4%)}
+.ss-photo.tr-slide.active{transform:translateX(0)}
+.ss-photo.tr-zoom{transform:scale(1)}
+.ss-photo.tr-zoom.active{transform:scale(1.08)}
+.ss-hint{position:absolute;bottom:34px;left:0;right:0;text-align:center;color:rgba(255,255,255,.65);font-size:13px;font-weight:600;letter-spacing:.4px;pointer-events:none}
+
 /* Idle lock button visible everywhere except pin screen */
 .floating-lock{position:fixed;top:18px;right:18px;z-index:50}
 
@@ -146,7 +159,17 @@ button{font-family:inherit;cursor:pointer}
       <button class="pin-key wide" data-k="back">⌫</button>
     </div>
     <div class="pin-error-msg" id="pinErrMsg"></div>
+    <button class="pin-ss-btn" id="screensaverBtn" style="display:none">🖼️ Screensaver</button>
   </div>
+</div>
+
+<!-- SCREENSAVER SCREEN -->
+<div class="screen" id="s-screensaver">
+  <div class="ss-photo-wrap">
+    <img class="ss-photo" id="ssPhotoA" alt="">
+    <img class="ss-photo" id="ssPhotoB" alt="">
+  </div>
+  <div class="ss-hint">Tap anywhere to continue</div>
 </div>
 
 <!-- HOME SCREEN -->
@@ -167,7 +190,7 @@ button{font-family:inherit;cursor:pointer}
 <!-- OPTIONS SCREEN -->
 <div class="screen" id="s-options">
   <div class="kiosk-topbar">
-    <button class="kt-back" onclick="goHome()">←</button>
+    <button class="kt-back" onclick="lockKiosk()">←</button>
     <div class="kt-logo"><svg viewBox="0 0 28 28" fill="none"><path d="M7 14l5 5 9-9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     <div class="kt-title">
       <h1 id="optTitle">—</h1>
@@ -199,7 +222,7 @@ import { initializeApp }                     from "https://www.gstatic.com/fireb
 import { getAuth, signInAnonymously }        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import * as pdfjsLib                         from "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs";
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
-import { getFirestore, collection, getDocs,
+import { getFirestore, collection, doc, getDoc, getDocs,
          query, where, orderBy }             from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -253,9 +276,112 @@ let currentPdf = null;
 let currentZoom = 1;
 const IDLE_LIMIT_MS = 10 * 60 * 1000; // 10 min
 
+// Screensaver state — photos/settings come from hounslow-admin.html
+let screensaverPhotos = [];
+let screensaverSettings = { idleSeconds: 60, photoSeconds: 8, transition: 'fade' };
+let screensaverActive = false;
+let ssTimer = null;
+let ssIndex = 0;
+let ssFront = 'A';
+let pinIdleTimer = null;
+
 // ── ANONYMOUS AUTH ──
 signInAnonymously(auth).catch(err => {
   document.getElementById('pinErrMsg').textContent = 'Connection error — check network and reload';
+});
+
+// ── SCREENSAVER CONFIG ──
+async function loadScreensaverConfig() {
+  try {
+    const [settingsSnap, photosSnap] = await Promise.all([
+      getDoc(doc(db, 'hounslowScreensaverSettings', 'config')),
+      getDocs(query(collection(db, 'hounslowScreensaverPhotos'), where('status', '==', 'active')))
+    ]);
+    if (settingsSnap.exists()) {
+      const d = settingsSnap.data();
+      screensaverSettings = {
+        idleSeconds: d.idleSeconds || 60,
+        photoSeconds: d.photoSeconds || 8,
+        transition: d.transition || 'fade'
+      };
+    }
+    screensaverPhotos = photosSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .filter(p => p.imageUrl)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  } catch (e) {
+    screensaverPhotos = [];
+  }
+  document.getElementById('screensaverBtn').style.display = screensaverPhotos.length ? 'inline-flex' : 'none';
+  resetPinIdleTimer();
+}
+loadScreensaverConfig();
+
+function resetPinIdleTimer() {
+  clearTimeout(pinIdleTimer);
+  if (unlocked || screensaverActive || !screensaverPhotos.length) return;
+  const secs = Math.max(10, screensaverSettings.idleSeconds || 60);
+  pinIdleTimer = setTimeout(() => { if (!unlocked && !screensaverActive) startScreensaver(); }, secs * 1000);
+}
+
+function startScreensaver() {
+  if (!screensaverPhotos.length || screensaverActive) return;
+  clearTimeout(idleTimer);
+  clearTimeout(pinIdleTimer);
+  enteredPin = '';
+  renderDots();
+  screensaverActive = true;
+  ssIndex = 0;
+  ssFront = 'A';
+  ['ssPhotoA', 'ssPhotoB'].forEach(id => {
+    const el = document.getElementById(id);
+    el.className = 'ss-photo';
+    el.removeAttribute('src');
+  });
+  showScreen('s-screensaver');
+  showSsPhoto(0);
+  clearInterval(ssTimer);
+  ssTimer = setInterval(() => {
+    ssIndex = (ssIndex + 1) % screensaverPhotos.length;
+    showSsPhoto(ssIndex);
+  }, Math.max(3, screensaverSettings.photoSeconds || 8) * 1000);
+}
+
+function showSsPhoto(index) {
+  const photo = screensaverPhotos[index];
+  const transition = screensaverSettings.transition || 'fade';
+  const photoSecs = Math.max(3, screensaverSettings.photoSeconds || 8);
+  const showEl = document.getElementById(ssFront === 'A' ? 'ssPhotoA' : 'ssPhotoB');
+  const hideEl = document.getElementById(ssFront === 'A' ? 'ssPhotoB' : 'ssPhotoA');
+
+  hideEl.classList.remove('active');
+  showEl.classList.remove('active', 'tr-slide', 'tr-zoom');
+  showEl.style.transition = transition === 'zoom'
+    ? `opacity 1.2s ease, transform ${photoSecs + 1}s ease`
+    : 'opacity 1.2s ease, transform 1.2s ease';
+  if (transition !== 'fade') showEl.classList.add('tr-' + transition);
+  showEl.src = photo.imageUrl;
+
+  requestAnimationFrame(() => requestAnimationFrame(() => { showEl.classList.add('active'); }));
+  ssFront = ssFront === 'A' ? 'B' : 'A';
+}
+
+function stopScreensaver() {
+  if (!screensaverActive) return;
+  screensaverActive = false;
+  clearInterval(ssTimer);
+  ssTimer = null;
+  showScreen('s-pin');
+  renderDots();
+  resetPinIdleTimer();
+}
+// stopPropagation is required here: this click also bubbles to the document-level
+// handleActivity() listener below, which (once screensaverActive flips true inside
+// startScreensaver) would treat that same click as "tap during screensaver" and
+// immediately call stopScreensaver() again — the screensaver would open and close
+// within the same click, looking like the button did nothing.
+document.getElementById('screensaverBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  startScreensaver();
 });
 
 // ── PIN ENTRY ──
@@ -285,6 +411,7 @@ async function checkPin() {
       unlocked = true;
       sessionStorage.setItem('hounslowUnlocked', String(Date.now()));
       enteredPin = '';
+      clearTimeout(pinIdleTimer);
       await goHome();
       resetIdleTimer();
     } else {
@@ -337,17 +464,26 @@ window.lockKiosk = function() {
   renderDots();
   showScreen('s-pin');
   clearTimeout(idleTimer);
+  resetPinIdleTimer();
 };
 document.getElementById('lockBtnHome').addEventListener('click', lockKiosk);
 document.getElementById('lockBtnOptions').addEventListener('click', lockKiosk);
 
-// ── IDLE AUTO-LOCK ──
+// ── IDLE AUTO-LOCK / SCREENSAVER ──
 function resetIdleTimer() {
   clearTimeout(idleTimer);
   if (!unlocked) return;
   idleTimer = setTimeout(() => { if (unlocked) lockKiosk(); }, IDLE_LIMIT_MS);
 }
-['click', 'touchstart', 'keydown', 'scroll'].forEach(evt => document.addEventListener(evt, resetIdleTimer, { passive: true }));
+// Single activity dispatcher: touching the screen during the screensaver stops
+// it and returns to the PIN screen; otherwise it feeds whichever idle timer
+// applies to the current state (10-min auto-lock while unlocked, screensaver
+// countdown while sitting on the PIN screen).
+function handleActivity() {
+  if (screensaverActive) { stopScreensaver(); return; }
+  if (unlocked) resetIdleTimer(); else resetPinIdleTimer();
+}
+['click', 'touchstart', 'keydown', 'scroll'].forEach(evt => document.addEventListener(evt, handleActivity, { passive: true }));
 
 // ── DATA LOADING ──
 async function loadTiles() {

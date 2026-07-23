@@ -271,6 +271,10 @@ tr:hover td{background:var(--surface2)}
         <span class="ni">▦</span> Service User Tiles
         <span class="nav-count" id="cnt-tiles">0</span>
       </div>
+      <div class="nav-item" onclick="showView('screensaver')" id="nav-screensaver">
+        <span class="ni">🖼️</span> Screensaver
+        <span class="nav-count" id="cnt-screensaver">0</span>
+      </div>
       <div class="sb-sec">Security</div>
       <div class="nav-item" onclick="showView('pins')" id="nav-pins">
         <span class="ni">🔑</span> Access PINs
@@ -326,6 +330,53 @@ tr:hover td{background:var(--surface2)}
           </div>
         </div>
         <div class="tile-grid" id="tilesGrid"></div>
+      </div>
+
+      <!-- SCREENSAVER VIEW -->
+      <div class="view" id="v-screensaver">
+        <div class="page-hdr">
+          <div>
+            <h2>Screensaver</h2>
+            <p>Shown on the kiosk lock screen after a period of inactivity, or when someone taps the "Screensaver" button. Tapping the tablet during playback returns straight to the PIN screen.</p>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="padding:18px 20px;margin-bottom:22px">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Transition Style</label>
+              <select id="ssTransition">
+                <option value="fade">Fade</option>
+                <option value="slide">Slide</option>
+                <option value="zoom">Zoom (Ken Burns)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Seconds Per Photo</label>
+              <input id="ssPhotoSeconds" type="number" min="3" max="120" value="8">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Idle Time Before Auto-Start (seconds)</label>
+            <input id="ssIdleSeconds" type="number" min="10" max="900" value="60" style="max-width:200px">
+            <p class="form-hint">How long the kiosk sits untouched on the PIN screen before the screensaver starts on its own.</p>
+          </div>
+          <button class="btn btn-primary" onclick="saveScreensaverSettings()">Save Settings</button>
+        </div>
+
+        <div class="page-hdr">
+          <div>
+            <h2>Photos</h2>
+            <p>Upload one or more photos at once — they play in this order. Use ▲▼ to reorder, or turn individual photos off without deleting them.</p>
+          </div>
+        </div>
+        <div class="dropzone" id="ssDz" onclick="document.getElementById('ssPhotoFiles').click()">
+          <div class="dz-icon">🖼️</div>
+          <div class="dz-text">Click to choose photos — select multiple at once for a bulk upload</div>
+          <div class="dz-hint">JPG or PNG</div>
+        </div>
+        <input type="file" id="ssPhotoFiles" accept="image/*" multiple style="display:none">
+        <div class="tile-grid" id="ssPhotoGrid" style="margin-top:16px"></div>
       </div>
 
       <!-- TILE DETAIL VIEW (options for one tile) -->
@@ -487,7 +538,7 @@ import { initializeApp }                                          from "https://
 import { getAuth, signInWithEmailAndPassword,
          onAuthStateChanged, signOut as fbSignOut }              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, doc,
-         getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+         getDoc, getDocs, addDoc, updateDoc, setDoc, deleteDoc,
          query, where, orderBy, serverTimestamp }                 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage, ref as sRef, uploadBytes,
          getDownloadURL, deleteObject }                           from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
@@ -534,6 +585,8 @@ let currentStaff = null;
 let pins         = [];
 let tiles        = [];
 let options      = [];        // options for the currently-open tile
+let screensaverPhotos   = [];
+let screensaverSettings = {};
 let currentTileId = null;
 let editingTileId  = null;
 let editingOptionId = null;
@@ -578,7 +631,7 @@ window.doSignOut = async () => { await fbSignOut(auth); showScreen('login'); };
 
 // ── LOAD ──
 async function loadAll() {
-  await Promise.all([loadPins(), loadTiles()]);
+  await Promise.all([loadPins(), loadTiles(), loadScreensaverSettings(), loadScreensaverPhotos()]);
   updateCounts();
 }
 
@@ -604,7 +657,117 @@ async function loadOptions(tileId) {
 function updateCounts() {
   document.getElementById('cnt-tiles').textContent = tiles.filter(t => t.status !== 'inactive').length;
   document.getElementById('cnt-pins').textContent  = pins.filter(p => p.status !== 'inactive').length;
+  document.getElementById('cnt-screensaver').textContent = screensaverPhotos.filter(p => p.status !== 'inactive').length;
 }
+
+// ── SCREENSAVER ──
+async function loadScreensaverSettings() {
+  const snap = await getDoc(doc(db, 'hounslowScreensaverSettings', 'config'));
+  screensaverSettings = snap.exists() ? snap.data() : {};
+  document.getElementById('ssTransition').value    = screensaverSettings.transition || 'fade';
+  document.getElementById('ssPhotoSeconds').value  = screensaverSettings.photoSeconds || 8;
+  document.getElementById('ssIdleSeconds').value   = screensaverSettings.idleSeconds || 60;
+}
+
+window.saveScreensaverSettings = async function() {
+  const transition   = document.getElementById('ssTransition').value;
+  const photoSeconds = Math.min(120, Math.max(3, parseInt(document.getElementById('ssPhotoSeconds').value, 10) || 8));
+  const idleSeconds  = Math.min(900, Math.max(10, parseInt(document.getElementById('ssIdleSeconds').value, 10) || 60));
+  try {
+    await setDoc(doc(db, 'hounslowScreensaverSettings', 'config'), {
+      transition, photoSeconds, idleSeconds,
+      updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
+    }, { merge: true });
+    screensaverSettings = { transition, photoSeconds, idleSeconds };
+    toast('Screensaver settings saved', 'success');
+  } catch (e) { toast(e.message, 'error'); }
+};
+
+async function loadScreensaverPhotos() {
+  const snap = await getDocs(query(collection(db, 'hounslowScreensaverPhotos'), orderBy('order')));
+  screensaverPhotos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderScreensaverPhotos();
+}
+
+window.renderScreensaverPhotos = function() {
+  const grid = document.getElementById('ssPhotoGrid');
+  if (!screensaverPhotos.length) {
+    grid.innerHTML = `<div class="table-wrap"><table><tbody><tr class="empty-row"><td>No screensaver photos yet — upload some above.</td></tr></tbody></table></div>`;
+    return;
+  }
+  grid.innerHTML = screensaverPhotos.map((p, i) => {
+    const active = p.status !== 'inactive';
+    return `<div class="tile-card ${active ? '' : 'inactive'}">
+      <div class="tile-img">${p.imageUrl ? `<img src="${esc(p.imageUrl)}" alt="">` : '⏳'}</div>
+      <div class="tile-body">
+        <div class="tile-meta">${active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-grey">Inactive</span>'}</div>
+      </div>
+      <div class="tile-actions" style="flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm btn-icon" ${i === 0 ? 'disabled' : ''} onclick="moveScreensaverPhoto('${p.id}', -1)">▲</button>
+        <button class="btn btn-ghost btn-sm btn-icon" ${i === screensaverPhotos.length - 1 ? 'disabled' : ''} onclick="moveScreensaverPhoto('${p.id}', 1)">▼</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleScreensaverPhoto('${p.id}')">${active ? 'Off' : 'On'}</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteScreensaverPhoto('${p.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+};
+
+document.getElementById('ssPhotoFiles').addEventListener('change', async e => {
+  const files = Array.from(e.target.files || []);
+  e.target.value = '';
+  if (!files.length) return;
+  toast(`Uploading ${files.length} photo${files.length > 1 ? 's' : ''}…`);
+  let nextOrder = screensaverPhotos.length ? Math.max(...screensaverPhotos.map(p => p.order || 0)) + 1 : 0;
+  let failed = 0;
+  for (const file of files) {
+    try {
+      const docRef = await addDoc(collection(db, 'hounslowScreensaverPhotos'), {
+        imageUrl: null, order: nextOrder++, status: 'active',
+        createdAt: serverTimestamp(), createdBy: currentStaff.initials || ''
+      });
+      const path = `hounslow/screensaver/${docRef.id}/${Date.now()}_${file.name}`;
+      const fileRef = sRef(storage, path);
+      await uploadBytes(fileRef, file);
+      const url = await getDownloadURL(fileRef);
+      await updateDoc(docRef, { imageUrl: url });
+    } catch (err) { failed++; }
+  }
+  toast(failed ? `${files.length - failed} uploaded, ${failed} failed` : 'Photos uploaded', failed ? 'warn' : 'success');
+  await loadScreensaverPhotos();
+  updateCounts();
+});
+
+window.moveScreensaverPhoto = async function(id, dir) {
+  const i = screensaverPhotos.findIndex(p => p.id === id);
+  const j = i + dir;
+  if (j < 0 || j >= screensaverPhotos.length) return;
+  const a = screensaverPhotos[i], b = screensaverPhotos[j];
+  await Promise.all([
+    updateDoc(doc(db, 'hounslowScreensaverPhotos', a.id), { order: b.order }),
+    updateDoc(doc(db, 'hounslowScreensaverPhotos', b.id), { order: a.order })
+  ]);
+  await loadScreensaverPhotos();
+};
+
+window.toggleScreensaverPhoto = async function(id) {
+  const p = screensaverPhotos.find(x => x.id === id);
+  const newStatus = p.status === 'inactive' ? 'active' : 'inactive';
+  await updateDoc(doc(db, 'hounslowScreensaverPhotos', id), { status: newStatus });
+  await loadScreensaverPhotos();
+  updateCounts();
+};
+
+window.deleteScreensaverPhoto = function(id) {
+  const p = screensaverPhotos.find(x => x.id === id);
+  confirmAction = async () => {
+    if (p.imageUrl) { try { await deleteObject(sRef(storage, p.imageUrl)); } catch {} }
+    await deleteDoc(doc(db, 'hounslowScreensaverPhotos', id));
+    toast('Photo deleted');
+    await loadScreensaverPhotos();
+    updateCounts();
+  };
+  showConfirm('Delete Photo', 'Remove this photo from the screensaver rotation?', 'This cannot be undone.', '🗑️');
+};
 
 // ── PINS ──
 window.renderPins = function() {
@@ -1006,6 +1169,7 @@ window.showView = function(view) {
     if (navEl) navEl.classList.add('active');
     const titles = {
       tiles: 'Service User Tiles <span class="tb-sub">What appears on the kiosk home screen</span>',
+      screensaver: 'Screensaver <span class="tb-sub">Photos and timing for the kiosk lock screen</span>',
       pins: 'Access PINs <span class="tb-sub">Who can unlock the kiosk</span>'
     };
     document.getElementById('topbarTitle').innerHTML = titles[view] || view;
