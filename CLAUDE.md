@@ -25,6 +25,8 @@ cs-documents.html    — Document template manager (new)
 hounslow-kiosk.html  — On-site PIN-locked kiosk (Android tablet, new)
 hounslow-admin.html  — Admin panel for the Hounslow kiosk (new)
 hounslow-manifest.json / hounslow-sw.js / hounslow-icon.svg — PWA assets for the kiosk
+task-manager-pro.html       — PIN-locked task viewer (unit/YP tasks, new)
+task-manager-pro-admin.html — Admin panel for Task Manager Pro (new)
 ```
 
 ## Tool Documentation
@@ -35,6 +37,7 @@ Read these instead of the full HTML files:
 - [task-board.md](task-board.md) — Task Board
 - [cs-documents.md](cs-documents.md) — Documents tool
 - [hounslow.md](hounslow.md) — Hounslow on-site kiosk + admin panel
+- [task-manager-pro.md](task-manager-pro.md) — Task Manager Pro viewer + admin panel
 
 ## Shared Firestore Collections
 These collections are read/written by multiple tools:
@@ -53,6 +56,10 @@ These collections are read/written by multiple tools:
 | `hounslowOptions` | hounslow-admin | hounslow-kiosk, hounslow-admin |
 | `hounslowScreensaverPhotos` | hounslow-admin | hounslow-kiosk (reads only), hounslow-admin |
 | `hounslowScreensaverSettings` | hounslow-admin | hounslow-kiosk (reads only), hounslow-admin |
+| `taskManagerPins` | task-manager-pro-admin | task-manager-pro (reads only), task-manager-pro-admin |
+| `taskManagerTags` | task-manager-pro-admin | task-manager-pro (reads only), task-manager-pro-admin |
+| `taskManagerTasks` | task-manager-pro-admin | task-manager-pro (reads + marks complete), task-manager-pro-admin |
+| `taskManagerComments` | task-manager-pro-admin | task-manager-pro (reads + adds), task-manager-pro-admin |
 
 ### `staffProfiles` schema
 ```js
