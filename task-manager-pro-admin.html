@@ -769,7 +769,24 @@ function updateCounts() {
 // ── FILTER BAR ──
 function populateFilterUnits() {
   const sel = document.getElementById('filterUnit');
-  sel.innerHTML = '<option value="">All Units</option>' + unitsCache.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
+  sel.innerHTML = '<option value="">All Units</option><option value="__management__">🏛️ Management</option>' +
+    unitsCache.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
+}
+
+// Shared by the filter bar's YP select and the task modal's YP select: Management
+// is a pseudo-unit spanning every young person org-wide (not scoped to one unit's
+// currentUnitId), so it lists all active service users instead of filtering by unit.
+function buildYPOptions(unitId, allLabel, unitTasksLabel) {
+  if (unitId === '__management__') {
+    return `<option value="">${allLabel}</option><option value="__unit__">🏛️ ${unitTasksLabel}</option>` +
+      serviceUsersCache.map(y => {
+        const u = unitsCache.find(x => x.id === y.currentUnitId);
+        return `<option value="${y.id}">${esc(y.name)}${u ? ` (${esc(u.name)})` : ''}</option>`;
+      }).join('');
+  }
+  const yps = serviceUsersCache.filter(s => s.currentUnitId === unitId);
+  return `<option value="">${allLabel}</option><option value="__unit__">🏢 ${unitTasksLabel}</option>` +
+    yps.map(y => `<option value="${y.id}">${esc(y.name)}</option>`).join('');
 }
 
 window.onFilterUnitChange = function() {
@@ -779,9 +796,8 @@ window.onFilterUnitChange = function() {
     ypSel.innerHTML = '<option value="">All Units</option>';
     ypSel.disabled = true;
   } else {
-    const yps = serviceUsersCache.filter(s => s.currentUnitId === unitId);
-    ypSel.innerHTML = '<option value="">All (this unit)</option><option value="__unit__">🏢 Unit Tasks (no young person)</option>' +
-      yps.map(y => `<option value="${y.id}">${esc(y.name)}</option>`).join('');
+    const allLabel = unitId === '__management__' ? 'All (Management)' : 'All (this unit)';
+    ypSel.innerHTML = buildYPOptions(unitId, allLabel, 'Tasks (no young person)');
     ypSel.disabled = false;
   }
   renderTasks();
@@ -841,6 +857,17 @@ function getFilteredSortedTasks() {
 
 function prioBadgeClass(p) { return p === 'high' ? 'red' : p === 'medium' ? 'amber' : p === 'low' ? 'green' : 'grey'; }
 
+// Management is a pseudo-unit (not a taskManagerTasks.unitId that maps to a real
+// units doc) spanning every young person org-wide — see buildYPOptions() above.
+function unitBadgeHtml(unitId) {
+  if (unitId === '__management__') return `<span class="badge badge-amber">🏛️ Management</span>`;
+  const u = unitsCache.find(x => x.id === unitId);
+  return `<span class="badge badge-blue">${u ? esc(u.name) : '—'}</span>`;
+}
+function noYpBadgeHtml(unitId) {
+  return unitId === '__management__' ? `<span class="badge badge-grey">Management Task</span>` : `<span class="badge badge-grey">Unit Task</span>`;
+}
+
 function hexTint(hex, alpha) {
   const h = (hex || '#6b7280').replace('#','');
   const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
@@ -856,7 +883,6 @@ window.renderTasks = function() {
   }
   const today = new Date().toISOString().slice(0,10);
   grid.innerHTML = list.map(t => {
-    const unit = unitsCache.find(u => u.id === t.unitId);
     const yp   = t.serviceUserId ? serviceUsersCache.find(s => s.id === t.serviceUserId) : null;
     const tagChips = (t.tags||[]).map(id => tags.find(g => g.id === id)).filter(Boolean)
       .map(g => `<span class="tm-tag" style="background:${hexTint(g.color,.15)};color:${g.color}">${esc(g.name)}</span>`).join('');
@@ -868,8 +894,8 @@ window.renderTasks = function() {
         ${t.priority ? `<span class="badge badge-${prioBadgeClass(t.priority)}">${t.priority}</span>` : ''}
       </div>
       <div class="tm-card-meta">
-        <span class="badge badge-blue">${unit ? esc(unit.name) : '—'}</span>
-        ${yp ? `<span class="badge badge-purple">${esc(yp.name)}</span>` : `<span class="badge badge-grey">Unit Task</span>`}
+        ${unitBadgeHtml(t.unitId)}
+        ${yp ? `<span class="badge badge-purple">${esc(yp.name)}</span>` : noYpBadgeHtml(t.unitId)}
       </div>
       ${tagChips ? `<div class="tm-card-tags">${tagChips}</div>` : ''}
       <div class="tm-card-bottom">
@@ -886,7 +912,8 @@ window.renderTasks = function() {
 // ── TASK MODAL ──
 function populateModalUnits() {
   const sel = document.getElementById('taskUnit');
-  sel.innerHTML = '<option value="">Select a unit…</option>' + unitsCache.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
+  sel.innerHTML = '<option value="">Select a unit…</option><option value="__management__">🏛️ Management</option>' +
+    unitsCache.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
 }
 
 window.onTaskUnitChange = function(prefillYP) {
@@ -897,8 +924,16 @@ window.onTaskUnitChange = function(prefillYP) {
     ypSel.disabled = true;
     return;
   }
-  const yps = serviceUsersCache.filter(s => s.currentUnitId === unitId);
-  ypSel.innerHTML = '<option value="">— Unit task, no young person —</option>' + yps.map(y => `<option value="${y.id}">${esc(y.name)}</option>`).join('');
+  const noneLabel = unitId === '__management__' ? '— Management task, no young person —' : '— Unit task, no young person —';
+  if (unitId === '__management__') {
+    ypSel.innerHTML = `<option value="">${noneLabel}</option>` + serviceUsersCache.map(y => {
+      const u = unitsCache.find(x => x.id === y.currentUnitId);
+      return `<option value="${y.id}">${esc(y.name)}${u ? ` (${esc(u.name)})` : ''}</option>`;
+    }).join('');
+  } else {
+    const yps = serviceUsersCache.filter(s => s.currentUnitId === unitId);
+    ypSel.innerHTML = `<option value="">${noneLabel}</option>` + yps.map(y => `<option value="${y.id}">${esc(y.name)}</option>`).join('');
+  }
   ypSel.disabled = false;
   if (prefillYP) ypSel.value = prefillYP;
 };

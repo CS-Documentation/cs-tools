@@ -14,8 +14,11 @@ The viewer has no per-user account, so anything written from it (comments, compl
 
 ## Filters & sort (identical in both files)
 Four filters plus a sort control, applied client-side over the loaded active/completed task set:
-1. **Unit** — active `units`; blank = all units.
-2. **Young Person** — disabled until a unit is picked. Options: blank (all tasks for that unit), **"🏢 Unit Tasks"** pseudo-option (`serviceUserId == null` tasks only), then each active service user in that unit (`currentUnitId` match). Picking a specific YP shows only that YP's own tasks.
+1. **Unit** — active `units`, plus a pseudo-unit option **"🏛️ Management"** (`unitId: '__management__'` — not a real `units` doc); blank = all units (including Management-scoped tasks).
+2. **Young Person** — disabled until a unit (or Management) is picked.
+   - For a real unit: blank (all tasks for that unit), **"🏢 Unit Tasks"** pseudo-option (`serviceUserId == null` tasks only), then each active service user in that unit (`currentUnitId` match).
+   - For **Management**: blank (all Management-scoped tasks), **"🏛️ Management Tasks"** pseudo-option (no young person), then *every* active service user org-wide (not restricted to one unit), each labeled with their current unit in parentheses for context since they now span multiple units.
+   Picking a specific YP shows only that YP's own tasks either way.
 3. **Priority** — All / High / Medium / Low / No Priority.
 4. **Assigned To** — in the viewer, built from the distinct `assignees` initials present in the loaded tasks (no `staffProfiles` read, to avoid depending on anonymous-auth read access to that collection); in the admin, built from all active `staffProfiles`.
 5. **Sort** (not a filter) — Due Date (soonest first, no-date last) or Priority (High → Medium → Low → None).
@@ -64,8 +67,8 @@ Same shape as `hounslowPins` (see [hounslow.md](hounslow.md)) — plain-text 6-d
 {
   title: string,
   description: string,
-  unitId: string,                    // required
-  serviceUserId: string | null,      // null = unit-only task
+  unitId: string,                    // required — a real `units` doc ID, OR the sentinel '__management__'
+  serviceUserId: string | null,      // null = unit-only (or Management-only) task
   tags: string[],                     // taskManagerTags doc IDs
   priority: 'high' | 'medium' | 'low' | null,
   dueDate: string | null,              // YYYY-MM-DD
@@ -82,6 +85,8 @@ Same shape as `hounslowPins` (see [hounslow.md](hounslow.md)) — plain-text 6-d
 }
 ```
 Note: the admin's **Delete** action hard-deletes the task doc (and its Storage file attachments), matching the precedent set by `hounslow-admin.html`'s tile/option delete — `status: 'inactive'` is reserved for a future soft-delete if one is needed, but nothing currently sets it.
+
+**"Management" pseudo-unit**: `unitId` is either a real `units` doc ID or the fixed sentinel string `'__management__'`, offered as an extra option (🏛️ Management) alongside real units in every Unit `<select>` in both files — the task-creation modal, the filter bar, and the assignee cascade all treat it the same way a real unit is treated for filtering/lookups (plain string equality), but its Young Person list is every active service user org-wide rather than one unit's `currentUnitId` cohort. It isn't backed by a Firestore doc — there's no way to rename or add more scopes like it from the admin UI, by design (mirrors the hardcoded `'__unit__'` "no young person" pseudo-option already used within a real unit). `unitBadgeHtml()`/`noYpBadgeHtml()` (duplicated in both files) render it as a distinct amber "🏛️ Management" badge instead of doing a `unitsCache` lookup.
 
 ### `taskManagerComments`
 ```js
@@ -129,6 +134,7 @@ pickerState   // people-picker state, keyed by pickerId (taskAssigneePicker)
 | `checkPin()` (viewer only) | Compare entered PIN against active `taskManagerPins`, unlock on match |
 | `onFilterUnitChange()` | Repopulate the Young Person filter for the selected unit, including the "Unit Tasks" pseudo-option |
 | `getFilteredSortedTasks()` | Apply the four filters + Active/Archive toggle, then sort by date or priority |
+| `unitBadgeHtml(unitId)` / `noYpBadgeHtml(unitId)` | Render the card/detail unit badge — real unit name, or the amber "🏛️ Management" badge for the `'__management__'` sentinel |
 | `renderTasks()` | Rebuild the card grid from `getFilteredSortedTasks()` |
 | `openTaskDetail(id)` (viewer) / `openTaskModal(id)` (admin) | Open the detail/edit modal for a task, loading its comments |
 | `postComment()` / `addComment` | Add a `taskManagerComments` doc attributed to the current session/staff identity |

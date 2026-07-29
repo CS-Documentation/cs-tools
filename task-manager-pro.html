@@ -442,15 +442,25 @@ async function loadTasks() {
 // ── FILTER BAR ──
 function populateFilterUnits() {
   const sel = document.getElementById('filterUnit');
-  sel.innerHTML = '<option value="">All Units</option>' + unitsCache.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
+  sel.innerHTML = '<option value="">All Units</option><option value="__management__">🏛️ Management</option>' +
+    unitsCache.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
 }
 
+// Management is a pseudo-unit spanning every young person org-wide (not scoped to
+// one unit's currentUnitId), so its Young Person list is every active service user.
 window.onFilterUnitChange = function() {
   const unitId = document.getElementById('filterUnit').value;
   const ypSel = document.getElementById('filterYP');
   if (!unitId) {
     ypSel.innerHTML = '<option value="">All Units</option>';
     ypSel.disabled = true;
+  } else if (unitId === '__management__') {
+    ypSel.innerHTML = '<option value="">All (Management)</option><option value="__unit__">🏛️ Management Tasks (no young person)</option>' +
+      serviceUsersCache.map(y => {
+        const u = unitsCache.find(x => x.id === y.currentUnitId);
+        return `<option value="${y.id}">${esc(y.name)}${u ? ` (${esc(u.name)})` : ''}</option>`;
+      }).join('');
+    ypSel.disabled = false;
   } else {
     const yps = serviceUsersCache.filter(s => s.currentUnitId === unitId);
     ypSel.innerHTML = '<option value="">All (this unit)</option><option value="__unit__">🏢 Unit Tasks (no young person)</option>' +
@@ -516,6 +526,14 @@ function getFilteredSortedTasks() {
 }
 
 function prioBadgeClass(p) { return p === 'high' ? 'red' : p === 'medium' ? 'amber' : p === 'low' ? 'green' : 'grey'; }
+function unitBadgeHtml(unitId) {
+  if (unitId === '__management__') return `<span class="badge badge-amber">🏛️ Management</span>`;
+  const u = unitsCache.find(x => x.id === unitId);
+  return `<span class="badge badge-blue">${u ? esc(u.name) : '—'}</span>`;
+}
+function noYpBadgeHtml(unitId) {
+  return unitId === '__management__' ? `<span class="badge badge-grey">Management Task</span>` : `<span class="badge badge-grey">Unit Task</span>`;
+}
 function hexTint(hex, alpha) {
   const h = (hex || '#6b7280').replace('#','');
   const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
@@ -531,7 +549,6 @@ window.renderTasks = function() {
   }
   const today = new Date().toISOString().slice(0,10);
   grid.innerHTML = list.map(t => {
-    const unit = unitsCache.find(u => u.id === t.unitId);
     const yp   = t.serviceUserId ? serviceUsersCache.find(s => s.id === t.serviceUserId) : null;
     const tagChips = (t.tags||[]).map(id => tagsCache.find(g => g.id === id)).filter(Boolean)
       .map(g => `<span class="tm-tag" style="background:${hexTint(g.color,.15)};color:${g.color}">${esc(g.name)}</span>`).join('');
@@ -543,8 +560,8 @@ window.renderTasks = function() {
         ${t.priority ? `<span class="badge badge-${prioBadgeClass(t.priority)}">${t.priority}</span>` : ''}
       </div>
       <div class="tm-card-meta">
-        <span class="badge badge-blue">${unit ? esc(unit.name) : '—'}</span>
-        ${yp ? `<span class="badge badge-purple">${esc(yp.name)}</span>` : `<span class="badge badge-grey">Unit Task</span>`}
+        ${unitBadgeHtml(t.unitId)}
+        ${yp ? `<span class="badge badge-purple">${esc(yp.name)}</span>` : noYpBadgeHtml(t.unitId)}
       </div>
       ${tagChips ? `<div class="tm-card-tags">${tagChips}</div>` : ''}
       <div class="tm-card-bottom">
@@ -564,7 +581,6 @@ window.openTaskDetail = async function(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
 
-  const unit = unitsCache.find(u => u.id === t.unitId);
   const yp   = t.serviceUserId ? serviceUsersCache.find(s => s.id === t.serviceUserId) : null;
   const tagChips = (t.tags||[]).map(gid => tagsCache.find(g => g.id === gid)).filter(Boolean)
     .map(g => `<span class="tm-tag" style="background:${hexTint(g.color,.15)};color:${g.color}">${esc(g.name)}</span>`).join('');
@@ -581,8 +597,8 @@ window.openTaskDetail = async function(id) {
     <div class="detail-title">${esc(t.title||'Untitled')}</div>
     ${t.description ? `<div class="detail-desc">${esc(t.description)}</div>` : ''}
     <div class="detail-meta-row">
-      <span class="badge badge-blue">${unit ? esc(unit.name) : '—'}</span>
-      ${yp ? `<span class="badge badge-purple">${esc(yp.name)}</span>` : `<span class="badge badge-grey">Unit Task</span>`}
+      ${unitBadgeHtml(t.unitId)}
+      ${yp ? `<span class="badge badge-purple">${esc(yp.name)}</span>` : noYpBadgeHtml(t.unitId)}
       ${t.priority ? `<span class="badge badge-${prioBadgeClass(t.priority)}">${t.priority} priority</span>` : ''}
       ${t.dueDate ? `<span class="badge ${overdue?'badge-red':'badge-grey'}">📅 ${t.dueDate}${overdue?' overdue':''}</span>` : ''}
     </div>
