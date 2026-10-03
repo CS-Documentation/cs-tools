@@ -27,6 +27,8 @@ hounslow-admin.html  — Admin panel for the Hounslow kiosk (new)
 hounslow-manifest.json / hounslow-sw.js / hounslow-icon.svg — PWA assets for the kiosk
 task-manager-pro.html       — PIN-locked task viewer (unit/YP tasks, new)
 task-manager-pro-admin.html — Admin panel for Task Manager Pro (new)
+body-map-tracker.html       — PIN-locked daily body map dashboard, reads a Google Sheet (new)
+body-map-admin.html         — Admin panel for the Body Map Tracker (new)
 ```
 
 ## Tool Documentation
@@ -38,6 +40,7 @@ Read these instead of the full HTML files:
 - [cs-documents.md](cs-documents.md) — Documents tool
 - [hounslow.md](hounslow.md) — Hounslow on-site kiosk + admin panel
 - [task-manager-pro.md](task-manager-pro.md) — Task Manager Pro viewer + admin panel
+- [body-map-tracker.md](body-map-tracker.md) — Body Map Tracker viewer + admin panel
 
 ## Shared Firestore Collections
 These collections are read/written by multiple tools:
@@ -60,6 +63,9 @@ These collections are read/written by multiple tools:
 | `taskManagerTags` | task-manager-pro-admin | task-manager-pro (reads only), task-manager-pro-admin |
 | `taskManagerTasks` | task-manager-pro-admin | task-manager-pro (reads + marks complete), task-manager-pro-admin |
 | `taskManagerComments` | task-manager-pro-admin | task-manager-pro (reads + adds), task-manager-pro-admin |
+| `bodyMapPins` | body-map-admin | body-map-tracker (reads only), body-map-admin |
+| `bodyMapYoungPeople` | body-map-admin | body-map-tracker (reads only), body-map-admin |
+| `bodyMapSettings` | body-map-admin | body-map-tracker (reads only), body-map-admin |
 
 ### `staffProfiles` schema
 ```js

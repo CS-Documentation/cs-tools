@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Body Map Admin — Connected Stars</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brand:#1446a0;--brand-dark:#0d3278;--brand-light:#e8eef8;--brand-mid:#2d5bbf;
+  --bg:#f4f6fb;--surface:#fff;--surface2:#f7f9fc;--surface3:#edf0f7;
+  --border:#dde3ef;--border2:#b8c5e0;
+  --text:#1a1a2e;--text2:#4a5568;--text3:#6b7280;
+  --green:#27ae60;--green-bg:#eafaf1;--green-bd:#a9dfbf;
+  --amber:#e67e22;--amber-bg:#fef9f0;--amber-bd:#fad7a0;
+  --red:#c0392b;--red-bg:#fdf0ef;--red-bd:#f5c6c2;
+  --r:10px;--rs:8px;
+  --sh:0 2px 12px rgba(20,70,160,.08);
+  --sh-lg:0 20px 60px rgba(0,0,0,.25);
+  --sidebar-w:240px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+
+/* LOGIN */
+#loginScreen{min-height:100vh;background:linear-gradient(135deg,var(--brand-dark) 0%,var(--brand) 50%,var(--brand-mid) 100%);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--surface);border-radius:20px;padding:48px 40px;width:100%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,.25);text-align:center}
+.login-logo-wrap{background:var(--brand);border-radius:10px;padding:14px 20px;margin:0 auto 28px;max-width:280px;display:flex;align-items:center;justify-content:center;gap:10px}
+.login-logo-wrap svg{flex-shrink:0}
+.login-logo-text{color:#fff;font-size:15px;font-weight:800;letter-spacing:-.3px;text-align:left;line-height:1.25}
+.login-logo-text span{display:block;font-size:10px;font-weight:500;opacity:.75;letter-spacing:1px;text-transform:uppercase}
+.login-badge{display:inline-flex;align-items:center;gap:5px;background:var(--red-bg);border:1px solid var(--red-bd);color:var(--red);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;margin-bottom:16px;letter-spacing:.5px;text-transform:uppercase}
+.login-title{font-size:22px;font-weight:700;color:var(--brand);margin-bottom:6px}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:28px}
+.login-err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd);border-radius:var(--rs);padding:10px 14px;font-size:13px;margin-bottom:16px;display:none;text-align:left}
+.form-group{margin-bottom:16px;text-align:left}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:#fff;outline:none;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(20,70,160,.1)}
+.login-btn{display:block;width:100%;padding:13px;background:var(--brand);color:#fff;border:none;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+.login-btn:hover{background:var(--brand-dark);transform:translateY(-1px)}
+.login-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+/* ACCESS DENIED */
+#accessDenied{display:none;min-height:100vh;background:linear-gradient(135deg,var(--brand-dark) 0%,var(--brand) 50%,var(--brand-mid) 100%);align-items:center;justify-content:center;padding:20px}
+.denied-card{background:var(--surface);border-radius:20px;padding:48px 40px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.25);text-align:center}
+.denied-icon{font-size:48px;margin-bottom:16px}
+.denied-title{font-size:22px;font-weight:700;color:var(--red);margin-bottom:8px}
+.denied-sub{font-size:14px;color:var(--text3);margin-bottom:24px}
+
+/* APP LAYOUT */
+#app{display:none;flex-direction:row;min-height:100vh}
+#sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200}
+#main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0}
+
+/* SIDEBAR */
+.sb-header{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.sb-home{display:block;text-decoration:none;cursor:pointer}
+.sb-brand{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text3);margin-bottom:3px}
+.sb-title{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.4px}
+.sb-title span{color:var(--brand)}
+.sb-badge{margin-top:6px;display:inline-flex;align-items:center;gap:4px;background:var(--red-bg);border:1px solid var(--red-bd);color:var(--red);font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase}
+.sb-nav{padding:8px;flex:1;overflow-y:auto}
+.sb-sec{padding:10px 8px 4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3)}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--rs);cursor:pointer;color:var(--text2);font-weight:500;font-size:13px;transition:all .12s;margin-bottom:1px;user-select:none}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--brand-light);color:var(--brand);font-weight:700}
+.nav-item .ni{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.nav-count{margin-left:auto;background:var(--surface3);color:var(--text3);font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px}
+.nav-item.active .nav-count{background:rgba(20,70,160,.15);color:var(--brand)}
+.sb-user{padding:12px 14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:9px}
+.u-av{width:30px;height:30px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.u-name{font-size:12px;font-weight:700;line-height:1.3}
+.u-role{font-size:10px;color:var(--text3)}
+.u-signout{margin-left:auto;background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:4px;border-radius:4px;font-family:'DM Sans',sans-serif}
+.u-signout:hover{color:var(--red)}
+
+/* TOPBAR */
+#topbar{background:var(--brand);color:#fff;padding:0 20px;min-height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(20,70,160,.3)}
+.tb-title{font-size:16px;font-weight:700;flex:1}
+.tb-sub{font-size:12px;opacity:.75;margin-left:4px;font-weight:400}
+.menu-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;display:none;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+
+/* CONTENT */
+#content{padding:20px;flex:1}
+.view{display:none}.view.active{display:block}
+.page-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.page-hdr h2{font-size:18px;font-weight:800;letter-spacing:-.3px}
+.page-hdr p{font-size:13px;color:var(--text3);margin-top:2px;max-width:640px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);padding:20px;max-width:760px}
+.panel + .panel{margin-top:16px}
+.panel h3{font-size:14px;font-weight:700;margin-bottom:12px}
+
+/* TABLE */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--surface2)}
+th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.empty-row td{text-align:center;padding:32px;color:var(--text3);font-style:italic}
+tr.inactive td{opacity:.6}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.badge-green{background:var(--green-bg);color:#1e8449;border:1px solid var(--green-bd)}
+.badge-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+.badge-amber{background:var(--amber-bg);color:#8a4b08;border:1px solid var(--amber-bd)}
+.badge-grey{background:var(--surface3);color:var(--text3);border:1px solid var(--border)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--rs);border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;text-decoration:none}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--brand-dark)}
+.btn-ghost{background:transparent;color:var(--text2);border:1.5px solid var(--border)}
+.btn-ghost:hover{background:var(--surface2);border-color:var(--border2)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+.btn-danger:hover{background:#fbe3e1}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-icon{padding:5px 8px;font-size:14px;line-height:1}
+.actions-cell{display:flex;gap:5px;flex-wrap:wrap}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.ord-btn{background:var(--surface2);border:1px solid var(--border);border-radius:4px;width:24px;height:20px;cursor:pointer;font-size:10px;display:inline-flex;align-items:center;justify-content:center;color:var(--text2)}
+.ord-btn:hover:not(:disabled){background:var(--surface3)}
+.ord-btn:disabled{opacity:.3;cursor:not-allowed}
+.ord-cell{display:flex;flex-direction:column;gap:2px;align-items:center}
+.yp-chip{display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:30px;padding:0 10px;border-radius:15px;background:var(--brand);color:#fff;font-family:'DM Mono',monospace;font-weight:500;font-size:13px}
+
+/* TEST RESULT */
+.test-box{margin-top:16px;border:1px solid var(--border);border-radius:var(--rs);background:var(--surface2);padding:14px 16px;font-size:13px;line-height:1.6}
+.test-box.ok{border-color:var(--green-bd);background:var(--green-bg)}
+.test-box.bad{border-color:var(--red-bd);background:var(--red-bg)}
+.test-box h4{font-size:13px;font-weight:800;margin-bottom:6px}
+.test-box ul{margin:6px 0 0 18px}
+.test-box code{font-family:'DM Mono',monospace;font-size:12px;background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px}
+.how-to{font-size:12px;color:var(--text2);line-height:1.6;background:var(--brand-light);border-radius:var(--rs);padding:12px 14px;margin-bottom:16px}
+.how-to ol{margin:6px 0 0 18px}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(26,26,46,.45);z-index:1000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border-radius:16px;width:100%;max-width:440px;box-shadow:var(--sh-lg);overflow:hidden;max-height:90vh;display:flex;flex-direction:column}
+.modal-hdr{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-hdr h3{font-size:16px;font-weight:700}
+.modal-close{background:transparent;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:2px 6px;border-radius:4px;line-height:1}
+.modal-close:hover{background:var(--surface2);color:var(--text)}
+.modal-body{padding:20px;overflow-y:auto;flex:1}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.form-hint{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.5}
+.confirm-icon{font-size:36px;text-align:center;margin-bottom:12px}
+.confirm-msg{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:4px}
+.confirm-warn{font-size:12px;color:var(--text3);margin-top:8px}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast-item{background:var(--text);color:#fff;padding:11px 16px;border-radius:var(--rs);font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.2);animation:toastIn .25s ease;max-width:320px}
+.toast-item.t-success{background:#1e8449}
+.toast-item.t-error{background:var(--red)}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:700px){
+  #sidebar{transform:translateX(-100%);transition:transform .25s}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}
+  .menu-btn{display:flex}
+  #sb-overlay{display:none;position:fixed;inset:0;background:rgba(26,26,46,.35);z-index:190}
+  #sb-overlay.show{display:block}
+  .login-card{padding:36px 26px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo-wrap">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="rgba(255,255,255,0.15)"/><path d="M7 14l5 5 9-9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="login-logo-text">Connected Stars<span>Care Management</span></div>
+    </div>
+    <div class="login-badge">🔒 Admin Only</div>
+    <h1 class="login-title">Body Map Admin</h1>
+    <p class="login-sub">Manage the sheet link, young people and viewer PINs</p>
+    <div id="loginErr" class="login-err"></div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email / Username</label>
+        <input id="emailIn" type="text" placeholder="username or full email" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input id="passIn" type="password" placeholder="Password" autocomplete="current-password">
+      </div>
+      <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
+    </form>
+  </div>
+</div>
+
+<!-- ACCESS DENIED -->
+<div id="accessDenied">
+  <div class="denied-card">
+    <div class="denied-icon">🚫</div>
+    <h2 class="denied-title">Access Denied</h2>
+    <p class="denied-sub">This panel is restricted to administrators only. Please contact your system admin if you believe this is an error.</p>
+    <button class="btn btn-ghost" onclick="doSignOut()">Sign Out</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div id="sb-overlay" onclick="closeSidebar()"></div>
+  <div id="sidebar">
+    <div class="sb-header">
+      <a href="index.html" class="sb-home" title="Home">
+        <div class="sb-brand">Connected Stars</div>
+        <div class="sb-title">Body Map <span>Admin</span></div>
+      </a>
+      <div class="sb-badge">🔒 Admin</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-sec">Setup</div>
+      <div class="nav-item active" onclick="showView('settings')" id="nav-settings">
+        <span class="ni">📄</span> Sheet &amp; Times
+      </div>
+      <div class="nav-item" onclick="showView('yps')" id="nav-yps">
+        <span class="ni">👤</span> Young People
+        <span class="nav-count" id="cnt-yps">0</span>
+      </div>
+      <div class="sb-sec">Security</div>
+      <div class="nav-item" onclick="showView('pins')" id="nav-pins">
+        <span class="ni">🔑</span> Access PINs
+        <span class="nav-count" id="cnt-pins">0</span>
+      </div>
+    </nav>
+    <div class="sb-user">
+      <div class="u-av" id="userAv">A</div>
+      <div>
+        <div class="u-name" id="userName">Admin</div>
+        <div class="u-role">Administrator</div>
+      </div>
+      <button class="u-signout" onclick="doSignOut()" title="Sign out">Sign out</button>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="topbar">
+      <button class="menu-btn" onclick="openSidebar()" aria-label="Menu">☰</button>
+      <div class="tb-title" id="topbarTitle"></div>
+    </div>
+    <div id="content">
+
+      <!-- SETTINGS -->
+      <div class="view active" id="v-settings">
+        <div class="page-hdr">
+          <div>
+            <h2>Sheet &amp; Times</h2>
+            <p>Where the tracker reads its body map entries from, and how the times in that sheet are interpreted.</p>
+          </div>
+          <a class="btn btn-ghost" href="body-map-tracker.html" target="_blank" rel="noopener">Open tracker ↗</a>
+        </div>
+        <div class="panel">
+          <div class="how-to">
+            <strong>Connecting the Google Sheet</strong>
+            <ol>
+              <li><strong>Recommended:</strong> in the sheet, <em>File → Share → Publish to web</em>, pick the form-responses tab, choose <em>Comma-separated values (.csv)</em>, press Publish, and paste that link below.</li>
+              <li>Or paste the normal sheet link, provided it's shared as <em>Anyone with the link → Viewer</em>.</li>
+            </ol>
+          </div>
+          <div class="form-group">
+            <label for="sheetUrl">Google Sheet link</label>
+            <input id="sheetUrl" type="url" placeholder="https://docs.google.com/spreadsheets/d/…" autocomplete="off" spellcheck="false">
+            <p class="form-hint">Anyone who can open this link can read the sheet, so only share it with people who should see these records.</p>
+          </div>
+          <div class="form-group">
+            <label for="timeMode">How are the times in the sheet stored?</label>
+            <select id="timeMode">
+              <option value="utc">In UTC (Fillout default) — convert to UK time, adding the hour in British Summer Time</option>
+              <option value="local">Already in UK time — show exactly as written</option>
+            </select>
+            <p class="form-hint">Use "Test connection" and compare the latest entry's "Sheet says" time with the time it was actually filled in. If they differ by an hour in summer, UTC is the right choice.</p>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="saveSettingsBtn" onclick="saveSettings()">Save</button>
+            <button class="btn btn-ghost" id="testBtn" onclick="testConnection()">Test connection</button>
+          </div>
+          <div id="testResult"></div>
+        </div>
+      </div>
+
+      <!-- YOUNG PEOPLE -->
+      <div class="view" id="v-yps">
+        <div class="page-hdr">
+          <div>
+            <h2>Young People</h2>
+            <p>The initials the tracker shows a section for, in this order. They must match the "YP Initials" value the form writes to the sheet. Deactivate someone who has moved on, or add a new arrival.</p>
+          </div>
+          <button class="btn btn-primary" onclick="openYpModal()">＋ Add Young Person</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th style="width:60px">Order</th>
+              <th>Initials</th>
+              <th>Status</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="ypsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PINS -->
+      <div class="view" id="v-pins">
+        <div class="page-hdr">
+          <div>
+            <h2>Access PINs</h2>
+            <p>Any active PIN below unlocks the Body Map Tracker. You can run several at once and revoke any independently.</p>
+          </div>
+          <button class="btn btn-primary" onclick="openPinModal()">＋ Add PIN</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Label</th>
+              <th>PIN</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="pinsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- YOUNG PERSON MODAL -->
+<div class="modal-bg" id="ypModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="ypModalTitle">Add Young Person</h3>
+      <button class="modal-close" onclick="closeModal('ypModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="ypInitials">Initials *</label>
+        <input id="ypInitials" type="text" maxlength="4" placeholder="e.g. AB" style="font-family:'DM Mono',monospace;letter-spacing:2px;text-transform:uppercase" onkeydown="if(event.key==='Enter')saveYp()">
+        <p class="form-hint">2–4 letters, exactly as they appear in the form's "YP Initials" answer.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('ypModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveYp()" id="ypSaveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN MODAL -->
+<div class="modal-bg" id="pinModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="pinModalTitle">Add Access PIN</h3>
+      <button class="modal-close" onclick="closeModal('pinModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Label *</label>
+        <input id="pinLabel" type="text" placeholder="e.g. Day Shift, Management">
+      </div>
+      <div class="form-group">
+        <label>6-Digit PIN *</label>
+        <input id="pinValue" type="text" inputmode="numeric" maxlength="6" placeholder="••••••" style="font-family:'DM Mono',monospace;letter-spacing:4px">
+      </div>
+      <div class="form-group">
+        <label>Confirm PIN *</label>
+        <input id="pinConfirm" type="text" inputmode="numeric" maxlength="6" placeholder="••••••" style="font-family:'DM Mono',monospace;letter-spacing:4px">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('pinModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePin()" id="pinSaveBtn">Save PIN</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-bg" id="confirmModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="confirmTitle">Confirm</h3>
+      <button class="modal-close" onclick="closeModal('confirmModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-icon" id="confirmIcon">⚠️</div>
+      <p class="confirm-msg" id="confirmMsg"></p>
+      <p class="confirm-warn" id="confirmWarn"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('confirmModal')">Cancel</button>
+      <button class="btn btn-danger" id="confirmOkBtn" onclick="runConfirmAction()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp }                                 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword,
+         onAuthStateChanged, signOut as fbSignOut }     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc,
+         getDoc, getDocs, addDoc, updateDoc, setDoc, deleteDoc,
+         query, orderBy, serverTimestamp }               from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCwHzZFibrc9SNP8vAV6Jr_NmQr4fVCEto",
+  authDomain: "connected-stars-handover.firebaseapp.com",
+  projectId: "connected-stars-handover",
+  storageBucket: "connected-stars-handover.firebasestorage.app",
+  messagingSenderId: "606134396217",
+  appId: "1:606134396217:web:6636e2fbe9b73b7723b4e8"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const auth  = getAuth(fbApp);
+const db    = getFirestore(fbApp);
+
+// ── BEGIN CORE (duplicated verbatim in body-map-admin.html — keep the two in sync) ──
+const TZ = 'Europe/London';
+const LONDON_FMT = new Intl.DateTimeFormat('en-GB', {
+  timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit',
+  hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZoneName: 'short'
+});
+
+// Fillout writes into the sheet in UTC, so a 10:25 BST entry lands as 09:25. 'utc' converts back
+// to UK local time; 'local' leaves the sheet's times untouched (if the form is ever changed).
+function parseCsv(text) {
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  const rows = []; let row = [], field = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQ) {
+      if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQ = false; }
+      else field += c;
+    } else if (c === '"') inQ = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(field); field = ''; rows.push(row); row = [];
+    } else field += c;
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows.filter(r => r.some(v => v.trim() !== ''));
+}
+
+const COLS = {
+  id:          ['submissionid'],
+  submitted:   ['submissiondatetime'],
+  when:        ['dateandtime', 'datetime'],
+  yp:          ['ypinitials', 'yp', 'initials'],
+  staff:       ['staffname', 'staff'],
+  injury:      ['anyinjuryormark', 'anyinjury'],
+  bm:          ['bmnumber', 'bodymapnumber', 'bm'],
+  location:    ['location'],
+  description: ['descrtiption', 'description'],   // the form's header is spelt "Descrtiption"
+  actions:     ['furtheractions', 'furtheraction'],
+  images:      ['images', 'image', 'photos']
+};
+const normHeader = h => String(h || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const pad2 = n => String(n).padStart(2, '0');
+
+// Accepts "YYYY-MM-DD[ T]HH:MM[:SS]" (what the sheet exports) or UK "DD/MM/YYYY HH:MM[:SS]".
+// A bare date, or a time of exactly 00:00:00, means the form's date picker was used without a time.
+function parseStamp(s) {
+  s = String(s || '').trim();
+  if (!s) return null;
+  let y, mo, d, rest;
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(.*)$/);
+  if (m) { y = +m[1]; mo = +m[2]; d = +m[3]; rest = m[4]; }
+  else if ((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(.*)$/))) { d = +m[1]; mo = +m[2]; y = +m[3]; rest = m[4]; }
+  else return null;
+  let hh = 0, mi = 0, ss = 0, hasTimePart = false;
+  const t = rest.match(/^[T,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (t) { hh = +t[1]; mi = +t[2]; ss = +(t[3] || 0); hasTimePart = true; }
+  else if (rest.trim() !== '' && !/^Z?$/i.test(rest.trim())) return null;
+  if (mo < 1 || mo > 12 || d < 1 || d > 31 || hh > 23 || mi > 59 || ss > 59) return null;
+  const chk = new Date(Date.UTC(y, mo - 1, d));
+  if (chk.getUTCMonth() !== mo - 1) return null;
+  return { y, mo, d, hh, mi, timeGiven: hasTimePart && !(hh === 0 && mi === 0 && ss === 0) };
+}
+
+function resolveWhen(stamp, mode) {
+  const date = `${stamp.y}-${pad2(stamp.mo)}-${pad2(stamp.d)}`;
+  if (!stamp.timeGiven) return { date, time: null, tz: '' };
+  if (mode === 'local') return { date, time: `${pad2(stamp.hh)}:${pad2(stamp.mi)}`, tz: '' };
+  const p = {};
+  LONDON_FMT.formatToParts(new Date(Date.UTC(stamp.y, stamp.mo - 1, stamp.d, stamp.hh, stamp.mi)))
+    .forEach(x => { p[x.type] = x.value; });
+  return { date: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}`, tz: p.timeZoneName || '' };
+}
+
+// Anything that is not clearly "none" or "yes" is surfaced for checking rather than assumed safe.
+function classifyInjury(raw, hasDetails) {
+  const v = String(raw || '').trim().toLowerCase().replace(/[.!]+$/, '');
+  if (/^(yes|y|true)$/.test(v) || /^(yes|injury|mark)\b/.test(v)) return 'injury';
+  if (/^(none|no|nil|n\/a|na|false|no injury|no injuries|no marks?|no injury( or|\/)? ?marks?)$/.test(v)) return 'none';
+  if (v === '') return hasDetails ? 'injury' : 'check';
+  return 'check';
+}
+
+function buildEntries(rows, mode) {
+  const out = { entries: [], skipped: [], missing: [] };
+  if (!rows.length) { out.missing = ['header row']; return out; }
+  const header = rows[0].map(normHeader);
+  const idx = {};
+  Object.keys(COLS).forEach(k => { idx[k] = header.findIndex(h => COLS[k].includes(h)); });
+  if (idx.when < 0 && idx.submitted < 0) out.missing.push('Date and Time');
+  if (idx.yp < 0) out.missing.push('YP Initials');
+  if (out.missing.length) return out;
+  const get = (r, k) => (idx[k] >= 0 && r[idx[k]] != null ? String(r[idx[k]]).trim() : '');
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i], rowNo = i + 1;
+    const yp = get(r, 'yp').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!yp) { out.skipped.push({ rowNo, reason: 'no YP initials' }); continue; }
+    let stamp = parseStamp(get(r, 'when')), usedSubmitted = false;
+    if (!stamp) { stamp = parseStamp(get(r, 'submitted')); usedSubmitted = !!stamp; }
+    if (!stamp) { out.skipped.push({ rowNo, yp, reason: `unrecognised date "${get(r, 'when')}"` }); continue; }
+    const when = resolveWhen(stamp, mode);
+    const bm = get(r, 'bm'), location = get(r, 'location'), description = get(r, 'description'),
+          actions = get(r, 'actions');
+    const images = (get(r, 'images').match(/https?:\/\/[^\s,"'<>]+/g) || []);
+    const hasDetails = !!(bm || location || description || actions || images.length);
+    const injuryRaw = get(r, 'injury');
+    out.entries.push({
+      id: get(r, 'id') || `row-${rowNo}`, rowNo, yp,
+      date: when.date, time: when.time, tz: when.tz, usedSubmitted, rawWhen: get(r, usedSubmitted ? 'submitted' : 'when'),
+      staff: get(r, 'staff'), injuryRaw, injury: classifyInjury(injuryRaw, hasDetails),
+      bm, location, description, actions, images, hasDetails
+    });
+  }
+  return out;
+}
+
+// Turns a pasted Google Sheets link into a CSV endpoint a browser can fetch.
+function sheetCsvUrl(link) {
+  link = String(link || '').trim();
+  if (!/^https:\/\/docs\.google\.com\/spreadsheets\//.test(link)) return null;
+  let u; try { u = new URL(link); } catch { return null; }
+  if (/\/spreadsheets\/d\/e\//.test(u.pathname)) {                    // "Publish to web" link
+    u.pathname = u.pathname.replace(/\/pub[^/]*$/, '/pub');
+    const gid = u.searchParams.get('gid');
+    u.search = ''; u.hash = '';
+    if (gid) u.searchParams.set('gid', gid);
+    u.searchParams.set('single', 'true'); u.searchParams.set('output', 'csv');
+    return u.toString();
+  }
+  const idm = u.pathname.match(/\/spreadsheets\/d\/([^/]+)/);        // normal share / edit link
+  if (!idm) return null;
+  const gid = u.searchParams.get('gid') || (u.hash.match(/gid=(\d+)/) || [])[1] || '0';
+  return `https://docs.google.com/spreadsheets/d/${idm[1]}/gviz/tq?tqx=out:csv&gid=${gid}`;
+}
+
+function todayLondon() {
+  const p = {};
+  new Intl.DateTimeFormat('en-GB', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' })
+    .formatToParts(new Date()).forEach(x => { p[x.type] = x.value; });
+  return `${p.year}-${p.month}-${p.day}`;
+}
+function esc(str) { return String(str == null ? '' : str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// ── END CORE ──
+
+const DEFAULT_YPS = ['BC', 'KW', 'JJ', 'RK', 'EG'];
+
+// ── STATE ──
+let currentUser = null;
+let currentStaff = null;
+let settings = { sheetUrl: '', timeMode: 'utc', ypSeeded: false };
+let yps = [], pins = [];
+let editingYpId = null, editingPinId = null;
+let revealedPins = new Set();
+let confirmAction = null;
+
+// ── AUTH ──
+onAuthStateChanged(auth, async user => {
+  // The tracker signs in anonymously on the same origin; treat that as "not signed in" here.
+  if (!user || user.isAnonymous) { showScreen('login'); return; }
+  currentUser = user;
+  const snap = await getDoc(doc(db, 'staffProfiles', user.uid));
+  if (!snap.exists() || snap.data().role !== 'admin') { showScreen('denied'); return; }
+  currentStaff = { id: snap.id, ...snap.data() };
+  document.getElementById('userName').textContent = currentStaff.name || 'Admin';
+  document.getElementById('userAv').textContent   = (currentStaff.initials || currentStaff.name || 'A').slice(0,2).toUpperCase();
+  showScreen('app');
+  showView('settings');
+  await loadAll();
+});
+
+document.getElementById('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  hideLoginErr();
+  let email = document.getElementById('emailIn').value.trim();
+  const pass = document.getElementById('passIn').value;
+  if (!email.includes('@')) email += '@connectedstars.co.uk';
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch (err) {
+    showLoginErr(friendlyAuthErr(err.code));
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+});
+
+window.doSignOut = async () => { await fbSignOut(auth); showScreen('login'); };
+
+function friendlyAuthErr(code) {
+  switch (code) {
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found': return 'Incorrect username or password.';
+    case 'auth/too-many-requests': return 'Too many attempts — try again in a few minutes.';
+    case 'auth/network-request-failed': return 'Network error — check your connection.';
+    default: return 'Sign-in failed. Please try again.';
+  }
+}
+
+// ── LOAD ──
+async function loadAll() {
+  await loadSettings();
+  await Promise.all([loadYps(), loadPins()]);
+  await seedDefaultYps();
+}
+
+async function loadSettings() {
+  const snap = await getDoc(doc(db, 'bodyMapSettings', 'config'));
+  settings = Object.assign({ sheetUrl: '', timeMode: 'utc', ypSeeded: false }, snap.exists() ? snap.data() : {});
+  document.getElementById('sheetUrl').value = settings.sheetUrl || '';
+  document.getElementById('timeMode').value = settings.timeMode === 'local' ? 'local' : 'utc';
+}
+
+async function loadYps() {
+  const snap = await getDocs(query(collection(db, 'bodyMapYoungPeople'), orderBy('order')));
+  yps = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderYps();
+  updateCounts();
+}
+
+async function loadPins() {
+  const snap = await getDocs(query(collection(db, 'bodyMapPins'), orderBy('createdAt', 'desc')));
+  pins = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderPins();
+  updateCounts();
+}
+
+// First visit only: start the list with the five current young people. The flag stops this
+// re-adding them if the admin later removes everyone on purpose.
+async function seedDefaultYps() {
+  if (yps.length || settings.ypSeeded) return;
+  for (let i = 0; i < DEFAULT_YPS.length; i++) {
+    await addDoc(collection(db, 'bodyMapYoungPeople'), {
+      initials: DEFAULT_YPS[i], order: i, status: 'active',
+      createdAt: serverTimestamp(), createdBy: currentStaff.initials || ''
+    });
+  }
+  await setDoc(doc(db, 'bodyMapSettings', 'config'), { ypSeeded: true }, { merge: true });
+  settings.ypSeeded = true;
+  await loadYps();
+}
+
+function updateCounts() {
+  document.getElementById('cnt-yps').textContent  = yps.filter(y => y.status !== 'inactive').length;
+  document.getElementById('cnt-pins').textContent = pins.filter(p => p.status !== 'inactive').length;
+}
+
+// ── SETTINGS ──
+window.saveSettings = async function() {
+  const sheetUrl = document.getElementById('sheetUrl').value.trim();
+  const timeMode = document.getElementById('timeMode').value === 'local' ? 'local' : 'utc';
+  if (sheetUrl && !sheetCsvUrl(sheetUrl)) { toast('That doesn\'t look like a Google Sheets link', 'error'); return; }
+  try {
+    await setDoc(doc(db, 'bodyMapSettings', 'config'), {
+      sheetUrl, timeMode, updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
+    }, { merge: true });
+    settings.sheetUrl = sheetUrl; settings.timeMode = timeMode;
+    toast('Settings saved', 'success');
+  } catch (e) { toast(e.message, 'error'); }
+};
+
+window.testConnection = async function() {
+  const out = document.getElementById('testResult');
+  const btn = document.getElementById('testBtn');
+  const link = document.getElementById('sheetUrl').value.trim();
+  const mode = document.getElementById('timeMode').value === 'local' ? 'local' : 'utc';
+  const csvUrl = sheetCsvUrl(link);
+  if (!csvUrl) { out.innerHTML = `<div class="test-box bad"><h4>Not a Google Sheets link</h4>Paste the sheet's share link or its "Publish to web" CSV link above.</div>`; return; }
+  btn.disabled = true; btn.textContent = 'Testing…';
+  out.innerHTML = '';
+  try {
+    const res = await fetch(csvUrl + (csvUrl.includes('?') ? '&' : '?') + '_=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error(`The sheet returned HTTP ${res.status}`);
+    const text = await res.text();
+    if (/^\s*<(!doctype|html)/i.test(text)) throw new Error('Google returned a sign-in page instead of data — the sheet isn\'t shared publicly');
+    const built = buildEntries(parseCsv(text), mode);
+    if (built.missing.length) {
+      out.innerHTML = `<div class="test-box bad"><h4>Connected, but the columns weren't recognised</h4>Couldn't find: ${esc(built.missing.join(', '))}. Make sure the link points at the form-responses tab.</div>`;
+      return;
+    }
+    const latest = built.entries.slice().sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || ''))).slice(0, 3);
+    const inSheet = [...new Set(built.entries.map(e => e.yp))].sort();
+    const known = new Set(yps.filter(y => y.status !== 'inactive').map(y => y.initials));
+    const unknown = inSheet.filter(i => !known.has(i));
+    out.innerHTML = `<div class="test-box ok">
+      <h4>✓ Connected — ${built.entries.length} entr${built.entries.length === 1 ? 'y' : 'ies'} read</h4>
+      ${latest.length ? `Most recent entries — compare the sheet's time with when it was really filled in:<ul>${latest.map(e =>
+        `<li>${esc(e.yp)}: sheet says <code>${esc(e.rawWhen)}</code> → shown as <strong>${esc(e.date)} ${e.time ? esc(e.time) + (e.tz ? ' ' + esc(e.tz) : '') : '(no time entered)'}</strong></li>`).join('')}</ul>` : 'The sheet has no entries yet.'}
+      ${inSheet.length ? `<div style="margin-top:8px">Initials found in the sheet: ${inSheet.map(i => `<code>${esc(i)}</code>`).join(' ')}</div>` : ''}
+      ${unknown.length ? `<div style="margin-top:8px"><span class="badge badge-amber">Not in your list</span> ${unknown.map(i => `<code>${esc(i)}</code>`).join(' ')} — add them under Young People to get their own section. (Until then the tracker still shows their entries under "not in your list".)</div>` : ''}
+      ${built.skipped.length ? `<div style="margin-top:8px"><span class="badge badge-red">${built.skipped.length} row${built.skipped.length === 1 ? '' : 's'} unreadable</span><ul>${built.skipped.slice(0, 6).map(s => `<li>Sheet row ${s.rowNo}: ${esc(s.reason)}</li>`).join('')}</ul></div>` : ''}
+    </div>`;
+  } catch (e) {
+    out.innerHTML = `<div class="test-box bad"><h4>Couldn't load the sheet</h4>${esc(e.message || e)}.<br>Check the sheet is published to the web or shared as "Anyone with the link can view". (A network error and a blocked cross-site request look identical to the browser, so this can't say which it was.)</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Test connection';
+  }
+};
+
+// ── YOUNG PEOPLE ──
+function renderYps() {
+  const tb = document.getElementById('ypsTbody');
+  if (!yps.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="4">No young people yet — click "Add Young Person".</td></tr>'; return; }
+  tb.innerHTML = yps.map((y, i) => {
+    const active = y.status !== 'inactive';
+    return `<tr class="${active ? '' : 'inactive'}">
+      <td><div class="ord-cell">
+        <button class="ord-btn" ${i === 0 ? 'disabled' : ''} onclick="moveYp('${y.id}',-1)" aria-label="Move up">▲</button>
+        <button class="ord-btn" ${i === yps.length - 1 ? 'disabled' : ''} onclick="moveYp('${y.id}',1)" aria-label="Move down">▼</button>
+      </div></td>
+      <td><span class="yp-chip">${esc(y.initials)}</span></td>
+      <td>${active ? '<span class="badge badge-green">Shown</span>' : '<span class="badge badge-grey">Hidden</span>'}</td>
+      <td><div class="actions-cell">
+        <button class="btn btn-ghost btn-sm" onclick="openYpModal('${y.id}')">Edit</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleYp('${y.id}')">${active ? 'Hide' : 'Show'}</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteYp('${y.id}')">Delete</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+window.openYpModal = function(id) {
+  editingYpId = id || null;
+  document.getElementById('ypModalTitle').textContent = id ? 'Edit Young Person' : 'Add Young Person';
+  document.getElementById('ypInitials').value = id ? (yps.find(x => x.id === id)?.initials || '') : '';
+  openModal('ypModal');
+  setTimeout(() => document.getElementById('ypInitials').focus(), 50);
+};
+
+window.saveYp = async function() {
+  const initials = document.getElementById('ypInitials').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (initials.length < 2) { toast('Enter 2–4 characters', 'error'); return; }
+  if (yps.some(y => y.initials === initials && y.id !== editingYpId)) { toast(`${initials} is already in the list`, 'error'); return; }
+  try {
+    if (editingYpId) {
+      await updateDoc(doc(db, 'bodyMapYoungPeople', editingYpId), { initials, updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || '' });
+      toast('Updated', 'success');
+    } else {
+      const order = yps.length ? Math.max(...yps.map(y => y.order || 0)) + 1 : 0;
+      await addDoc(collection(db, 'bodyMapYoungPeople'), {
+        initials, order, status: 'active',
+        createdAt: serverTimestamp(), createdBy: currentStaff.initials || ''
+      });
+      toast(`${initials} added`, 'success');
+    }
+    closeModal('ypModal');
+    await loadYps();
+  } catch (e) { toast(e.message, 'error'); }
+};
+
+window.toggleYp = async function(id) {
+  const y = yps.find(x => x.id === id);
+  const status = y.status === 'inactive' ? 'active' : 'inactive';
+  await updateDoc(doc(db, 'bodyMapYoungPeople', id), { status, updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || '' });
+  toast(`${y.initials} ${status === 'inactive' ? 'hidden from' : 'shown in'} the tracker`);
+  await loadYps();
+};
+
+window.moveYp = async function(id, dir) {
+  const i = yps.findIndex(x => x.id === id), j = i + dir;
+  if (i < 0 || j < 0 || j >= yps.length) return;
+  // Re-number the whole list so ties or gaps in `order` can never make a move a no-op.
+  const next = yps.slice(); [next[i], next[j]] = [next[j], next[i]];
+  await Promise.all(next.map((y, n) => y.order === n ? null : updateDoc(doc(db, 'bodyMapYoungPeople', y.id), { order: n })));
+  await loadYps();
+};
+
+window.deleteYp = function(id) {
+  const y = yps.find(x => x.id === id);
+  confirmAction = async () => {
+    await deleteDoc(doc(db, 'bodyMapYoungPeople', id));
+    toast(`${y.initials} deleted`);
+    await loadYps();
+  };
+  showConfirm('Delete young person', `Delete ${y.initials} from the list?`, 'Their body maps stay in the Google Sheet and still appear in the tracker under "not in your list". Use Hide instead to just take them off the main view.', '🗑️');
+};
+
+// ── PINS ──
+function renderPins() {
+  const tb = document.getElementById('pinsTbody');
+  if (!pins.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="5">No PINs yet — add one so the tracker can be unlocked.</td></tr>'; return; }
+  tb.innerHTML = pins.map(p => {
+    const active = p.status !== 'inactive';
+    const revealed = revealedPins.has(p.id);
+    return `<tr class="${active ? '' : 'inactive'}">
+      <td style="font-weight:600">${esc(p.label)}</td>
+      <td>
+        <span style="font-family:'DM Mono',monospace;letter-spacing:2px">${revealed ? esc(p.pin) : '••••••'}</span>
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="togglePinReveal('${p.id}')" title="${revealed ? 'Hide' : 'Show'} PIN" aria-label="${revealed ? 'Hide' : 'Show'} PIN">${revealed ? '🙈' : '👁️'}</button>
+      </td>
+      <td>${active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-grey">Inactive</span>'}</td>
+      <td style="color:var(--text3);font-size:12px">${fmtDate(p.createdAt)}</td>
+      <td><div class="actions-cell">
+        <button class="btn btn-ghost btn-sm" onclick="openPinModal('${p.id}')">Edit</button>
+        <button class="btn btn-ghost btn-sm" onclick="togglePin('${p.id}')">${active ? 'Deactivate' : 'Activate'}</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePin('${p.id}')">Delete</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+window.togglePinReveal = function(id) {
+  if (revealedPins.has(id)) revealedPins.delete(id); else revealedPins.add(id);
+  renderPins();
+};
+
+window.openPinModal = function(id) {
+  editingPinId = id || null;
+  document.getElementById('pinModalTitle').textContent = id ? 'Edit Access PIN' : 'Add Access PIN';
+  document.getElementById('pinSaveBtn').textContent     = id ? 'Save Changes' : 'Save PIN';
+  const p = id ? pins.find(x => x.id === id) : null;
+  document.getElementById('pinLabel').value   = p ? (p.label || '') : '';
+  document.getElementById('pinValue').value   = p ? (p.pin || '') : '';
+  document.getElementById('pinConfirm').value = p ? (p.pin || '') : '';
+  openModal('pinModal');
+};
+
+window.savePin = async function() {
+  const label      = document.getElementById('pinLabel').value.trim();
+  const pin        = document.getElementById('pinValue').value.trim();
+  const confirmVal = document.getElementById('pinConfirm').value.trim();
+  if (!label) { toast('Label is required', 'error'); return; }
+  if (!/^\d{6}$/.test(pin)) { toast('PIN must be exactly 6 digits', 'error'); return; }
+  if (pin !== confirmVal) { toast('PINs do not match', 'error'); return; }
+  try {
+    if (editingPinId) {
+      await updateDoc(doc(db, 'bodyMapPins', editingPinId), {
+        label, pin, updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
+      });
+      toast('PIN updated', 'success');
+    } else {
+      await addDoc(collection(db, 'bodyMapPins'), {
+        label, pin, status: 'active',
+        createdAt: serverTimestamp(), createdBy: currentStaff.initials || '',
+        updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || ''
+      });
+      toast('PIN added', 'success');
+    }
+    closeModal('pinModal');
+    await loadPins();
+  } catch (e) { toast(e.message, 'error'); }
+};
+
+window.togglePin = async function(id) {
+  const p = pins.find(x => x.id === id);
+  const newStatus = p.status === 'inactive' ? 'active' : 'inactive';
+  await updateDoc(doc(db, 'bodyMapPins', id), { status: newStatus, updatedAt: serverTimestamp(), updatedBy: currentStaff.initials || '' });
+  toast(`PIN "${p.label}" ${newStatus === 'inactive' ? 'deactivated' : 'activated'}`);
+  await loadPins();
+};
+
+window.deletePin = function(id) {
+  const p = pins.find(x => x.id === id);
+  confirmAction = async () => {
+    await deleteDoc(doc(db, 'bodyMapPins', id));
+    toast('PIN deleted');
+    await loadPins();
+  };
+  showConfirm('Delete PIN', `Delete the "${p.label}" PIN?`, 'Anyone using this PIN will no longer be able to unlock the tracker.', '🗑️');
+};
+
+// ── NAV ──
+window.showView = function(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('v-' + view).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('nav-' + view)?.classList.add('active');
+  const titles = {
+    settings: 'Sheet &amp; Times <span class="tb-sub">Where entries come from</span>',
+    yps: 'Young People <span class="tb-sub">Who the tracker shows</span>',
+    pins: 'Access PINs <span class="tb-sub">Who can unlock the tracker</span>'
+  };
+  document.getElementById('topbarTitle').innerHTML = titles[view] || view;
+  closeSidebar();
+};
+window.openSidebar = function() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sb-overlay').classList.add('show');
+};
+window.closeSidebar = function() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('show');
+};
+
+// ── MODAL HELPERS ──
+window.openModal  = id => { document.getElementById(id).classList.add('open'); };
+window.closeModal = id => { document.getElementById(id).classList.remove('open'); };
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+});
+
+function showConfirm(title, msg, warn, icon) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent   = msg;
+  document.getElementById('confirmWarn').textContent  = warn || '';
+  document.getElementById('confirmIcon').textContent  = icon || '⚠️';
+  openModal('confirmModal');
+}
+window.runConfirmAction = async function() {
+  if (confirmAction) { closeModal('confirmModal'); await confirmAction(); confirmAction = null; }
+};
+
+function showScreen(screen) {
+  document.getElementById('loginScreen').style.display  = screen === 'login'  ? '' : 'none';
+  document.getElementById('accessDenied').style.display = screen === 'denied' ? 'flex' : 'none';
+  document.getElementById('app').style.display          = screen === 'app'    ? 'flex' : 'none';
+}
+function hideLoginErr() { const el = document.getElementById('loginErr'); el.style.display = 'none'; el.textContent = ''; }
+function showLoginErr(msg) { const el = document.getElementById('loginErr'); el.textContent = msg; el.style.display = 'block'; }
+
+// ── UTILITIES ──
+window.toast = function(msg, type = '') {
+  const wrap = document.getElementById('toast');
+  const el   = document.createElement('div');
+  el.className = 'toast-item' + (type ? ' t-' + type : '');
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+};
+function fmtDate(ts) {
+  if (!ts) return '—';
+  try { const d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); }
+  catch { return '—'; }
+}
+</script>
+</body>
+</html>

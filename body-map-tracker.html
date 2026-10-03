@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Body Map Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brand:#1446a0;--brand-dark:#0d3278;--brand-mid:#2d5bbf;--brand-light:#e8eef8;
+  --bg:#f4f6fb;--surface:#fff;--surface2:#f7f9fc;--surface3:#edf0f7;
+  --text:#1a1a2e;--text2:#4a5568;--text3:#6b7280;
+  --border:#dde3ef;--border2:#b8c5e0;
+  --green:#27ae60;--green-bg:#eafaf1;--green-bd:#a9dfbf;--green-strong:#1e8449;
+  --amber:#e67e22;--amber-bg:#fef9f0;--amber-bd:#fad7a0;--amber-strong:#a85a0a;
+  --red:#c0392b;--red-bg:#fdf0ef;--red-bd:#f5c6c2;
+  --r:10px;--rs:8px;
+  --sh:0 2px 12px rgba(20,70,160,.08);
+  --sh-md:0 4px 16px rgba(20,70,160,.12);
+  --sh-lg:0 20px 60px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+button{font-family:inherit;cursor:pointer}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+
+/* ── PIN SCREEN ── */
+#s-pin{background:linear-gradient(135deg,var(--brand-dark) 0%,var(--brand) 55%,var(--brand-mid) 100%);align-items:center;justify-content:center;padding:24px}
+.pin-card{background:rgba(255,255,255,.98);border-radius:22px;padding:38px 40px 34px;width:100%;max-width:380px;box-shadow:var(--sh-lg);text-align:center}
+.pin-logo{width:56px;height:56px;border-radius:16px;background:var(--brand);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:var(--sh)}
+.pin-logo svg{width:30px;height:30px}
+.pin-title{font-size:21px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.pin-sub{font-size:13px;color:var(--text3);margin-top:4px;margin-bottom:24px}
+.pin-dots{display:flex;gap:13px;justify-content:center;margin-bottom:26px}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2.5px solid var(--border2);transition:all .15s}
+.pin-dot.filled{background:var(--brand);border-color:var(--brand);transform:scale(1.1)}
+.pin-dot.err{background:var(--red);border-color:var(--red)}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.pin-key{aspect-ratio:1/1;border-radius:50%;border:none;background:var(--brand-light);color:var(--brand);font-size:24px;font-weight:800;display:flex;align-items:center;justify-content:center;transition:all .1s;min-height:60px}
+.pin-key:active{background:var(--brand);color:#fff;transform:scale(.92)}
+.pin-key.wide{background:transparent;color:var(--text3);font-size:14px;font-weight:600}
+.pin-key.wide:active{background:var(--surface2);transform:scale(.96)}
+.pin-error-msg{color:var(--red);font-size:13px;font-weight:700;margin-top:14px;min-height:16px}
+
+/* ── TOPBAR ── */
+.bm-topbar{background:linear-gradient(135deg,var(--brand-dark) 0%,var(--brand) 55%,var(--brand-mid) 100%);color:#fff;padding:0 20px;min-height:60px;display:flex;align-items:center;gap:14px;flex-shrink:0;box-shadow:0 2px 16px rgba(20,70,160,.25)}
+.bm-tb-logo{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bm-tb-logo svg{width:20px;height:20px}
+.bm-tb-title{flex:1;min-width:0}
+.bm-tb-title h1{font-size:17px;font-weight:800;line-height:1.2}
+.bm-tb-title span{font-size:11px;opacity:.75;font-weight:500}
+.bm-lock-btn{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;padding:8px 16px;border-radius:22px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px;flex-shrink:0}
+.bm-lock-btn:active{background:rgba(255,255,255,.3)}
+
+/* ── MAIN BODY ── */
+.bm-body{flex:1;overflow-y:auto;padding:18px 20px 40px}
+.bm-wrap{max-width:1400px;margin:0 auto}
+
+/* CONTROL BAR */
+.ctl-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;box-shadow:var(--sh)}
+.ctl-field{display:flex;flex-direction:column;gap:3px}
+.ctl-field label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3)}
+.date-nav{display:flex;align-items:center;gap:6px}
+.date-nav input[type=date]{padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--text);background:#fff;outline:none;min-width:150px}
+.date-nav input[type=date]:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(20,70,160,.1)}
+.nav-btn{width:38px;height:38px;border-radius:var(--rs);border:1.5px solid var(--border);background:#fff;color:var(--text2);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.nav-btn:hover{background:var(--surface2);border-color:var(--border2)}
+.ctl-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.updated{font-size:11px;color:var(--text3)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--rs);border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--brand-dark)}
+.btn-ghost{background:transparent;color:var(--text2);border:1.5px solid var(--border)}
+.btn-ghost:hover{background:var(--surface2);border-color:var(--border2)}
+.btn-sm{padding:7px 12px;font-size:12px}
+
+/* DAY SUMMARY */
+.day-summary{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;font-size:14px;color:var(--text2)}
+.day-summary strong{color:var(--text)}
+.day-title{font-size:18px;font-weight:800;color:var(--text);margin-right:6px}
+
+/* NOTICES */
+.notice{border-radius:var(--rs);padding:11px 14px;font-size:13px;margin-bottom:14px;line-height:1.5}
+.notice-error{background:var(--red-bg);border:1px solid var(--red-bd);color:var(--red)}
+.notice-warn{background:var(--amber-bg);border:1px solid var(--amber-bd);color:#8a4b08}
+.notice ul{margin:6px 0 0 18px}
+
+/* YP GRID */
+.yp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:16px;align-items:start}
+.yp-card{background:var(--surface);border:1.5px solid var(--border);border-top:5px solid var(--border2);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.yp-card.st-ok{border-top-color:var(--green-strong)}
+.yp-card.st-injury{border-top-color:var(--red)}
+.yp-card.st-check{border-top-color:var(--amber-strong)}
+.yp-head{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.yp-av{width:44px;height:44px;border-radius:50%;background:var(--brand);color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;flex-shrink:0}
+.yp-meta{flex:1;min-width:90px}
+.yp-meta h2{font-size:17px;font-weight:800;letter-spacing:-.2px}
+.yp-meta span{font-size:12px;color:var(--text3);font-weight:500}
+.yp-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px}
+.yp-empty{padding:18px 16px;font-size:13px;color:var(--text3);font-style:italic;text-align:center}
+
+/* STATUS TAGS — solid fill + icon + text, never colour alone */
+.tag{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;font-size:12px;font-weight:800;white-space:nowrap;color:#fff}
+.tag-green{background:var(--green-strong)}
+.tag-red{background:var(--red)}
+.tag-amber{background:var(--amber-strong)}
+.tag-grey{background:var(--surface3);color:var(--text3);font-weight:700}
+
+/* BODY MAP ENTRY */
+.bm{border:1.5px solid var(--border);border-left:5px solid var(--border2);border-radius:var(--rs);background:var(--surface2);padding:10px 12px}
+.bm.bm-ok{border-left-color:var(--green-strong)}
+.bm.bm-injury{background:var(--red-bg);border-color:var(--red-bd);border-left-color:var(--red)}
+.bm.bm-check{background:var(--amber-bg);border-color:var(--amber-bd);border-left-color:var(--amber-strong)}
+.bm-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.bm-time{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:var(--text)}
+.bm-time small{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;color:var(--text3);margin-left:3px;letter-spacing:.4px}
+.bm-time.no-time{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--text3)}
+.bm-staff{font-size:12px;color:var(--text2);flex:1;min-width:60px}
+.bm-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin-top:10px}
+.bm-fields .wide{grid-column:1 / -1}
+.bm-fields dt{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:2px}
+.bm-fields dd{font-size:13px;color:var(--text);line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.bm-photos{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.bm-photo{width:92px;height:92px;border-radius:var(--rs);border:1.5px solid var(--border2);padding:0;overflow:hidden;background:var(--surface3);position:relative}
+.bm-photo:hover{border-color:var(--brand)}
+.bm-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.bm-photo-fail{display:flex;align-items:center;justify-content:center;width:92px;height:92px;border-radius:var(--rs);border:1.5px dashed var(--border2);font-size:11px;color:var(--brand);text-align:center;padding:6px;text-decoration:none;background:var(--surface)}
+.bm-sub{font-size:11px;color:var(--text3);margin-top:8px}
+
+.empty-day{text-align:center;padding:56px 20px;color:var(--text3);background:var(--surface);border:1px dashed var(--border2);border-radius:var(--r)}
+.other-title{font-size:13px;font-weight:700;color:var(--text2);margin:22px 0 10px}
+
+/* LIGHTBOX */
+.lb{display:none;position:fixed;inset:0;background:rgba(10,12,24,.9);z-index:1500;align-items:center;justify-content:center;padding:16px;flex-direction:column;gap:12px}
+.lb.open{display:flex}
+.lb img{max-width:100%;max-height:calc(100vh - 110px);object-fit:contain;border-radius:6px}
+.lb-bar{display:flex;gap:10px;align-items:center;color:#fff;font-size:13px}
+.lb-btn{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;padding:8px 16px;border-radius:22px;font-size:13px;font-weight:700;text-decoration:none}
+.lb-btn:hover{background:rgba(255,255,255,.3)}
+
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:8px}
+
+@media(max-width:700px){
+  .pin-card{padding:30px 26px 28px}
+  .bm-body{padding:14px 12px 32px}
+  .yp-grid{grid-template-columns:1fr}
+  .ctl-right{margin-left:0;width:100%}
+  .bm-fields{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div class="screen active" id="s-pin">
+  <div class="pin-card">
+    <div class="pin-logo"><svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="rgba(255,255,255,0.15)"/><path d="M7 14l5 5 9-9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="pin-title">Body Map Tracker</div>
+    <div class="pin-sub">Enter your 6-digit PIN to continue</div>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="pin-keypad" id="pinKeypad">
+      <button class="pin-key" data-k="1">1</button>
+      <button class="pin-key" data-k="2">2</button>
+      <button class="pin-key" data-k="3">3</button>
+      <button class="pin-key" data-k="4">4</button>
+      <button class="pin-key" data-k="5">5</button>
+      <button class="pin-key" data-k="6">6</button>
+      <button class="pin-key" data-k="7">7</button>
+      <button class="pin-key" data-k="8">8</button>
+      <button class="pin-key" data-k="9">9</button>
+      <button class="pin-key wide" data-k="clear">Clear</button>
+      <button class="pin-key" data-k="0">0</button>
+      <button class="pin-key wide" data-k="back">⌫</button>
+    </div>
+    <div class="pin-error-msg" id="pinErrMsg"></div>
+  </div>
+</div>
+
+<!-- MAIN SCREEN -->
+<div class="screen" id="s-main">
+  <div class="bm-topbar">
+    <div class="bm-tb-logo"><svg viewBox="0 0 28 28" fill="none"><path d="M7 14l5 5 9-9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="bm-tb-title">
+      <h1>Body Map Tracker</h1>
+      <span>Daily body maps by young person</span>
+    </div>
+    <button class="bm-lock-btn" onclick="lockViewer()">🔒 Lock</button>
+  </div>
+  <div class="bm-body">
+    <div class="bm-wrap">
+      <div class="ctl-bar">
+        <div class="ctl-field">
+          <label for="dateInput">Date</label>
+          <div class="date-nav">
+            <button class="nav-btn" onclick="shiftDate(-1)" title="Previous day" aria-label="Previous day">◀</button>
+            <input type="date" id="dateInput" onchange="onDateChange()">
+            <button class="nav-btn" onclick="shiftDate(1)" title="Next day" aria-label="Next day">▶</button>
+            <button class="btn btn-ghost" onclick="goToday()">Today</button>
+          </div>
+        </div>
+        <div class="ctl-right">
+          <span class="updated" id="updatedLbl"></span>
+          <button class="btn btn-primary btn-sm" id="refreshBtn" onclick="refreshData()">↻ Refresh</button>
+        </div>
+      </div>
+      <div id="notices"></div>
+      <div id="daySummary" class="day-summary"></div>
+      <div id="ypGrid" class="yp-grid"></div>
+      <div id="otherWrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PHOTO LIGHTBOX -->
+<div class="lb" id="lightbox" onclick="if(event.target===this)closeLightbox()">
+  <img id="lbImg" alt="Body map photo">
+  <div class="lb-bar">
+    <button class="lb-btn" id="lbPrev" onclick="lbStep(-1)">◀ Prev</button>
+    <span id="lbCount"></span>
+    <button class="lb-btn" id="lbNext" onclick="lbStep(1)">Next ▶</button>
+    <a class="lb-btn" id="lbOpen" href="#" target="_blank" rel="noopener noreferrer">Open original</a>
+    <button class="lb-btn" onclick="closeLightbox()">Close</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp }              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, getDocs,
+         query, where }               from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCwHzZFibrc9SNP8vAV6Jr_NmQr4fVCEto",
+  authDomain: "connected-stars-handover.firebaseapp.com",
+  projectId: "connected-stars-handover",
+  storageBucket: "connected-stars-handover.firebasestorage.app",
+  messagingSenderId: "606134396217",
+  appId: "1:606134396217:web:6636e2fbe9b73b7723b4e8"
+};
+const fbApp = initializeApp(firebaseConfig);
+const auth  = getAuth(fbApp);
+const db    = getFirestore(fbApp);
+
+// ── BEGIN CORE (duplicated verbatim in body-map-admin.html — keep the two in sync) ──
+const TZ = 'Europe/London';
+const LONDON_FMT = new Intl.DateTimeFormat('en-GB', {
+  timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit',
+  hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZoneName: 'short'
+});
+
+// Fillout writes into the sheet in UTC, so a 10:25 BST entry lands as 09:25. 'utc' converts back
+// to UK local time; 'local' leaves the sheet's times untouched (if the form is ever changed).
+function parseCsv(text) {
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  const rows = []; let row = [], field = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQ) {
+      if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQ = false; }
+      else field += c;
+    } else if (c === '"') inQ = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(field); field = ''; rows.push(row); row = [];
+    } else field += c;
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows.filter(r => r.some(v => v.trim() !== ''));
+}
+
+const COLS = {
+  id:          ['submissionid'],
+  submitted:   ['submissiondatetime'],
+  when:        ['dateandtime', 'datetime'],
+  yp:          ['ypinitials', 'yp', 'initials'],
+  staff:       ['staffname', 'staff'],
+  injury:      ['anyinjuryormark', 'anyinjury'],
+  bm:          ['bmnumber', 'bodymapnumber', 'bm'],
+  location:    ['location'],
+  description: ['descrtiption', 'description'],   // the form's header is spelt "Descrtiption"
+  actions:     ['furtheractions', 'furtheraction'],
+  images:      ['images', 'image', 'photos']
+};
+const normHeader = h => String(h || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const pad2 = n => String(n).padStart(2, '0');
+
+// Accepts "YYYY-MM-DD[ T]HH:MM[:SS]" (what the sheet exports) or UK "DD/MM/YYYY HH:MM[:SS]".
+// A bare date, or a time of exactly 00:00:00, means the form's date picker was used without a time.
+function parseStamp(s) {
+  s = String(s || '').trim();
+  if (!s) return null;
+  let y, mo, d, rest;
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(.*)$/);
+  if (m) { y = +m[1]; mo = +m[2]; d = +m[3]; rest = m[4]; }
+  else if ((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(.*)$/))) { d = +m[1]; mo = +m[2]; y = +m[3]; rest = m[4]; }
+  else return null;
+  let hh = 0, mi = 0, ss = 0, hasTimePart = false;
+  const t = rest.match(/^[T,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (t) { hh = +t[1]; mi = +t[2]; ss = +(t[3] || 0); hasTimePart = true; }
+  else if (rest.trim() !== '' && !/^Z?$/i.test(rest.trim())) return null;
+  if (mo < 1 || mo > 12 || d < 1 || d > 31 || hh > 23 || mi > 59 || ss > 59) return null;
+  const chk = new Date(Date.UTC(y, mo - 1, d));
+  if (chk.getUTCMonth() !== mo - 1) return null;
+  return { y, mo, d, hh, mi, timeGiven: hasTimePart && !(hh === 0 && mi === 0 && ss === 0) };
+}
+
+function resolveWhen(stamp, mode) {
+  const date = `${stamp.y}-${pad2(stamp.mo)}-${pad2(stamp.d)}`;
+  if (!stamp.timeGiven) return { date, time: null, tz: '' };
+  if (mode === 'local') return { date, time: `${pad2(stamp.hh)}:${pad2(stamp.mi)}`, tz: '' };
+  const p = {};
+  LONDON_FMT.formatToParts(new Date(Date.UTC(stamp.y, stamp.mo - 1, stamp.d, stamp.hh, stamp.mi)))
+    .forEach(x => { p[x.type] = x.value; });
+  return { date: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}`, tz: p.timeZoneName || '' };
+}
+
+// Anything that is not clearly "none" or "yes" is surfaced for checking rather than assumed safe.
+function classifyInjury(raw, hasDetails) {
+  const v = String(raw || '').trim().toLowerCase().replace(/[.!]+$/, '');
+  if (/^(yes|y|true)$/.test(v) || /^(yes|injury|mark)\b/.test(v)) return 'injury';
+  if (/^(none|no|nil|n\/a|na|false|no injury|no injuries|no marks?|no injury( or|\/)? ?marks?)$/.test(v)) return 'none';
+  if (v === '') return hasDetails ? 'injury' : 'check';
+  return 'check';
+}
+
+function buildEntries(rows, mode) {
+  const out = { entries: [], skipped: [], missing: [] };
+  if (!rows.length) { out.missing = ['header row']; return out; }
+  const header = rows[0].map(normHeader);
+  const idx = {};
+  Object.keys(COLS).forEach(k => { idx[k] = header.findIndex(h => COLS[k].includes(h)); });
+  if (idx.when < 0 && idx.submitted < 0) out.missing.push('Date and Time');
+  if (idx.yp < 0) out.missing.push('YP Initials');
+  if (out.missing.length) return out;
+  const get = (r, k) => (idx[k] >= 0 && r[idx[k]] != null ? String(r[idx[k]]).trim() : '');
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i], rowNo = i + 1;
+    const yp = get(r, 'yp').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!yp) { out.skipped.push({ rowNo, reason: 'no YP initials' }); continue; }
+    let stamp = parseStamp(get(r, 'when')), usedSubmitted = false;
+    if (!stamp) { stamp = parseStamp(get(r, 'submitted')); usedSubmitted = !!stamp; }
+    if (!stamp) { out.skipped.push({ rowNo, yp, reason: `unrecognised date "${get(r, 'when')}"` }); continue; }
+    const when = resolveWhen(stamp, mode);
+    const bm = get(r, 'bm'), location = get(r, 'location'), description = get(r, 'description'),
+          actions = get(r, 'actions');
+    const images = (get(r, 'images').match(/https?:\/\/[^\s,"'<>]+/g) || []);
+    const hasDetails = !!(bm || location || description || actions || images.length);
+    const injuryRaw = get(r, 'injury');
+    out.entries.push({
+      id: get(r, 'id') || `row-${rowNo}`, rowNo, yp,
+      date: when.date, time: when.time, tz: when.tz, usedSubmitted, rawWhen: get(r, usedSubmitted ? 'submitted' : 'when'),
+      staff: get(r, 'staff'), injuryRaw, injury: classifyInjury(injuryRaw, hasDetails),
+      bm, location, description, actions, images, hasDetails
+    });
+  }
+  return out;
+}
+
+// Turns a pasted Google Sheets link into a CSV endpoint a browser can fetch.
+function sheetCsvUrl(link) {
+  link = String(link || '').trim();
+  if (!/^https:\/\/docs\.google\.com\/spreadsheets\//.test(link)) return null;
+  let u; try { u = new URL(link); } catch { return null; }
+  if (/\/spreadsheets\/d\/e\//.test(u.pathname)) {                    // "Publish to web" link
+    u.pathname = u.pathname.replace(/\/pub[^/]*$/, '/pub');
+    const gid = u.searchParams.get('gid');
+    u.search = ''; u.hash = '';
+    if (gid) u.searchParams.set('gid', gid);
+    u.searchParams.set('single', 'true'); u.searchParams.set('output', 'csv');
+    return u.toString();
+  }
+  const idm = u.pathname.match(/\/spreadsheets\/d\/([^/]+)/);        // normal share / edit link
+  if (!idm) return null;
+  const gid = u.searchParams.get('gid') || (u.hash.match(/gid=(\d+)/) || [])[1] || '0';
+  return `https://docs.google.com/spreadsheets/d/${idm[1]}/gviz/tq?tqx=out:csv&gid=${gid}`;
+}
+
+function todayLondon() {
+  const p = {};
+  new Intl.DateTimeFormat('en-GB', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' })
+    .formatToParts(new Date()).forEach(x => { p[x.type] = x.value; });
+  return `${p.year}-${p.month}-${p.day}`;
+}
+function esc(str) { return String(str == null ? '' : str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// ── END CORE ──
+
+// ── STATE ──
+let enteredPin = '';
+let unlocked = false;
+let idleTimer = null, refreshTimer = null;
+const IDLE_LIMIT_MS = 10 * 60 * 1000;     // 10 min, same as the other PIN-locked tools
+const REFRESH_MS    = 2 * 60 * 1000;      // sheet re-fetched every 2 min while unlocked
+
+let settings = { sheetUrl: '', timeMode: 'utc' };
+let ypList = [];            // active bodyMapYoungPeople, ordered
+let entries = [], skipped = [];
+let selectedDate = todayLondon();
+let loading = false;
+let lbPhotos = [], lbIndex = 0;
+
+// ── ANONYMOUS AUTH ──
+signInAnonymously(auth).catch(() => {
+  document.getElementById('pinErrMsg').textContent = 'Connection error — check network and reload';
+});
+
+// ── PIN ENTRY ──
+document.getElementById('pinKeypad').addEventListener('click', e => {
+  const btn = e.target.closest('.pin-key');
+  if (!btn) return;
+  const k = btn.dataset.k;
+  if (k === 'clear') { enteredPin = ''; renderDots(); return; }
+  if (k === 'back')  { enteredPin = enteredPin.slice(0, -1); renderDots(); return; }
+  if (enteredPin.length >= 6) return;
+  enteredPin += k;
+  renderDots();
+  if (enteredPin.length === 6) checkPin();
+});
+
+function renderDots() {
+  document.querySelectorAll('.pin-dot').forEach((d, i) => { d.classList.toggle('filled', i < enteredPin.length); d.classList.remove('err'); });
+  document.getElementById('pinErrMsg').textContent = '';
+}
+
+async function checkPin() {
+  try {
+    const snap = await getDocs(query(collection(db, 'bodyMapPins'), where('status', '==', 'active')));
+    const match = snap.docs.some(d => d.data().pin === enteredPin);
+    if (match) {
+      unlocked = true;
+      enteredPin = '';
+      renderDots();
+      await enterMain();
+    } else {
+      document.querySelectorAll('.pin-dot').forEach(d => d.classList.add('err'));
+      document.getElementById('pinErrMsg').textContent = 'Incorrect PIN — try again';
+      setTimeout(() => { enteredPin = ''; renderDots(); }, 500);
+    }
+  } catch (e) {
+    document.getElementById('pinErrMsg').textContent = 'Could not verify PIN — check connection';
+    enteredPin = '';
+  }
+}
+
+async function enterMain() {
+  showScreen('s-main');
+  resetIdleTimer();
+  selectedDate = todayLondon();
+  document.getElementById('dateInput').value = selectedDate;
+  await loadConfig();
+  await refreshData();
+  clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => { if (unlocked && !document.hidden) refreshData(); }, REFRESH_MS);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+window.lockViewer = function() {
+  unlocked = false;
+  enteredPin = '';
+  entries = []; skipped = [];                       // don't leave care data in memory behind the PIN screen
+  document.getElementById('ypGrid').innerHTML = '';
+  document.getElementById('otherWrap').innerHTML = '';
+  closeLightbox();
+  renderDots();
+  showScreen('s-pin');
+  clearTimeout(idleTimer);
+  clearInterval(refreshTimer);
+};
+
+function resetIdleTimer() {
+  clearTimeout(idleTimer);
+  if (!unlocked) return;
+  idleTimer = setTimeout(() => { if (unlocked) lockViewer(); }, IDLE_LIMIT_MS);
+}
+['click', 'touchstart', 'keydown', 'scroll'].forEach(evt => document.addEventListener(evt, () => { if (unlocked) resetIdleTimer(); }, { passive: true }));
+
+// ── DATA LOADING ──
+async function loadConfig() {
+  try {
+    const [cfgSnap, ypSnap] = await Promise.all([
+      getDoc(doc(db, 'bodyMapSettings', 'config')),
+      getDocs(query(collection(db, 'bodyMapYoungPeople'), where('status', '==', 'active')))
+    ]);
+    settings = Object.assign({ sheetUrl: '', timeMode: 'utc' }, cfgSnap.exists() ? cfgSnap.data() : {});
+    ypList = ypSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.order || 0) - (b.order || 0));
+  } catch (e) {
+    setNotices([`<div class="notice notice-error"><strong>Couldn't load the tracker settings.</strong> ${esc(e.message || e)}<br>If this says "permission denied", the Firestore rules need to allow the <code>bodyMap*</code> collections.</div>`]);
+  }
+}
+
+window.refreshData = async function() {
+  if (loading) return;
+  const csvUrl = sheetCsvUrl(settings.sheetUrl);
+  if (!csvUrl) {
+    entries = []; skipped = [];
+    setNotices([`<div class="notice notice-warn"><strong>No Google Sheet is connected yet.</strong> An admin needs to paste the sheet link into Body Map Admin → Settings.</div>`]);
+    render();
+    return;
+  }
+  loading = true;
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true; btn.textContent = '↻ Loading…';
+  try {
+    const res = await fetch(csvUrl + (csvUrl.includes('?') ? '&' : '?') + '_=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error(`The sheet returned HTTP ${res.status}`);
+    const text = await res.text();
+    if (/^\s*<(!doctype|html)/i.test(text)) throw new Error('Google returned a sign-in page instead of data — the sheet is not shared publicly');
+    const built = buildEntries(parseCsv(text), settings.timeMode);
+    const notices = [];
+    if (built.missing.length) {
+      entries = []; skipped = [];
+      notices.push(`<div class="notice notice-error"><strong>The sheet's columns weren't recognised.</strong> Couldn't find: ${esc(built.missing.join(', '))}. Check the sheet link points at the form-responses tab.</div>`);
+    } else {
+      entries = built.entries; skipped = built.skipped;
+      if (skipped.length) {
+        notices.push(`<div class="notice notice-warn"><strong>${skipped.length} row${skipped.length === 1 ? '' : 's'} in the sheet couldn't be read</strong> and aren't shown below:<ul>${
+          skipped.slice(0, 8).map(s => `<li>Sheet row ${s.rowNo}${s.yp ? ` (${esc(s.yp)})` : ''}: ${esc(s.reason)}</li>`).join('')}${skipped.length > 8 ? `<li>…and ${skipped.length - 8} more</li>` : ''}</ul></div>`);
+      }
+    }
+    setNotices(notices);
+    document.getElementById('updatedLbl').textContent = 'Updated ' + new Date().toLocaleTimeString('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    setNotices([`<div class="notice notice-error"><strong>Couldn't load the Google Sheet.</strong> ${esc(e.message || e)}.<br>Check the sheet is shared as "Anyone with the link can view" (or published to the web). ${entries.length ? 'Showing the last data that loaded.' : ''}</div>`]);
+  } finally {
+    loading = false;
+    btn.disabled = false; btn.textContent = '↻ Refresh';
+    render();
+  }
+};
+
+function setNotices(list) { document.getElementById('notices').innerHTML = list.join(''); }
+
+// ── DATE CONTROLS ──
+window.onDateChange = function() {
+  const v = document.getElementById('dateInput').value;
+  if (!v) { document.getElementById('dateInput').value = selectedDate; return; }
+  selectedDate = v;
+  render();
+};
+window.shiftDate = function(delta) {
+  const [y, m, d] = selectedDate.split('-').map(Number);
+  const nd = new Date(Date.UTC(y, m - 1, d + delta));
+  selectedDate = `${nd.getUTCFullYear()}-${pad2(nd.getUTCMonth() + 1)}-${pad2(nd.getUTCDate())}`;
+  document.getElementById('dateInput').value = selectedDate;
+  render();
+};
+window.goToday = function() {
+  selectedDate = todayLondon();
+  document.getElementById('dateInput').value = selectedDate;
+  render();
+};
+
+// ── RENDER ──
+function fmtLongDate(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d, 12)).toLocaleDateString('en-GB', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+const sortKey = e => e.time || '99:99';       // entries with no recorded time go last
+
+function ypStatus(list) {
+  if (!list.length) return 'empty';
+  if (list.some(e => e.injury === 'injury')) return 'injury';
+  if (list.some(e => e.injury === 'check')) return 'check';
+  return 'ok';
+}
+function statusTag(status, list) {
+  if (status === 'empty')  return `<span class="tag tag-grey">No body maps</span>`;
+  if (status === 'injury') {
+    const n = list.filter(e => e.injury === 'injury').length;
+    return `<span class="tag tag-red">⚠ Injury / mark recorded${list.length > 1 ? ` (${n} of ${list.length})` : ''}</span>`;
+  }
+  if (status === 'check')  return `<span class="tag tag-amber">? Check entry</span>`;
+  return `<span class="tag tag-green">✓ No injury / mark</span>`;
+}
+function entryTag(e) {
+  if (e.injury === 'injury') return `<span class="tag tag-red">⚠ Injury / mark recorded</span>`;
+  if (e.injury === 'check')  return `<span class="tag tag-amber">? ${e.injuryRaw ? esc(e.injuryRaw) : 'Not specified'} — check</span>`;
+  return `<span class="tag tag-green">✓ No injury / mark</span>`;
+}
+
+function entryHtml(e) {
+  const cls = e.injury === 'injury' ? 'bm-injury' : e.injury === 'check' ? 'bm-check' : 'bm-ok';
+  const time = e.time
+    ? `<span class="bm-time">${esc(e.time)}${e.tz ? `<small>${esc(e.tz)}</small>` : ''}</span>`
+    : `<span class="bm-time no-time">Time not recorded</span>`;
+  const fields = [];
+  if (e.bm)          fields.push(`<div><dt>Body map no.</dt><dd>${esc(e.bm)}</dd></div>`);
+  if (e.location)    fields.push(`<div><dt>Location</dt><dd>${esc(e.location)}</dd></div>`);
+  if (e.description) fields.push(`<div class="wide"><dt>Description</dt><dd>${esc(e.description)}</dd></div>`);
+  if (e.actions)     fields.push(`<div class="wide"><dt>Further actions</dt><dd>${esc(e.actions)}</dd></div>`);
+  const photos = e.images.map((u, i) =>
+    `<button class="bm-photo" type="button" data-entry="${esc(e.id)}" data-i="${i}" aria-label="Open photo ${i + 1} of ${e.images.length}">
+       <img src="${esc(u)}" alt="Body map photo ${i + 1}" loading="lazy" referrerpolicy="no-referrer" onerror="photoFailed(this)"></button>`).join('');
+  return `<article class="bm ${cls}">
+    <div class="bm-top">${time}<span class="bm-staff">${e.staff ? 'by ' + esc(e.staff) : ''}</span>${entryTag(e)}</div>
+    ${fields.length ? `<dl class="bm-fields">${fields.join('')}</dl>` : ''}
+    ${photos ? `<div class="bm-photos">${photos}</div>` : ''}
+    ${e.usedSubmitted ? `<div class="bm-sub">Date taken from the form submission time — no body map date was entered.</div>` : ''}
+  </article>`;
+}
+
+function render() {
+  const day = entries.filter(e => e.date === selectedDate);
+  const known = new Set(ypList.map(y => y.initials));
+  const injuryCount = day.filter(e => e.injury === 'injury').length;
+  const checkCount  = day.filter(e => e.injury === 'check').length;
+
+  document.getElementById('daySummary').innerHTML =
+    `<span class="day-title">${esc(fmtLongDate(selectedDate))}${selectedDate === todayLondon() ? ' <span class="tag tag-grey" style="vertical-align:middle">Today</span>' : ''}</span>` +
+    `<span><strong>${day.length}</strong> body map${day.length === 1 ? '' : 's'}</span>` +
+    (day.length ? (injuryCount ? `<span class="tag tag-red">⚠ ${injuryCount} with injury / mark</span>` : `<span class="tag tag-green">✓ No injuries / marks</span>`) : '') +
+    (checkCount ? `<span class="tag tag-amber">? ${checkCount} to check</span>` : '');
+
+  const grid = document.getElementById('ypGrid');
+  if (!ypList.length) {
+    grid.innerHTML = `<div class="empty-day" style="grid-column:1/-1">No young people are set up yet. An admin can add them in Body Map Admin → Young People.</div>`;
+  } else {
+    grid.innerHTML = ypList.map(y => {
+      const list = day.filter(e => e.yp === y.initials).sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
+      const st = ypStatus(list);
+      return `<section class="yp-card st-${st === 'empty' ? 'none' : st}">
+        <div class="yp-head">
+          <div class="yp-av">${esc(y.initials)}</div>
+          <div class="yp-meta"><h2>${esc(y.initials)}</h2><span>${list.length} body map${list.length === 1 ? '' : 's'}</span></div>
+          ${statusTag(st, list)}
+        </div>
+        ${list.length ? `<div class="yp-body">${list.map(entryHtml).join('')}</div>`
+                      : `<div class="yp-empty">No body maps recorded for this date.</div>`}
+      </section>`;
+    }).join('');
+  }
+
+  // Entries whose initials aren't in the configured list — shown, never silently dropped.
+  const others = day.filter(e => !known.has(e.yp)).sort((a, b) => a.yp.localeCompare(b.yp) || sortKey(a).localeCompare(sortKey(b)));
+  document.getElementById('otherWrap').innerHTML = others.length
+    ? `<div class="other-title">Entries for initials that aren't in your list (${others.length})</div>
+       <div class="yp-grid">${others.map(e => `<section class="yp-card"><div class="yp-head"><div class="yp-av">${esc(e.yp)}</div><div class="yp-meta"><h2>${esc(e.yp)}</h2><span>Not in the young people list</span></div></div><div class="yp-body">${entryHtml(e)}</div></section>`).join('')}</div>`
+    : '';
+}
+
+// ── PHOTOS ──
+window.photoFailed = function(img) {
+  const a = document.createElement('a');
+  a.className = 'bm-photo-fail'; a.href = img.getAttribute('src'); a.target = '_blank'; a.rel = 'noopener noreferrer';
+  a.textContent = 'Photo unavailable — open link';
+  img.closest('.bm-photo').replaceWith(a);
+};
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('.bm-photo');
+  if (b) openLightbox(b.dataset.entry, +b.dataset.i);
+});
+function openLightbox(entryId, i) {
+  const e = entries.find(x => x.id === entryId);
+  if (!e || !e.images.length) return;
+  lbPhotos = e.images; lbIndex = i;
+  showLb();
+  document.getElementById('lightbox').classList.add('open');
+}
+function showLb() {
+  document.getElementById('lbImg').src = lbPhotos[lbIndex];
+  document.getElementById('lbOpen').href = lbPhotos[lbIndex];
+  document.getElementById('lbCount').textContent = `${lbIndex + 1} / ${lbPhotos.length}`;
+  const multi = lbPhotos.length > 1;
+  document.getElementById('lbPrev').style.display = multi ? '' : 'none';
+  document.getElementById('lbNext').style.display = multi ? '' : 'none';
+}
+window.lbStep = function(d) { lbIndex = (lbIndex + d + lbPhotos.length) % lbPhotos.length; showLb(); };
+window.closeLightbox = function() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lbImg').removeAttribute('src');
+};
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  if (e.key === 'Escape') closeLightbox();
+  else if (e.key === 'ArrowLeft' && lbPhotos.length > 1) lbStep(-1);
+  else if (e.key === 'ArrowRight' && lbPhotos.length > 1) lbStep(1);
+});
+</script>
+</body>
+</html>
