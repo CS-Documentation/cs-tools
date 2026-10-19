@@ -1,0 +1,2147 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Interactive Support Plan (sample)</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brand:#1446a0;--brand-dark:#0d3278;--brand-mid:#2d5bbf;--brand-light:#e8eef8;
+  --bg:#f4f6fb;--surface:#fff;--surface2:#f7f9fc;--surface3:#edf0f7;
+  --text:#1a1a2e;--text2:#4a5568;--text3:#5b6472;
+  --border:#dde3ef;--border2:#b8c5e0;
+  --green:#27ae60;--green-bg:#eafaf1;--green-strong:#1e8449;
+  --amber:#e67e22;--amber-bg:#fef5e7;--amber-strong:#a85a0a;
+  --red:#c0392b;--red-bg:#fdf0ef;
+  --r:10px;--rs:8px;
+  --sh:0 2px 12px rgba(20,70,160,.08);
+  --sh-md:0 4px 16px rgba(20,70,160,.12);
+  --sh-lg:0 20px 60px rgba(0,0,0,.25);
+  --fs:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html{font-size:var(--fs);scroll-behavior:smooth}
+body{font-family:'Roboto',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh}
+h1,h2,h3,h4{font-weight:900;color:var(--brand);line-height:1.2}
+a{color:var(--brand)}
+button{font-family:inherit;cursor:pointer;font-size:inherit}
+input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--brand-mid);outline-offset:2px}
+.muted{color:var(--text3)}
+.skip{position:absolute;left:-999px;top:0;background:#fff;color:var(--brand);padding:.6rem 1rem;z-index:400;font-weight:700}
+.skip:focus{left:8px;top:8px}
+
+/* top bars */
+.sticky-top{position:sticky;top:0;z-index:60}
+.topbar{background:linear-gradient(135deg,var(--brand-dark) 0%,var(--brand) 55%,var(--brand-mid) 100%);color:#fff;display:flex;align-items:center;gap:.5rem .7rem;padding:.45rem .9rem;flex-wrap:wrap}
+.tb-logo{display:flex;align-items:center;height:40px}
+.tb-logo img{height:38px;max-width:140px;object-fit:contain;object-position:left center}
+.tb-title{display:flex;flex-direction:column;min-width:0;line-height:1.15}
+.tb-title strong{font-weight:900;font-size:1.05rem}
+.tb-title span{font-size:.72rem;opacity:.85}
+.searchbox{position:relative;flex:1 1 200px;max-width:420px;margin-left:auto}
+.searchbox input{width:100%;padding:.5rem .9rem;border-radius:22px;border:0;font-size:.9rem;min-height:38px}
+.search-results{position:absolute;left:0;right:0;top:calc(100% + 6px);background:#fff;color:var(--text);border-radius:var(--r);box-shadow:var(--sh-lg);max-height:65vh;overflow:auto;z-index:70;min-width:min(420px,90vw)}
+.sr-item{display:block;width:100%;text-align:left;background:none;border:0;padding:.6rem .85rem}
+.sr-item:hover,.sr-item:focus{background:var(--brand-light)}
+.sr-where{font-size:.74rem;color:var(--text3);font-weight:700}
+.sr-empty{padding:.8rem .9rem;color:var(--text3)}
+mark{background:#cfe0ff;color:inherit;border-radius:3px;padding:0 1px}
+.tb-actions{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}
+.tbtn{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:22px;padding:.4rem .85rem;font-size:.82rem;font-weight:700;min-height:38px}
+.tbtn:hover{background:rgba(255,255,255,.28)}
+.tbtn.on,.tbtn.edit{background:#fff;color:var(--brand)}
+.menu-toggle{display:none}
+.editbar{background:var(--brand-dark);color:#fff;padding:.4rem .9rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;font-size:.88rem}
+.editbar input{flex:1 1 260px;padding:.4rem .75rem;border-radius:8px;border:0;min-height:36px}
+.savestate{font-weight:700;white-space:nowrap}
+.savestate.err{color:#ffb4ab}
+.alertbar{background:var(--red);color:#fff;padding:.5rem .9rem;font-weight:700;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.alertbar a{color:#fff}
+
+/* layout */
+.layout{display:grid;grid-template-columns:272px minmax(0,1fr);align-items:start}
+.menu{position:sticky;top:var(--stickyh,64px);max-height:calc(100vh - var(--stickyh,64px));overflow:auto;padding:1rem .8rem 2rem}
+.menu h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin:.2rem .6rem .5rem}
+.menu ul{list-style:none}
+.menu li{display:flex;align-items:center;gap:.15rem;border-radius:var(--rs)}
+.menu li.dragover{background:var(--brand-light);outline:2px dashed var(--brand-mid)}
+.mi{flex:1;display:flex;gap:.55rem;align-items:center;padding:.5rem .7rem;border-radius:var(--rs);color:var(--text);text-decoration:none;font-weight:500;min-height:40px;min-width:0}
+.mi:hover{background:var(--brand-light)}
+.mi.active{background:var(--brand);color:#fff}
+.mi .n{font-weight:900;min-width:1.5em}
+.mi.hidden-sec{opacity:.6;font-style:italic}
+.mini{background:none;border:0;color:var(--text3);width:30px;height:34px;border-radius:6px;font-size:.85rem}
+.mini:hover{background:var(--brand-light);color:var(--brand)}
+.menu-note{font-size:.8rem;color:var(--text3);padding:.3rem .7rem}
+.main{padding:1rem 1.2rem 5rem;max-width:1120px;width:100%;margin:0 auto;outline:0}
+.scrim{display:none}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.55rem 1rem;border-radius:var(--rs);border:1.5px solid transparent;font-weight:700;font-size:.9rem;min-height:40px;transition:background .12s}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--brand-dark)}
+.btn-ghost{background:#fff;color:var(--brand);border-color:var(--border2)}
+.btn-ghost:hover:not(:disabled){background:var(--brand-light)}
+.btn-danger{background:var(--red);color:#fff}
+.btn-sm{padding:.3rem .65rem;font-size:.8rem;min-height:34px}
+.icon-btn{background:#fff;border:1.5px solid var(--border2);color:var(--brand);border-radius:var(--rs);min-width:34px;min-height:34px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;padding:0 .4rem}
+.icon-btn:hover:not(:disabled){background:var(--brand-light)}
+.icon-btn:disabled{opacity:.35;cursor:not-allowed}
+.icon-btn.danger{color:var(--red)}
+.chip{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .6rem;border-radius:20px;font-size:.76rem;font-weight:700;border:0}
+.chip.ok{background:var(--green-bg);color:var(--green-strong)}
+.chip.warn{background:var(--amber-bg);color:var(--amber-strong)}
+button.chip{cursor:pointer}
+
+/* cover */
+.cover{background:var(--surface);border-radius:14px;box-shadow:var(--sh-md);padding:1.4rem;margin-bottom:1.6rem;scroll-margin-top:calc(var(--stickyh,64px) + 10px)}
+.cover-top{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1.2rem;flex-wrap:wrap;background:var(--brand);border-radius:12px;padding:.8rem 1.3rem}
+.cover-logo{height:68px;max-width:min(300px,60%);object-fit:contain;object-position:left center}
+.cover-kicker{font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.09em;font-size:.9rem}
+.cover-main{display:grid;grid-template-columns:minmax(200px,380px) 1fr;gap:1.5rem;align-items:start}
+.cover-photo{display:flex;align-items:center;justify-content:center;aspect-ratio:1/1;width:100%;border-radius:14px;background:var(--brand-light);overflow:hidden;border:0;position:relative;color:var(--brand);font-weight:700;padding:0}
+.cover-photo img{width:100%;height:100%;object-fit:cover;display:block}
+button.cover-photo:hover{filter:brightness(.96)}
+.cover-photo .hint{position:absolute;left:0;right:0;bottom:0;background:rgba(13,50,120,.85);color:#fff;padding:.45rem;font-size:.82rem}
+.cover-photo-wrap .chip{margin-top:.5rem}
+.cover h1{font-size:2.3rem;font-weight:900;margin-bottom:.2rem}
+.facts{display:grid;grid-template-columns:minmax(120px,max-content) 1fr;gap:.35rem .9rem;margin-top:.9rem;align-items:center}
+.facts dt{font-weight:700;color:var(--text2);font-size:.85rem}
+.facts dd{min-width:0}
+.facts input,.facts select{width:100%;padding:.35rem .55rem;border:1.5px solid var(--border2);border-radius:var(--rs);background:#fff;min-height:38px}
+.facts .auto{background:var(--surface2);padding:.35rem .55rem;border-radius:var(--rs)}
+.cover-alert{background:var(--red);color:#fff;border-radius:var(--rs);padding:.6rem .8rem;font-weight:700;margin-top:.7rem}
+.cover-alert ul{margin:.2rem 0 0 1.1rem;font-weight:500}
+
+/* sections and panels */
+.section{margin:2.2rem 0;scroll-margin-top:calc(var(--stickyh,64px) + 10px)}
+.sec-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.7rem}
+.sec-head h2{font-size:1.75rem}
+.sec-num{background:var(--brand);color:#fff;border-radius:50%;width:2.2rem;height:2.2rem;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;flex-shrink:0}
+.sec-title-input{font:inherit;font-weight:900;font-size:1.4rem;color:var(--brand);border:1.5px solid var(--border2);border-radius:var(--rs);padding:.2rem .6rem;flex:1;min-width:200px;background:#fff}
+.sec-tools{display:flex;gap:.35rem;flex-wrap:wrap;margin-left:auto}
+.sec-hidden{background:var(--surface3);border-radius:var(--r);padding:.8rem 1rem;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;color:var(--text2)}
+.panel{margin:.9rem 0}
+.panel-head{display:flex;align-items:center;gap:.6rem;width:100%;background:var(--brand-light);color:var(--brand);border:0;border-radius:var(--rs);padding:.7rem 1rem;font-weight:900;font-size:1.08rem;text-align:left;min-height:46px}
+.panel-head:hover{background:#dbe6f7}
+.chev{transition:transform .15s;display:inline-block}
+.panel.collapsed .chev{transform:rotate(-90deg)}
+.panel.collapsed .panel-body{display:none}
+.panel-body{padding:.3rem 0 .2rem}
+.panel-empty{color:var(--text3);padding:.6rem .3rem}
+.add-slot{display:flex;justify-content:center;margin:.15rem 0}
+.add-slot button{background:#fff;border:1.5px dashed var(--border2);color:var(--brand);border-radius:20px;padding:.1rem 1rem;font-weight:700;min-height:30px}
+.add-slot button:hover{background:var(--brand-light)}
+.deleted-tray{margin:.6rem 0;font-size:.9rem}
+.deleted-tray summary{cursor:pointer;color:var(--text2);font-weight:700}
+.deleted-tray li{display:flex;gap:.6rem;align-items:center;margin:.3rem 0;list-style:none}
+
+/* blocks */
+.block{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);padding:.9rem 1rem .6rem;margin:.5rem 0;scroll-margin-top:calc(var(--stickyh,64px) + 14px)}
+body.editing .block{outline:1.5px dashed var(--border2)}
+.block.flash{animation:flash 1.8s ease-out}
+@keyframes flash{0%,40%{background:#cfe0ff}100%{background:var(--surface)}}
+.block-bar{display:flex;gap:.35rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem}
+.block-bar .lbl{font-size:.72rem;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-right:auto}
+.block-meta{font-size:.74rem;color:var(--text3);margin-top:.5rem}
+.block-title{font-size:1.1rem;margin-bottom:.4rem}
+.block-title-input{font:inherit;font-weight:900;font-size:1.05rem;color:var(--brand);border:1.5px solid var(--border2);border-radius:var(--rs);padding:.25rem .55rem;width:100%;margin-bottom:.4rem;background:#fff}
+.rich{line-height:1.6;overflow-wrap:anywhere}
+.rich p,.rich div{margin:.15rem 0}
+.rich ul,.rich ol{margin:.3rem 0 .3rem 1.4rem}
+.rich h4{font-size:1rem;margin:.6rem 0 .1rem}
+.rte{min-height:3.2rem;border:1.5px solid var(--border2);border-radius:var(--rs);padding:.5rem .7rem;background:#fff}
+.rte:focus{border-color:var(--brand);outline:0;box-shadow:0 0 0 3px rgba(20,70,160,.12)}
+.rte-tools{display:flex;gap:.35rem;margin-bottom:.4rem;flex-wrap:wrap}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;margin:.3rem 0}
+table.dt{border-collapse:separate;border-spacing:3px;width:100%}
+table.dt th{background:var(--brand-light);color:var(--brand);font-weight:700;text-align:left;padding:.45rem .6rem;border-radius:6px;font-size:.85rem;vertical-align:bottom;white-space:nowrap}
+table.dt th .th-in{display:flex;align-items:center;gap:.3rem;justify-content:space-between}
+table.dt th .th-label{white-space:normal;min-width:5rem}
+table.dt td{background:var(--surface2);border-radius:6px;vertical-align:top;padding:.45rem .6rem;min-width:7rem;overflow-wrap:anywhere}
+body.editing table.dt td{padding:.2rem}
+table.dt td.ctl,table.dt th.ctl{min-width:0;width:1%;white-space:nowrap;background:transparent;padding:0 .15rem}
+table.dt td.t-longtext{min-width:13rem}
+table.dt td.t-date{min-width:9.5rem}
+table.dt td.t-tick,table.dt td.t-number{min-width:5rem}
+table.dt tr.dragging{opacity:.4}
+table.dt tr.dragover td{background:#cfe0ff}
+table.dt td input:not([type=checkbox]),table.dt td textarea,table.dt td select{width:100%;border:1.5px solid transparent;background:transparent;padding:.35rem .45rem;border-radius:6px;min-height:36px}
+table.dt td textarea{resize:vertical;min-height:36px;field-sizing:content;line-height:1.4}
+table.dt td input:hover,table.dt td textarea:hover,table.dt td select:hover{border-color:var(--border2);background:#fff}
+table.dt td input:focus,table.dt td textarea:focus,table.dt td select:focus{border-color:var(--brand);background:#fff;outline:0;box-shadow:0 0 0 3px rgba(20,70,160,.12)}
+table.dt td input[type=checkbox]{width:22px;height:22px;margin:.4rem}
+.pre{white-space:pre-wrap}
+.stars{display:inline-flex;gap:1px}
+.star{background:none;border:0;color:var(--border2);font-size:1.35rem;line-height:1;padding:.1rem .12rem;min-width:30px;min-height:34px}
+.star.on{color:var(--brand)}
+.stars-static{color:var(--brand);letter-spacing:1px;white-space:nowrap}
+.stars-static .off{color:var(--border2)}
+.risk{display:inline-block;padding:.15rem .6rem;border-radius:14px;font-weight:700;font-size:.85rem;margin:.3rem .2rem}
+.risk.low{background:var(--green-bg);color:var(--green-strong)}
+.risk.medium{background:var(--amber-bg);color:var(--amber-strong)}
+.risk.high{background:var(--red-bg);color:var(--red)}
+.risk.none{color:var(--text3)}
+.contact-sum{font-size:.78rem;color:var(--text3);padding:0 .45rem .2rem}
+.sig-img{max-height:56px;max-width:180px;display:block}
+.tbl-tools{display:flex;gap:.4rem;margin-top:.5rem;flex-wrap:wrap}
+.cell-tools{display:flex;gap:.3rem;align-items:center;padding:.2rem 0 0 .3rem}
+
+/* photos, video, files */
+.photo-grid{display:grid;gap:.8rem}
+.photo-grid.n1{grid-template-columns:minmax(0,640px)}
+.photo-grid.n2,.photo-grid.n4{grid-template-columns:repeat(2,minmax(0,1fr))}
+.photo-grid.n3,.photo-grid.n5,.photo-grid.n6{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ph{display:flex;flex-direction:column;gap:.35rem}
+.ph-btn{border:0;background:var(--surface3);border-radius:var(--rs);padding:0;overflow:hidden;display:block;aspect-ratio:4/3}
+.ph-btn img{width:100%;height:100%;object-fit:cover;display:block}
+.ph figcaption{font-size:.9rem}
+.ph input{width:100%;padding:.3rem .5rem;border:1.5px solid var(--border2);border-radius:6px;font-size:.85rem;min-height:34px}
+.ph label{font-size:.7rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+.video-wrap video{width:100%;max-width:760px;border-radius:var(--rs);background:#000;display:block}
+.print-poster{display:none}
+.file-row{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.file-icon{background:var(--brand-light);color:var(--brand);font-weight:900;border-radius:var(--rs);padding:.7rem .6rem;font-size:.8rem;min-width:52px;text-align:center}
+.caption-input{margin-top:.4rem;width:100%;padding:.4rem .6rem;border:1.5px solid var(--border2);border-radius:var(--rs);min-height:38px}
+
+/* version log */
+.logsec{margin:2.2rem 0;scroll-margin-top:calc(var(--stickyh,64px) + 10px)}
+.log-filters{display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end;margin:.6rem 0}
+.log-filters label{display:flex;flex-direction:column;font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;gap:.15rem}
+.log-filters select,.log-filters input{padding:.4rem .5rem;border:1.5px solid var(--border2);border-radius:var(--rs);min-height:38px;background:#fff;text-transform:none;letter-spacing:0;font-weight:400;font-size:.9rem}
+table.lg{border-collapse:separate;border-spacing:3px;width:100%;font-size:.85rem}
+table.lg th{background:var(--brand-light);color:var(--brand);padding:.4rem .5rem;text-align:left;border-radius:6px;white-space:nowrap}
+table.lg td{background:var(--surface);padding:.4rem .5rem;border-radius:6px;vertical-align:top}
+table.lg tr:nth-child(even) td{background:var(--surface2)}
+.log-note{font-size:.85rem;color:var(--text2);margin:.3rem 0}
+.diff{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-top:.6rem}
+.diff pre{background:var(--surface2);border-radius:var(--rs);padding:.6rem;white-space:pre-wrap;font-family:inherit;font-size:.85rem;max-height:40vh;overflow:auto}
+.diff h4{font-size:.85rem;margin-bottom:.2rem}
+
+/* modal, toast, lightbox */
+.overlay{position:fixed;inset:0;background:rgba(10,20,50,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;overflow:auto}
+.modal{background:#fff;border-radius:14px;box-shadow:var(--sh-lg);width:100%;max-width:540px;max-height:92vh;overflow:auto;padding:1.2rem 1.3rem}
+.modal.wide{max-width:900px}
+.modal h3{font-size:1.25rem;margin-bottom:.7rem}
+.modal .m-actions{display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap;margin-top:1rem}
+.field{display:flex;flex-direction:column;gap:.2rem;margin:.55rem 0}
+.field label{font-size:.78rem;font-weight:700;color:var(--text2)}
+.field input,.field select,.field textarea{padding:.5rem .65rem;border:1.5px solid var(--border2);border-radius:var(--rs);min-height:40px;background:#fff}
+.field textarea{min-height:90px}
+.field label.check{flex-direction:row;display:flex;gap:.6rem;align-items:flex-start;font-size:.95rem;font-weight:400;color:var(--text)}
+.field label.check input{width:22px;height:22px;min-height:0;flex-shrink:0}
+.pick-list{display:grid;gap:.4rem}
+.pick{display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rs);padding:.6rem .8rem;width:100%;min-height:48px}
+.pick:hover{background:var(--brand-light);border-color:var(--brand-mid)}
+.pick strong{color:var(--brand)}
+.pick small{color:var(--text3)}
+.type-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.6rem}
+.type-grid .pick{align-items:center;text-align:center;min-height:84px;justify-content:center;font-weight:700}
+.type-grid .ico{font-size:1.6rem}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--brand-dark);color:#fff;padding:.55rem 1.1rem;border-radius:24px;font-weight:700;box-shadow:var(--sh-md);z-index:300;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:250;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;color:#fff}
+.lightbox img{max-width:96vw;max-height:78vh;object-fit:contain;border-radius:6px}
+.lightbox .lb-cap{margin-top:.7rem;max-width:90vw;text-align:center}
+.lightbox .lb-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.2);border:0;color:#fff;font-size:2rem;width:54px;height:80px;border-radius:10px}
+.lightbox .lb-prev{left:10px}.lightbox .lb-next{right:10px}
+.lightbox .lb-close{position:absolute;top:12px;right:14px;background:rgba(255,255,255,.2);border:0;color:#fff;font-size:1.4rem;width:46px;height:46px;border-radius:50%}
+.crop-box{touch-action:none;cursor:grab;width:min(100%,360px);aspect-ratio:1/1;margin:.4rem auto;border-radius:10px;background:var(--surface3);display:block}
+.sig-pad{touch-action:none;border:1.5px solid var(--border2);border-radius:var(--rs);background:#fff;width:100%;height:160px;display:block}
+
+/* accessibility */
+body.hc{--text:#000;--text2:#000;--text3:#1a1a1a;--border:#000;--border2:#000;--bg:#fff;--surface2:#fff;--surface3:#fff;--brand-light:#fff;--brand:#0a2a66;--brand-dark:#000}
+body.hc .block,body.hc table.dt td,body.hc table.dt th,body.hc table.lg td,body.hc table.lg th,body.hc .panel-head,body.hc .cover{outline:2px solid #000}
+body.hc .topbar{background:#000}
+body.hc a{text-decoration:underline}
+@media (pointer:coarse){button,.btn,.icon-btn,select,input:not([type=checkbox]){min-height:44px}}
+
+/* small screens */
+@media (max-width:900px){
+  .layout{display:block}
+  .menu{position:fixed;left:0;top:0;bottom:0;width:290px;max-height:none;z-index:130;background:#fff;box-shadow:var(--sh-lg);transform:translateX(-105%);transition:transform .2s;padding-top:1rem}
+  body.menu-open .menu{transform:none}
+  body.menu-open .scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:120}
+  .menu-toggle{display:inline-flex}
+  .cover-main{grid-template-columns:1fr}
+  .photo-grid.n3,.photo-grid.n5,.photo-grid.n6{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .diff{grid-template-columns:1fr}
+  .main{padding:.8rem .8rem 5rem}
+  .cover-photo-wrap{max-width:380px;width:100%;margin:0 auto}
+  .tb-actions{flex-wrap:nowrap;overflow-x:auto;width:100%;padding-bottom:2px}
+  .tbtn{white-space:nowrap;flex-shrink:0}
+  .tb-title span{display:none}
+  .searchbox{max-width:none;flex:1 1 140px;margin-left:0}
+  .cover h1{font-size:1.8rem}
+}
+
+/* print */
+.print-footer{display:none}
+@media print {
+  @page{size:A4;margin:14mm 12mm 18mm}
+  html{font-size:11pt}
+  body,body.hc{background:#fff;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .sticky-top,.menu,.scrim,.add-slot,.edit-only,.no-print,.skip,.toast,.deleted-tray,#modalRoot{display:none!important}
+  .layout{display:block}
+  .main{max-width:none;padding:0}
+  .cover{box-shadow:none;padding:0;margin:0;break-after:page}
+  .cover-main{grid-template-columns:minmax(0,270px) 1fr;gap:1.2rem}
+  .cover-top{margin-bottom:.9rem}
+  .cover h1{font-size:1.9rem}
+  .facts{gap:.2rem .8rem;font-size:.92rem}
+  .facts .auto{padding:.2rem .4rem}
+  .photo-grid.n3,.photo-grid.n5,.photo-grid.n6{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .cover-photo .hint{display:none}
+  .section{margin:0;break-before:page}
+  .logsec{break-before:page;margin:0}
+  .panel.collapsed .panel-body{display:block}
+  .panel-head{break-after:avoid}
+  .chev{display:none}
+  .block{box-shadow:none;break-inside:auto;padding:.4rem 0}
+  .block-meta{display:none}
+  tr{break-inside:avoid}
+  thead{display:table-header-group}
+  .video-wrap video{display:none}
+  .print-poster{display:block;max-width:420px;border-radius:6px}
+  .tbl-wrap{overflow:visible}
+  .print-footer{display:block;position:fixed;left:0;right:0;bottom:0;font-size:8.5pt;color:#333;text-align:center}
+  .print-footer .pf-alert{color:#c0392b;font-weight:700}
+  a{color:inherit;text-decoration:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the plan</a>
+<div class="sticky-top" id="sticky">
+  <header class="topbar">
+    <button class="tbtn menu-toggle" id="btnMenu" aria-label="Open the sections menu">Menu</button>
+    <div class="tb-logo"><img id="tbLogo" alt="Connected Stars"></div>
+    <div class="tb-title"><strong id="tbTitle">Support plan</strong><span>Sample: saved on this device only</span></div>
+    <div class="searchbox">
+      <input id="search" type="search" placeholder="Search the whole plan" aria-label="Search the whole plan" autocomplete="off">
+      <div id="searchResults" class="search-results" hidden></div>
+    </div>
+    <div class="tb-actions">
+      <button class="tbtn" id="btnTextMinus" aria-label="Smaller text">A-</button>
+      <button class="tbtn" id="btnTextPlus" aria-label="Larger text">A+</button>
+      <button class="tbtn" id="btnContrast" aria-pressed="false">High contrast</button>
+      <button class="tbtn" id="btnPrint">Print or PDF</button>
+      <button class="tbtn" id="btnBackup">Backup</button>
+      <button class="tbtn" id="btnSettings">Settings</button>
+      <button class="tbtn" id="btnUser">Who am I</button>
+      <button class="tbtn edit" id="btnEdit">Edit</button>
+    </div>
+  </header>
+  <div id="editbar" class="editbar" hidden>
+    <strong>Editing</strong>
+    <input id="reason" type="text" placeholder="Reason for these changes, for example: After GP appointment" aria-label="Reason for these changes">
+    <span id="pendingNote" class="muted" style="color:#cfe0ff;font-size:.8rem" aria-live="polite"></span>
+    <span class="savestate" id="saveState" role="status" aria-live="polite">Saved</span>
+    <button class="tbtn edit" id="btnDone">Done editing</button>
+  </div>
+  <div id="alertbar" class="alertbar" role="alert" hidden></div>
+</div>
+<div class="layout">
+  <nav class="menu" id="menu" aria-label="Sections"></nav>
+  <main id="main" class="main" tabindex="-1"></main>
+</div>
+<div class="scrim" id="scrim"></div>
+<div class="print-footer" id="printFooter"></div>
+<div id="modalRoot"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<noscript><p style="padding:2rem">This page needs JavaScript.</p></noscript>
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════
+   Interactive Support Plan: SAMPLE (Phase 1, option A)
+   No login. Everything is stored in this browser (IndexedDB) behind
+   the Storage interface below, so Phase 2 can swap in an online
+   service without touching the screens.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── constants ── */
+const PLAN_ID = 'plan-001';
+const DEFAULT_LOGO = 'https://raw.githubusercontent.com/CS-Documentation/invoice/refs/heads/main/front%20page%20header.png';
+const HEADINGS = {
+  know: 'What you need to know about me',
+  like: 'How I like to be supported',
+  further: 'How Connected Stars can support me further'
+};
+const PANEL_KEYS = ['know', 'like', 'further'];
+const COLTYPES = { text: 'Text', longtext: 'Long text', date: 'Date', dropdown: 'Dropdown', tick: 'Tick box', number: 'Number', rating: 'Rating', contact: 'Contact' };
+const BLOCK_LABELS = { text: 'Text', table: 'Table', image: 'Photo', video: 'Video', file: 'File' };
+const IDLE_MS = 5 * 60 * 1000;
+const CONTACT_ROLES = ['GP', 'Dentist', 'Optician', 'Pharmacy', 'Community learning disability team', 'Social worker', 'Advocate', 'Family member', 'Legal representative', 'Commissioner or funder', 'Therapist', 'Hospital', 'Other'];
+const ACTIONS = {
+  plan_created: 'Plan created', cover_edited: 'Edited cover', cover_photo: 'Changed cover photo',
+  block_added: 'Added block', text_edited: 'Edited text', title_edited: 'Edited table title', cell_edited: 'Edited table cell',
+  row_added: 'Added row', row_deleted: 'Deleted row', row_moved: 'Moved row', rows_sorted: 'Sorted rows',
+  column_added: 'Added column', column_edited: 'Edited column', column_deleted: 'Deleted column',
+  photo_uploaded: 'Uploaded photo', video_uploaded: 'Uploaded video', file_uploaded: 'Uploaded file',
+  caption_edited: 'Edited caption', consent_recorded: 'Recorded consent', media_removed: 'Removed media',
+  block_moved: 'Moved block', block_deleted: 'Deleted block', block_restored: 'Restored block', edited_block: 'Edited block',
+  section_added: 'Added section', section_renamed: 'Renamed section', section_hidden: 'Hid section', section_shown: 'Showed section',
+  section_moved: 'Moved section', section_deleted: 'Deleted section', section_restored: 'Restored section',
+  signed_off: 'Signed off review', backup_imported: 'Imported backup', demo_loaded: 'Loaded demo content', settings_changed: 'Changed settings'
+};
+const SECTION_DEFS = [
+  ['about', 'About me'], ['communication', 'Communication'], ['decisions', 'Decisions and consent'], ['goals', 'Goals and outcomes'],
+  ['daily', 'Daily support'], ['health', 'Health and wellbeing'], ['medicines', 'Medicines'], ['risk', 'Risk and safety'],
+  ['behaviour', 'Behaviour support'], ['relationships', 'Relationships and community'], ['people', 'People and staffing'], ['review', 'Review and sign-off']
+];
+
+/* ── small utilities ── */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const uid = p => p + '-' + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 7);
+const clone = o => (o === undefined ? undefined : structuredClone(o));
+const nowISO = () => new Date().toISOString();
+const pad = n => String(n).padStart(2, '0');
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function fmtDate(s) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || '');
+  return m ? `${+m[3]} ${MONTHS[+m[2] - 1]} ${m[1]}` : (s || '');
+}
+function fmtDT(iso) {
+  const d = new Date(iso);
+  return isNaN(d) ? '' : `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function fmtSize(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+function h(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  let value;
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'style') e.style.cssText = v;
+    else if (k === 'html') e.innerHTML = v;
+    else if (k === 'value') value = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (k === 'checked' || k === 'disabled' || k === 'selected' || k === 'hidden') e[k] = v;
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat(Infinity)) { if (c == null || c === false) continue; e.append(c.nodeType ? c : document.createTextNode(c)); }
+  if (value !== undefined) e.value = value;
+  return e;
+}
+function stripHtml(html) { const d = document.createElement('div'); d.innerHTML = html || ''; return d.textContent.replace(/\s+/g, ' ').trim(); }
+const ALLOWED_TAGS = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'UL', 'OL', 'LI', 'H4', 'DIV']);
+function sanitize(html) {
+  const doc = new DOMParser().parseFromString('<body>' + (html || '') + '</body>', 'text/html');
+  (function walk(node) {
+    for (const ch of Array.from(node.childNodes)) {
+      if (ch.nodeType === 1) {
+        if (['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED'].includes(ch.tagName)) { ch.remove(); continue; }
+        walk(ch);
+        if (!ALLOWED_TAGS.has(ch.tagName)) { ch.replaceWith(...Array.from(ch.childNodes)); }
+        else { for (const a of Array.from(ch.attributes)) ch.removeAttribute(a.name); }
+      } else if (ch.nodeType !== 3) ch.remove();
+    }
+  })(doc.body);
+  return doc.body.innerHTML;
+}
+
+/* ── ready-made tables ──
+   c(label, type, extras). Panels: know / like / further.
+   rows: optional pre-filled rows (values in column order). */
+const c = (label, type = 'text', x = {}) => ({ label, type, ...x });
+const L = 'longtext', D = 'date';
+const dd = (label, options) => c(label, 'dropdown', { options });
+const TPL = [
+  { key: 'important', title: 'Important to me and for me', sec: 'about', panel: 'know', cols: [c('Important to me', L), c('Important for me', L)] },
+  { key: 'gooddaybadday', title: 'Good day and bad day', sec: 'about', panel: 'know', cols: [dd('Day type', ['Good day', 'Bad day']), c('What it looks like', L), c('What helps', L)] },
+  { key: 'communicate', title: 'How I communicate', sec: 'communication', panel: 'know', cols: [c('What I do or say', L), c('What it usually means', L), c('How staff should respond', L)] },
+  { key: 'commtools', title: 'Communication tools', sec: 'communication', panel: 'like', cols: [c('Tool (such as Makaton or symbols)'), c('When used', L), c('Notes', L)] },
+  { key: 'sensory', title: 'Sensory profile', sec: 'communication', panel: 'know', cols: [c('Sense'), dd('Seeks or avoids', ['Seeks', 'Avoids', 'Both', 'Neither']), c('Examples', L), c('What helps', L)] },
+  { key: 'capacity', title: 'Capacity and decisions', sec: 'decisions', panel: 'know', cols: [c('Decision', L), c('Date assessed', D), c('Assessed by'), dd('Capacity', ['Has capacity', 'Lacks capacity', 'Fluctuates']), c('Best-interest outcome and who was consulted', L), c('Review date', D)] },
+  { key: 'legalreps', title: 'Legal representatives and advocacy', sec: 'decisions', panel: 'know', cols: [dd('Role', ['LPA', 'Deputy', 'Advocate', 'IMCA']), c('Contact', 'contact'), c('Authority', L), c('Document reference')] },
+  { key: 'dols', title: 'Deprivation of liberty authorisations', sec: 'decisions', panel: 'know', cols: [c('Type'), c('Reference'), c('Start date', D), c('Expiry date', D), c('Conditions', L)] },
+  { key: 'goals', title: 'My goals', sec: 'goals', panel: 'further', cols: [c('Goal', L), c('Why it matters to me', L), c('Steps', L), c('Who helps', L), c('Start date', D), c('Target date', D), dd('Status', ['Not started', 'In progress', 'Achieved', 'On hold', 'No longer relevant']), c('Evidence (photo or video)', L)] },
+  { key: 'weekly', title: 'Weekly routine', sec: 'daily', panel: 'like', cols: [dd('Day', ['Every day', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']), c('Time'), c('Activity', L), c('Support needed', L), c('Staff ratio')] },
+  { key: 'personalcare', title: 'Personal care and daily living', sec: 'daily', panel: 'like', cols: [c('Task'), c('How I like it done', L), dd('Level of support', ['Independent', 'Prompted', 'Some help', 'Full help']), c('Notes', L)] },
+  { key: 'funded', title: 'Funded support hours', sec: 'daily', panel: 'know', cols: [c('Period'), c('Hours', 'number'), c('Staff ratio'), dd('Type', ['Waking', 'Sleep-in']), c('Funder')] },
+  { key: 'nhs', title: 'NHS and health details', sec: 'health', panel: 'know', cols: [c('Item'), c('Detail', L), c('Last checked', D)],
+    rows: ['Full name', 'Date of birth', 'NHS number', 'GP practice and phone', 'Dentist', 'Optician', 'Pharmacy', 'Community learning disability team', 'Preferred hospital', 'Annual health check (last)', 'Annual health check (next due)', 'Health action plan updated', 'Hospital passport updated'].map(x => [x]) },
+  { key: 'diagnoses', title: 'Diagnoses and conditions', sec: 'health', panel: 'know', cols: [c('Condition'), c('Date diagnosed', D), c('Managed by'), c('How it affects me', L), c('What staff should do', L)] },
+  { key: 'allergies', title: 'Allergies and intolerances', sec: 'health', panel: 'know', cols: [c('Allergen'), c('Reaction', L), dd('Severity', ['Mild', 'Moderate', 'Severe']), c('What staff must do', L), c('Source'), c('Date checked', D)] },
+  { key: 'eating', title: 'Eating and drinking', sec: 'health', panel: 'like', cols: [c('Topic'), c('Detail', L), c('Source')],
+    rows: ['Likes', 'Dislikes', 'Food texture level', 'Choking risk', 'Equipment', 'Fluid needs', 'Speech and language therapy advice'].map(x => [x]) },
+  { key: 'appointments', title: 'Health appointments', sec: 'health', panel: 'further', cols: [c('Date', D), c('With'), c('Purpose', L), c('Outcome', L), c('Next step', L), c('Next appointment', D)] },
+  { key: 'regmeds', title: 'Regular medication', sec: 'medicines', panel: 'know', cols: [c('Medicine'), c('Dose'), c('Route'), c('Time'), c('What it is for'), c('Prescriber'), c('Start date', D), c('Review date', D), dd('Who gives it', ['Self', 'Prompted', 'Staff']), c('Side effects to watch for', L), c('Where stored')] },
+  { key: 'prn', title: 'As-needed (PRN) medicines', sec: 'medicines', panel: 'know', cols: [c('Medicine'), c('Reason', L), c('Dose and maximum in 24 hours'), c('Minimum gap'), c('Signs it is needed', L), c('Tried first', L), c('When to get medical help', L), c('Authorised by')] },
+  { key: 'stomp', title: 'Psychotropic medicine review (STOMP)', sec: 'medicines', panel: 'further', cols: [c('Medicine'), c('Reason prescribed', L), c('Last reviewed', D), c('Reviewed by'), c('Outcome', L), c('Next review', D)] },
+  { key: 'risk', title: 'Risk assessment', sec: 'risk', panel: 'know', cols: [c('Risk', L), c('What could happen and to whom', L), c('What staff do to reduce it', L), c('Likelihood (1 to 5)', 'rating', { max: 5 }), c('Severity (1 to 5)', 'rating', { max: 5 }), c('Rating (calculated)', 'text', { calc: 'risk' }), c('Owner'), c('Review date', D)] },
+  { key: 'evac', title: 'Emergency evacuation plan', sec: 'risk', panel: 'know', cols: [c('Need during evacuation', L), c('Support required', L), c('Equipment'), c('Staff needed'), c('Assembly point')] },
+  { key: 'missing', title: 'Missing person information', sec: 'risk', panel: 'know', cols: [c('Item'), c('Detail', L)],
+    rows: ['Description', 'Places I may go', 'What to do if I am not back', 'Consent to share a photo with police'].map(x => [x]) },
+  { key: 'behaviours', title: 'Behaviour and what it may mean', sec: 'behaviour', panel: 'know', cols: [c('Behaviour', L), c('Likely triggers', L), c('What it may be communicating', L), c('Early warning signs', L)] },
+  { key: 'strategies', title: 'Support strategies', sec: 'behaviour', panel: 'like', cols: [dd('Stage', ['Prevent', 'Respond', 'After']), c('What staff do', L), c('What staff avoid', L)] },
+  { key: 'restrictions', title: 'Restrictions register', sec: 'behaviour', panel: 'know', cols: [c('Restriction', L), c('Reason', L), c('Less restrictive options tried', L), c('Who decided and how', L), c('Start date', D), c('Review date', D), c('Plan to reduce', L)] },
+  { key: 'people', title: 'People who matter to me', sec: 'relationships', panel: 'know', cols: [c('Name'), c('Relationship'), c('How we keep in touch', L), c('Support needed', L), c('Notes', L)] },
+  { key: 'activities', title: 'Activities, work and learning', sec: 'relationships', panel: 'like', cols: [dd('Type', ['Activity', 'Work', 'Education', 'Volunteering']), c('What'), c('Where'), c('When'), c('Support', L), c('What I enjoy about it', L)] },
+  { key: 'contacts', title: 'Contacts directory', sec: 'people', panel: 'know', bound: 'contacts',
+    cols: [c('Name', 'text', { id: 'name' }), dd('Role', CONTACT_ROLES), c('Organisation', 'text', { id: 'organisation' }), c('Phone', 'text', { id: 'phone' }), c('Email', 'text', { id: 'email' }), c('How they are involved', L, { id: 'involvement' }), dd('OK to share information', ['Yes', 'No', 'Ask first']), c('Last contact', D, { id: 'lastContact' })] },
+  { key: 'emergency', title: 'Emergency contacts', sec: 'people', panel: 'know', cols: [c('Priority', 'number'), c('Contact', 'contact'), c('When to call', L), c('Out-of-hours number')] },
+  { key: 'team', title: 'Support team', sec: 'people', panel: 'know', cols: [c('Role'), c('Name'), c('Phone')], rows: [['Key worker'], ['Registered manager']] },
+  { key: 'skills', title: 'Skills staff need', sec: 'people', panel: 'further', cols: [c('Skill or training'), c('Why needed', L), c('Staff trained', L), c('Last refreshed', D), c('Next due', D)] },
+  { key: 'reviews', title: 'Reviews', sec: 'review', panel: 'know', cols: [c('Review date', D), dd('Type', ['Routine', 'After an incident', 'Change of need']), c('Who attended', L), c('How I took part', L), c('Outcome', L), c('Next review date', D)] },
+  { key: 'signoff', title: 'Sign-off', sec: 'review', panel: 'know', cols: [c('Name'), c('Role'), c('Signature', 'text', { sig: true }), c('Date', D)] }
+];
+// contacts directory columns map to fixed contact fields
+const CONTACT_COLIDS = ['name', 'role', 'organisation', 'phone', 'email', 'involvement', 'shareInfo', 'lastContact'];
+
+/* ── builders ── */
+const blankFor = col => (col.type === 'tick' ? false : (col.type === 'rating' ? 0 : ''));
+function baseBlock(type, by) {
+  const t = nowISO();
+  return { id: uid('blk'), type, order: 0, deleted: false, createdBy: by || 'System', createdAt: t, updatedBy: by || 'System', updatedAt: t };
+}
+function makeTableBlock(t, by) {
+  const columns = t.cols.map((x, i) => {
+    const col = { id: x.id || (t.bound ? CONTACT_COLIDS[i] : uid('c')), label: x.label, type: x.type };
+    if (x.options) col.options = [...x.options];
+    if (x.max) col.max = x.max;
+    if (x.calc) col.calc = x.calc;
+    if (x.sig) col.sig = true;
+    return col;
+  });
+  const b = baseBlock('table', by);
+  b.title = t.title; b.templateKey = t.key; b.columns = columns;
+  if (t.bound) { b.bound = t.bound; b.rows = []; }
+  else b.rows = (t.rows && t.rows.length ? t.rows : [[]]).map(vals => makeRow(columns, vals));
+  return b;
+}
+function makeRow(columns, vals = []) {
+  const cells = {};
+  columns.forEach((col, i) => { cells[col.id] = vals[i] !== undefined ? vals[i] : blankFor(col); });
+  return { id: uid('r'), cells };
+}
+function makeBlankTable(by) {
+  const columns = ['Column 1', 'Column 2', 'Column 3'].map(l => ({ id: uid('c'), label: l, type: 'text' }));
+  const b = baseBlock('table', by);
+  b.title = 'New table'; b.templateKey = null; b.columns = columns;
+  b.rows = [makeRow(columns), makeRow(columns), makeRow(columns)];
+  return b;
+}
+function makePanels() { return PANEL_KEYS.map(key => ({ key, heading: HEADINGS[key], blocks: [] })); }
+function makeContact(by) {
+  return { id: uid('ct'), name: '', role: '', organisation: '', phone: '', email: '', involvement: '', shareInfo: '', lastContact: null, deleted: false };
+}
+function defaultState() {
+  const sections = SECTION_DEFS.map(([key, title], i) => {
+    const panels = makePanels();
+    TPL.filter(t => t.sec === key).forEach(t => panels.find(p => p.key === t.panel).blocks.push(makeTableBlock(t)));
+    return { id: 'sec-' + key, key, title, order: i + 1, isDefault: true, visible: true, deleted: false, panels };
+  });
+  return {
+    plan: {
+      id: PLAN_ID, personLabel: 'young person', preferredName: 'Leslie', fullName: '', dob: '', address: '', movedIn: '', commLine: '', funder: '',
+      keyWorkerRowId: '', managerRowId: '', coverPhotoMediaId: null, createdAt: nowISO(), version: '1.0',
+      settings: { logoUrl: DEFAULT_LOGO, maxVideoMB: 200 }, pending: { sessions: [], queue: [] }
+    },
+    sections, contacts: [], media: []
+  };
+}
+
+/* ── Storage interface (Phase 1: IndexedDB in this browser) ──
+   loadPlan / savePlan / uploadFile / fetchFile / addLog (+ listLog).
+   There is deliberately no updateLog or deleteLog. Phase 2 replaces this
+   object with one that calls the online service. */
+const Storage = (() => {
+  const DB = 'cs-support-plan-sample';
+  let db = null;
+  const mem = { kv: new Map(), files: new Map(), log: [] };
+  const open = () => new Promise((res, rej) => {
+    if (!window.indexedDB) return rej(new Error('IndexedDB is not available'));
+    const r = indexedDB.open(DB, 1);
+    r.onupgradeneeded = () => { const d = r.result; d.createObjectStore('kv'); d.createObjectStore('files'); d.createObjectStore('log', { autoIncrement: true }); };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+    r.onblocked = () => rej(new Error('Storage is blocked by another tab'));
+  });
+  const tx = (store, mode, fn) => new Promise((res, rej) => {
+    const t = db.transaction(store, mode);
+    const req = fn(t.objectStore(store));
+    t.oncomplete = () => res(req ? req.result : undefined);
+    t.onerror = () => rej(t.error);
+    t.onabort = () => rej(t.error || new Error('Storage write was cancelled'));
+  });
+  return {
+    volatile: false,
+    async init() {
+      try { db = await open(); } catch (e) { db = null; this.volatile = true; console.warn('Falling back to memory storage', e); }
+      try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { /* optional */ }
+    },
+    async loadPlan() { return db ? tx('kv', 'readonly', s => s.get('plan')) : mem.kv.get('plan'); },
+    async savePlan(data) { return db ? tx('kv', 'readwrite', s => s.put(data, 'plan')) : void mem.kv.set('plan', clone(data)); },
+    async uploadFile(ref, blob) { return db ? tx('files', 'readwrite', s => s.put(blob, ref)) : void mem.files.set(ref, blob); },
+    async fetchFile(ref) { return db ? tx('files', 'readonly', s => s.get(ref)) : mem.files.get(ref); },
+    async addLog(entry) { return db ? tx('log', 'readwrite', s => s.add(entry)) : void mem.log.push(clone(entry)); },
+    async listLog() { return db ? tx('log', 'readonly', s => s.getAll()) : mem.log.slice(); },
+    async listFileRefs() { return db ? tx('files', 'readonly', s => s.getAllKeys()) : Array.from(mem.files.keys()); },
+    /* used only by "start again" and "import backup" */
+    async wipe() {
+      if (db) { for (const st of ['kv', 'files', 'log']) await tx(st, 'readwrite', s => s.clear()); }
+      else { mem.kv.clear(); mem.files.clear(); mem.log.length = 0; }
+    }
+  };
+})();
+
+/* ═══ STATE ═══ */
+let S = null;      // { plan, sections, contacts, media }
+let LOG = [];      // version log, append only
+const ui = {
+  edit: false, printing: false, user: { name: '', manager: false },
+  collapsed: {}, reason: '', editCount: 0,
+  logFilter: { section: '', by: '', from: '', to: '' }, logShowAll: false
+};
+const getSec = id => S.sections.find(s => s.id === id);
+const panelOf = (sec, key) => sec.panels.find(p => p.key === key);
+function locate(blockId) {
+  for (const sec of S.sections) for (const panel of sec.panels) {
+    const i = panel.blocks.findIndex(b => b.id === blockId);
+    if (i >= 0) return { sec, panel, block: panel.blocks[i], index: i };
+  }
+  return null;
+}
+const liveSections = () => S.sections.filter(s => !s.deleted);
+const shownSections = () => liveSections().filter(s => s.visible || ui.edit);
+function allBlocks(pred) {
+  const out = [];
+  for (const sec of S.sections) if (!sec.deleted) for (const panel of sec.panels) for (const b of panel.blocks) if (!b.deleted && (!pred || pred(b))) out.push({ sec, panel, block: b });
+  return out;
+}
+const firstByTemplate = key => (allBlocks(b => b.templateKey === key)[0] || {}).block || null;
+const contactById = id => S.contacts.find(x => x.id === id);
+const liveContacts = () => S.contacts.filter(x => !x.deleted);
+const mediaMeta = id => S.media.find(m => m.id === id);
+const rowsArray = block => (block.bound ? S.contacts : block.rows);
+const visibleRows = block => (block.bound ? liveContacts() : block.rows);
+const colByLabel = (block, re) => block.columns.find(cl => re.test(cl.label));
+
+/* ═══ VERSION LOG ═══
+   Entries are only ever appended. Edits to one block are folded into a
+   single "session" that is written when the user leaves the block, after
+   5 minutes without edits, on "Done editing", or when the page is hidden. */
+const COVER_FIELDS = ['preferredName', 'fullName', 'dob', 'address', 'movedIn', 'commLine', 'funder', 'keyWorkerRowId', 'managerRowId'];
+const Log = {
+  sessions: new Map(), queue: [], lastKey: null, timer: null,
+  snap(s) {
+    if (s.kind === 'cover') return Object.fromEntries(COVER_FIELDS.map(k => [k, S.plan[k]]));
+    const loc = s.blockId && locate(s.blockId);
+    if (!loc) return null;
+    const b = clone(loc.block);
+    if (b.bound) b.rows = clone(S.contacts);
+    return b;
+  },
+  snapBlock(blockId) { return this.snap({ kind: 'block', blockId }); },
+  pending() { return this.queue.length + this.sessions.size; },
+  arm() { clearTimeout(this.timer); this.timer = setTimeout(() => this.commit(), IDLE_MS); },
+  /* an editing session on one block: many keystrokes become one entry */
+  session(ctx, action, summary) {
+    const key = ctx.kind === 'cover' ? 'cover' : ctx.blockId;
+    if (this.lastKey && this.lastKey !== key) this.flush(this.lastKey);
+    this.lastKey = key;
+    let s = this.sessions.get(key);
+    if (s && Date.now() - s.lastAt > IDLE_MS) { this.flush(key); s = null; this.lastKey = key; }
+    if (!s) {
+      s = { key, kind: ctx.kind || 'block', sectionId: ctx.sectionId || null, panelKey: ctx.panelKey || null, blockId: ctx.blockId || null,
+        by: ui.user.name, startedAt: nowISO(), lastAt: Date.now(), actions: [], summaries: [], count: 0 };
+      s.before = this.snap(s);
+      this.sessions.set(key, s);
+    }
+    s.lastAt = Date.now(); s.count++;
+    if (!s.actions.includes(action)) s.actions.push(action);
+    if (!s.summaries.includes(summary)) s.summaries.push(summary);
+    ui.editCount++;
+    this.arm(); pendingNote(); scheduleSave();
+  },
+  /* the session ends (user left the block, or 5 minutes passed): it joins the queue */
+  flush(key) {
+    const s = this.sessions.get(key);
+    if (!s) return;
+    this.sessions.delete(key);
+    if (this.lastKey === key) this.lastKey = null;
+    const after = this.snap(s);
+    const strip = o => (o ? JSON.stringify(o, (k, v) => (k === 'updatedAt' || k === 'updatedBy' ? undefined : v)) : '');
+    if (s.before && after && strip(s.before) === strip(after) && !s.recovered) { pendingNote(); return; } // typed then undone: nothing changed
+    const action = s.actions.length === 1 ? s.actions[0] : 'edited_block';
+    let summary = s.summaries.slice(0, 3).join('; ') + (s.summaries.length > 3 ? ' and more' : '');
+    if (s.count > 1) summary += ` (${s.count} edits)`;
+    if (s.recovered) summary += ' (saved when the page was closed)';
+    this.queue.push({ at: new Date(s.lastAt).toISOString(), by: s.by, sectionId: s.sectionId, panelKey: s.panelKey, blockId: s.blockId, action, summary, before: s.before, after });
+    pendingNote(); scheduleSave();
+  },
+  flushAll() { for (const k of Array.from(this.sessions.keys())) this.flush(k); },
+  /* one-off events (add, move, delete, restore, upload ...) */
+  event(ctx, action, summary, extra = {}) {
+    this.flushAll();
+    ui.editCount++;
+    this.queue.push({ at: nowISO(), by: ui.user.name, sectionId: ctx.sectionId || null, panelKey: ctx.panelKey || null, blockId: ctx.blockId || null, action, summary, ...extra });
+    if (ui.edit) { this.arm(); pendingNote(); scheduleSave(); } else this.commit();   // outside edit mode there is no "Done editing", so write it now
+  },
+  /* write everything waiting into the log, with the reason typed by the user */
+  commit() {
+    clearTimeout(this.timer);
+    this.flushAll();
+    const q = this.queue.splice(0);
+    q.forEach(e => this.append(e));
+    pendingNote();
+  },
+  append(e) {
+    const [a, b] = S.plan.version.split('.').map(Number);
+    const version = e.signoff ? `${a + 1}.0` : `${a}.${b + 1}`;
+    const sec = e.sectionId && getSec(e.sectionId);
+    const entry = {
+      id: 'log-' + String(LOG.length + 1).padStart(4, '0'), version, at: e.at || nowISO(), by: e.by || ui.user.name || 'Unknown',
+      sectionId: e.sectionId || null, panelKey: e.panelKey || null, blockId: e.blockId || null,
+      action: e.action, summary: e.summary, reason: e.reason !== undefined ? e.reason : ui.reason,
+      approvedBy: e.approvedBy || null, snapshotRef: e.snapshotRef || null,
+      sectionTitle: sec ? sec.title : '', panelHeading: e.panelKey ? HEADINGS[e.panelKey] : '',
+      before: e.before || null, after: e.after || null
+    };
+    S.plan.version = version;
+    LOG.push(entry);
+    Storage.addLog(entry).catch(err => setSaveState('error', err.message));
+    scheduleSave();
+    refreshChrome();
+    return entry;
+  },
+  serialise() { return { sessions: Array.from(this.sessions.values()).map(s => clone(s)), queue: clone(this.queue) }; },
+  recover(p) {
+    if (!p) return;
+    const sessions = Array.isArray(p) ? p : (p.sessions || []);
+    (p.queue || []).forEach(e => this.queue.push(e));
+    for (const s of sessions) { s.recovered = true; this.sessions.set(s.key, s); }
+    if (this.pending()) this.commit();
+  },
+  reset() { clearTimeout(this.timer); this.sessions.clear(); this.queue.length = 0; this.lastKey = null; }
+};
+const ctxOf = loc => ({ sectionId: loc.sec.id, panelKey: loc.panel.key, blockId: loc.block.id, kind: 'block' });
+
+/* ═══ SAVING ═══ */
+let saveTimer = null, lastToast = 0;
+function setSaveState(state, msg) {
+  const el = $('#saveState');
+  if (!el) return;
+  el.classList.toggle('err', state === 'error');
+  if (state === 'saving') el.textContent = 'Saving...';
+  else if (state === 'saved') { el.textContent = 'Saved ' + fmtDT(nowISO()).slice(11); if (Date.now() - lastToast > 4000) { toast('Saved'); lastToast = Date.now(); } }
+  else el.textContent = 'Could not save: ' + (msg || 'unknown problem');
+}
+function scheduleSave() { setSaveState('saving'); clearTimeout(saveTimer); saveTimer = setTimeout(doSave, 350); }
+async function doSave() {
+  clearTimeout(saveTimer);
+  S.plan.pending = Log.serialise();
+  S.plan.updatedAt = nowISO();
+  S.sections.forEach((sec, i) => { sec.order = i + 1; sec.panels.forEach(p => p.blocks.forEach((b, j) => { b.order = j + 1; })); });
+  try { await Storage.savePlan(S); setSaveState('saved'); } catch (e) { setSaveState('error', e.message); }
+}
+function flushNow() { Log.commit(); return doSave(); }
+
+/* ═══ MEDIA ═══ */
+const Media = {
+  urls: new Map(),
+  async urlForRef(ref) {
+    if (!ref) return null;
+    if (this.urls.has(ref)) return this.urls.get(ref);
+    const blob = await Storage.fetchFile(ref);
+    if (!blob) return null;
+    const u = URL.createObjectURL(blob);
+    this.urls.set(ref, u);
+    return u;
+  },
+  urlFor(id, poster) { const m = mediaMeta(id); return m ? this.urlForRef(poster ? m.posterRef : m.storageRef) : Promise.resolve(null); },
+  async blobFor(id) { const m = mediaMeta(id); return m ? Storage.fetchFile(m.storageRef) : null; },
+  forget(ref) { const u = this.urls.get(ref); if (u) { URL.revokeObjectURL(u); this.urls.delete(ref); } },
+  clearUrls() { this.urls.forEach(u => URL.revokeObjectURL(u)); this.urls.clear(); },
+  async add({ kind, blob, fileName, mimeType, poster }) {
+    const id = uid('media');
+    const ref = `${PLAN_ID}/${id}`;
+    await Storage.uploadFile(ref, blob);
+    const m = { id, kind, fileName, mimeType, sizeBytes: blob.size, storageRef: ref, posterRef: null, consent: { recorded: false, agreedBy: '', date: '' }, uploadedBy: ui.user.name, uploadedAt: nowISO() };
+    if (poster) { m.posterRef = ref + '-poster.jpg'; await Storage.uploadFile(m.posterRef, poster); }
+    S.media.push(m);
+    return m;
+  }
+};
+const canvasBlob = (cv, type, q) => new Promise((res, rej) => cv.toBlob(b => (b ? res(b) : rej(new Error('Could not encode the image'))), type, q));
+async function decodeImage(blob) {
+  if (window.createImageBitmap) { try { return await createImageBitmap(blob, { imageOrientation: 'from-image' }); } catch (e) { /* fall through */ } }
+  return new Promise((res, rej) => {
+    const u = URL.createObjectURL(blob); const i = new Image();
+    i.onload = () => res(i); i.onerror = () => rej(new Error('This file could not be read as a picture'));
+    i.src = u;
+  });
+}
+async function resizeImage(file, maxLong = 2000) {
+  const img = await decodeImage(file);
+  const w = img.width || img.naturalWidth, hgt = img.height || img.naturalHeight;
+  const sc = Math.min(1, maxLong / Math.max(w, hgt));
+  const cv = document.createElement('canvas');
+  cv.width = Math.max(1, Math.round(w * sc)); cv.height = Math.max(1, Math.round(hgt * sc));
+  const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(img, 0, 0, cv.width, cv.height);
+  return canvasBlob(cv, 'image/jpeg', 0.85);
+}
+function videoPoster(file) {
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(file); const v = document.createElement('video');
+    v.muted = true; v.playsInline = true; v.preload = 'metadata'; v.src = url;
+    let finished = false;
+    const done = blob => { if (finished) return; finished = true; clearTimeout(timer); URL.revokeObjectURL(url); resolve(blob); };
+    const timer = setTimeout(() => done(null), 10000);
+    v.onerror = () => done(null);
+    v.onloadedmetadata = () => { v.currentTime = Math.min(1, (v.duration || 1) / 2); };
+    v.onseeked = async () => {
+      try {
+        const sc = Math.min(1, 960 / (v.videoWidth || 960)); const cv = document.createElement('canvas');
+        cv.width = Math.round((v.videoWidth || 960) * sc); cv.height = Math.round((v.videoHeight || 540) * sc);
+        cv.getContext('2d').drawImage(v, 0, 0, cv.width, cv.height);
+        done(await canvasBlob(cv, 'image/jpeg', 0.8));
+      } catch (e) { done(null); }
+    };
+  });
+}
+function pickFiles({ accept, multiple = false, capture = false }) {
+  return new Promise(res => {
+    const inp = h('input', { type: 'file', accept, multiple, style: 'position:fixed;left:-999px' });
+    if (capture) inp.setAttribute('capture', 'environment');
+    inp.addEventListener('change', () => { res(Array.from(inp.files)); inp.remove(); });
+    inp.addEventListener('cancel', () => { res([]); inp.remove(); });
+    document.body.append(inp);
+    inp.click();
+  });
+}
+
+/* ═══ BACKUP FILE (a plain ZIP, files stored without compression) ═══ */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+async function crc32(blob) {
+  let c = 0xFFFFFFFF; const CH = 4 * 1024 * 1024;
+  for (let o = 0; o < blob.size; o += CH) { const u = new Uint8Array(await blob.slice(o, o + CH).arrayBuffer()); for (let i = 0; i < u.length; i++) c = CRC_T[(c ^ u[i]) & 0xFF] ^ (c >>> 8); }
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+async function zipWrite(files) {
+  const enc = new TextEncoder(); const parts = []; const central = []; let offset = 0;
+  const n = new Date();
+  const dt = (n.getHours() << 11) | (n.getMinutes() << 5) | (n.getSeconds() >> 1);
+  const dte = ((n.getFullYear() - 1980) << 9) | ((n.getMonth() + 1) << 5) | n.getDate();
+  for (const f of files) {
+    const name = enc.encode(f.name); const crc = await crc32(f.blob); const size = f.blob.size;
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(10, dt, true); lh.setUint16(12, dte, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, size, true); lh.setUint32(22, size, true); lh.setUint16(26, name.length, true);
+    parts.push(lh.buffer, name, f.blob);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(12, dt, true); ch.setUint16(14, dte, true);
+    ch.setUint32(16, crc, true); ch.setUint32(20, size, true); ch.setUint32(24, size, true); ch.setUint16(28, name.length, true); ch.setUint32(42, offset, true);
+    central.push(ch.buffer, name);
+    offset += 30 + name.length + size;
+  }
+  const cdSize = central.reduce((a, p) => a + p.byteLength, 0);
+  const eo = new DataView(new ArrayBuffer(22));
+  eo.setUint32(0, 0x06054b50, true); eo.setUint16(8, files.length, true); eo.setUint16(10, files.length, true); eo.setUint32(12, cdSize, true); eo.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, eo.buffer], { type: 'application/zip' });
+}
+async function zipRead(blob) {
+  const tailLen = Math.min(blob.size, 66000);
+  const tail = new DataView(await blob.slice(blob.size - tailLen).arrayBuffer());
+  let p = -1;
+  for (let i = tailLen - 22; i >= 0; i--) if (tail.getUint32(i, true) === 0x06054b50) { p = i; break; }
+  if (p < 0) throw new Error('This is not a backup file from this tool.');
+  const count = tail.getUint16(p + 10, true), cdSize = tail.getUint32(p + 12, true), cdOff = tail.getUint32(p + 16, true);
+  const cd = new DataView(await blob.slice(cdOff, cdOff + cdSize).arrayBuffer());
+  const dec = new TextDecoder(); const out = new Map(); let o = 0;
+  for (let i = 0; i < count; i++) {
+    if (cd.getUint32(o, true) !== 0x02014b50) throw new Error('The backup file looks damaged.');
+    const method = cd.getUint16(o + 10, true), size = cd.getUint32(o + 24, true), nl = cd.getUint16(o + 28, true), el = cd.getUint16(o + 30, true), cl = cd.getUint16(o + 32, true), off = cd.getUint32(o + 42, true);
+    const name = dec.decode(new Uint8Array(cd.buffer, o + 46, nl));
+    if (method !== 0) throw new Error('This backup uses a format the tool cannot read.');
+    const lh = new DataView(await blob.slice(off, off + 30).arrayBuffer());
+    const start = off + 30 + lh.getUint16(26, true) + lh.getUint16(28, true);
+    out.set(name, blob.slice(start, start + size));
+    o += 46 + nl + el + cl;
+  }
+  return out;
+}
+function download(blob, name) {
+  const a = h('a', { href: URL.createObjectURL(blob), download: name });
+  document.body.append(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+
+/* ═══ UI PRIMITIVES ═══ */
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 1600);
+}
+function modal({ title, body, actions = [], wide = false, dismissible = true }) {
+  const prev = document.activeElement;
+  const ov = h('div', { class: 'overlay' });
+  const card = h('div', { class: 'modal' + (wide ? ' wide' : ''), role: 'dialog', 'aria-modal': 'true', 'aria-label': title });
+  const m = { el: card, close() { document.removeEventListener('keydown', onKey, true); ov.remove(); if (prev && prev.focus && document.contains(prev)) prev.focus(); } };
+  const onKey = e => { if (e.key === 'Escape' && dismissible && $('#modalRoot').lastElementChild === ov) { e.stopPropagation(); m.close(); } };
+  document.addEventListener('keydown', onKey, true);
+  card.append(h('h3', null, title));
+  if (body) card.append(...[].concat(body).filter(Boolean));
+  const bar = h('div', { class: 'm-actions' });
+  actions.forEach(a => bar.append(h('button', {
+    class: 'btn btn-' + (a.kind || 'ghost'), type: 'button',
+    onclick: async () => { const r = a.run ? await a.run(m) : undefined; if (r !== false) m.close(); }
+  }, a.label)));
+  if (actions.length) card.append(bar);
+  card.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') { const p = $('.btn-primary,.btn-danger', bar); if (p) { e.preventDefault(); p.click(); } }
+  });
+  ov.append(card);
+  if (dismissible) ov.addEventListener('mousedown', e => { if (e.target === ov) m.close(); });
+  $('#modalRoot').append(ov);
+  setTimeout(() => { const f = card.querySelector('input:not([type=checkbox]),select,textarea') || $('.btn-primary,.btn-danger', card) || card.querySelector('button'); if (f) f.focus(); }, 30);
+  return m;
+}
+function confirmDialog(message, okLabel = 'Confirm', danger = false, title = 'Please confirm') {
+  return new Promise(res => {
+    let answered = false;
+    const m = modal({ title, body: h('p', null, message), actions: [
+      { label: 'Cancel', run: () => { answered = true; res(false); } },
+      { label: okLabel, kind: danger ? 'danger' : 'primary', run: () => { answered = true; res(true); } }] });
+    const orig = m.close; m.close = () => { orig(); if (!answered) res(false); };
+  });
+}
+const alertDialog = (message, title = 'Something to check') => modal({ title, body: h('p', null, message), actions: [{ label: 'OK', kind: 'primary' }] });
+function busy(msg) {
+  const m = modal({ title: 'Please wait', body: h('p', { id: 'busyMsg' }, msg), dismissible: false });
+  return { text: t => { const p = $('#busyMsg', m.el); if (p) p.textContent = t; }, done: () => m.close() };
+}
+function field(label, input, hint) {
+  const id = uid('f'); input.id = id;
+  return h('div', { class: 'field' }, h('label', { for: id }, label), input, hint ? h('small', { class: 'muted' }, hint) : null);
+}
+function openLightbox(items, start) {
+  let i = start; let ov;
+  const img = h('img', { alt: '' }); const cap = h('div', { class: 'lb-cap' });
+  const close = () => { document.removeEventListener('keydown', onKey, true); ov.remove(); };
+  const step = d => { i = (i + d + items.length) % items.length; show(); };
+  const prev = h('button', { class: 'lb-nav lb-prev', 'aria-label': 'Previous photo', onclick: () => step(-1) }, '‹');
+  const next = h('button', { class: 'lb-nav lb-next', 'aria-label': 'Next photo', onclick: () => step(1) }, '›');
+  const x = h('button', { class: 'lb-close', 'aria-label': 'Close photo viewer', onclick: close }, '×');
+  async function show() { const it = items[i]; img.alt = it.alt || it.caption || 'Photo'; img.src = (await Media.urlFor(it.mediaId)) || ''; cap.textContent = it.caption || ''; prev.hidden = next.hidden = items.length < 2; }
+  const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } else if (e.key === 'ArrowLeft' && items.length > 1) step(-1); else if (e.key === 'ArrowRight' && items.length > 1) step(1); };
+  ov = h('div', { class: 'lightbox', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Photo viewer', onclick: e => { if (e.target === ov) close(); } }, x, prev, img, cap, next);
+  document.addEventListener('keydown', onKey, true);
+  document.body.append(ov); show(); x.focus();
+}
+
+function pendingNote() {
+  const n = Log.pending(), el = $('#pendingNote'); if (!el) return;
+  el.textContent = n ? `${n} change${n > 1 ? 's' : ''} will be added to the version log when you press Done editing` : '';
+}
+
+/* ═══ DERIVED FACTS ═══ */
+function severeAllergies() {
+  const out = [];
+  allBlocks(b => b.templateKey === 'allergies').forEach(({ block }) => {
+    const sev = colByLabel(block, /^severity/i), al = colByLabel(block, /^allergen/i), re = colByLabel(block, /^reaction/i);
+    if (!sev) return;
+    block.rows.forEach(r => { if (r.cells[sev.id] === 'Severe') out.push({ blockId: block.id, allergen: ((al && r.cells[al.id]) || '').trim(), reaction: ((re && r.cells[re.id]) || '').trim() }); });
+  });
+  return out;
+}
+function reviewInfo() {
+  const b = firstByTemplate('reviews');
+  if (!b) return { last: '', next: '' };
+  const dc = colByLabel(b, /^review date/i), nc = colByLabel(b, /^next review date/i);
+  let best = null;
+  b.rows.forEach(r => { const d = dc && r.cells[dc.id]; if (d && (!best || d > best.d)) best = { d, n: nc ? r.cells[nc.id] : '' }; });
+  return { last: best ? best.d : '', next: best ? best.n : '' };
+}
+function teamRows() {
+  const b = firstByTemplate('team');
+  if (!b) return [];
+  const nc = colByLabel(b, /^name/i), rc = colByLabel(b, /^role/i);
+  return b.rows.filter(r => nc && (r.cells[nc.id] || '').trim()).map(r => ({ id: r.id, name: r.cells[nc.id].trim(), role: rc ? (r.cells[rc.id] || '') : '' }));
+}
+function teamPick(key, roleRe) {
+  const rows = teamRows();
+  const id = S.plan[key] && rows.some(r => r.id === S.plan[key]) ? S.plan[key] : ((rows.find(r => roleRe.test(r.role)) || {}).id || '');
+  return { rows, id, row: rows.find(r => r.id === id) };
+}
+function blockLabel(b) {
+  if (b.type === 'table') return `${b.title || 'Table'} table`;
+  if (b.type === 'file') return `File "${b.name || 'file'}"`;
+  return `${BLOCK_LABELS[b.type]} block`;
+}
+const metaText = b => `Last edited by ${b.updatedBy || 'unknown'}, ${fmtDT(b.updatedAt)}`;
+function secNo(sec) { return sec.visible ? liveSections().filter(s => s.visible).indexOf(sec) + 1 : 0; }
+
+/* ═══ CHROME THAT FOLLOWS THE DATA ═══ */
+function refreshAlertbar() {
+  const bar = $('#alertbar'); const list = severeAllergies();
+  bar.hidden = !list.length;
+  if (!list.length) return;
+  const names = list.map(a => a.allergen || 'allergen not named').join(', ');
+  bar.replaceChildren(h('span', null, `SEVERE ALLERGY: ${names}.`), h('a', { href: '#', onclick: e => { e.preventDefault(); goTo(list[0].blockId); } }, 'See details'));
+  setStickyHeight();
+}
+function refreshFooter() {
+  const name = S.plan.preferredName || 'Support plan';
+  const sev = severeAllergies();
+  $('#printFooter').replaceChildren(
+    `${name}’s support plan  |  Version ${S.plan.version}  |  ${fmtDate(todayStr())}`,
+    sev.length ? h('span', { class: 'pf-alert' }, `  |  SEVERE ALLERGY: ${sev.map(a => a.allergen || 'see plan').join(', ')}`) : '');
+}
+function refreshChrome() {
+  const name = S.plan.preferredName || 'Support plan';
+  $('#tbTitle').textContent = `${name}’s support plan`;
+  document.title = `${name}’s support plan`;
+  const logo = $('#tbLogo'); if (logo.getAttribute('src') !== S.plan.settings.logoUrl) logo.src = S.plan.settings.logoUrl || DEFAULT_LOGO;
+  const h1 = $('#cover h1'); if (h1) h1.textContent = `${name}’s support plan`;
+  const v = $('#coverVersion'); if (v) v.textContent = 'Version ' + S.plan.version;
+  refreshAlertbar(); refreshFooter(); refreshLogBody();
+}
+function setStickyHeight() { document.documentElement.style.setProperty('--stickyh', $('#sticky').offsetHeight + 'px'); }
+
+let dirtyBlock = null;
+const derivedRefresh = debounce(() => {
+  refreshAlertbar(); refreshFooter(); refreshCover();
+  if (dirtyBlock && dirtyBlock.bound === 'contacts') {
+    allBlocks(b => b.type === 'table' && b.columns.some(cl => cl.type === 'contact') && b.id !== dirtyBlock.id).forEach(({ block }) => {
+      const el = document.querySelector(`[data-blk="${block.id}"]`);
+      if (el && !el.contains(document.activeElement)) rerenderBlock(block.id);
+    });
+  }
+  dirtyBlock = null;
+}, 450);
+function touchBlock(block) {
+  block.updatedBy = ui.user.name; block.updatedAt = nowISO();
+  const m = document.querySelector(`[data-blk="${block.id}"] .block-meta`); if (m) m.textContent = metaText(block);
+  dirtyBlock = block; derivedRefresh();
+}
+function refreshCover() {
+  const old = $('#cover');
+  if (!old || old.contains(document.activeElement)) return;
+  old.replaceWith(renderCover());
+}
+
+/* ═══ COVER ═══ */
+function consentOk(m) { return !!(m && m.consent && m.consent.recorded && m.consent.agreedBy && m.consent.date); }
+function consentChip(mediaId, onChange, loc) {
+  const m = mediaMeta(mediaId);
+  const ok = consentOk(m);
+  const txt = ok ? `✓ Consent: ${m.consent.agreedBy}, ${fmtDate(m.consent.date)}` : '⚠ Consent not recorded';
+  const cls = 'chip ' + (ok ? 'ok' : 'warn');
+  if (!ui.edit) return h('span', { class: cls, role: 'status' }, txt);
+  return h('button', { class: cls, type: 'button', title: 'Record or change consent', onclick: () => openConsent(mediaId, onChange, loc) }, txt);
+}
+function openConsent(mediaId, onChange, loc) {
+  const m = mediaMeta(mediaId); if (!m) return;
+  const tick = h('input', { type: 'checkbox', checked: !!m.consent.recorded });
+  const who = h('input', { type: 'text', value: m.consent.agreedBy || '', placeholder: 'Name and role of the person who agreed' });
+  const when = h('input', { type: 'date', value: m.consent.date || todayStr() });
+  modal({
+    title: 'Consent for this ' + (m.kind === 'video' ? 'video' : 'photo'),
+    body: [
+      h('p', { class: 'muted' }, 'Record who agreed to this being used in the plan, and when. A warning shows until this is filled in.'),
+      h('div', { class: 'field' }, h('label', { class: 'check' }, tick, 'Consent has been given')),
+      field('Agreed by (name and role)', who), field('Date', when)],
+    actions: [{ label: 'Cancel' }, {
+      label: 'Save consent', kind: 'primary', run: () => {
+        if (tick.checked && (!who.value.trim() || !when.value)) { alertDialog('Please add who agreed and the date, or untick the box.'); return false; }
+        const before = clone(m.consent);
+        m.consent = { recorded: tick.checked, agreedBy: who.value.trim(), date: when.value };
+        const ctx = loc ? { sectionId: loc.sec.id, panelKey: loc.panel.key, blockId: loc.block.id } : {};
+        Log.event(ctx, 'consent_recorded', `${m.kind === 'video' ? 'Video' : 'Photo'} consent ${tick.checked ? 'recorded: ' + m.consent.agreedBy : 'removed'}`, { before: { consent: before }, after: { consent: clone(m.consent) } });
+        if (onChange) onChange();
+      }
+    }]
+  });
+}
+function renderCover() {
+  const p = S.plan; const name = p.preferredName || 'Name';
+  const el = h('section', { class: 'cover', id: 'cover', 'aria-label': 'Cover' });
+  const logo = h('img', { class: 'cover-logo', alt: 'Connected Stars', src: p.settings.logoUrl || DEFAULT_LOGO });
+  logo.addEventListener('error', () => { logo.style.display = 'none'; });
+  el.append(h('div', { class: 'cover-top' }, logo, h('span', { class: 'cover-kicker' }, 'Support plan')));
+
+  let inner;
+  if (p.coverPhotoMediaId && mediaMeta(p.coverPhotoMediaId)) {
+    inner = h('img', { alt: `Photo of ${name}` });
+    Media.urlFor(p.coverPhotoMediaId).then(u => { if (u) inner.src = u; });
+  } else inner = h('span', null, 'No photo yet');
+  const photo = ui.edit
+    ? h('button', { class: 'cover-photo', type: 'button', 'aria-label': 'Change the cover photo', onclick: openCoverPhoto }, inner, h('span', { class: 'hint' }, 'Click to upload, take, crop or remove'))
+    : h('div', { class: 'cover-photo' }, inner);
+  const left = h('div', { class: 'cover-photo-wrap' }, photo);
+  if (p.coverPhotoMediaId && mediaMeta(p.coverPhotoMediaId)) { left.append(consentChip(p.coverPhotoMediaId, () => refreshCover())); }
+  const sev = severeAllergies();
+  if (sev.length) left.append(h('div', { class: 'cover-alert', role: 'alert' }, 'SEVERE ALLERGY', h('ul', null, sev.map(a => h('li', null, `${a.allergen || 'Allergen not named'}${a.reaction ? ': ' + a.reaction : ''}`)))));
+
+  const right = h('div', null, h('h1', null, `${name}’s support plan`));
+  const facts = h('dl', { class: 'facts' });
+  const typed = (key, label, type = 'text') => {
+    facts.append(h('dt', null, label));
+    const val = p[key] || '';
+    if (!ui.edit) { facts.append(h('dd', null, type === 'date' ? fmtDate(val) : val || h('span', { class: 'muted' }, 'Not filled in'))); return; }
+    facts.append(h('dd', null, h('input', {
+      type, value: val, 'aria-label': label,
+      oninput: e => { Log.session({ kind: 'cover' }, 'cover_edited', `Cover: ${label} edited`); p[key] = e.target.value; if (key === 'preferredName') refreshChrome(); }
+    })));
+  };
+  const picked = (key, label, roleRe) => {
+    facts.append(h('dt', null, label));
+    const pk = teamPick(key, roleRe);
+    if (!ui.edit) { facts.append(h('dd', null, pk.row ? `${pk.row.name}${pk.row.role ? ' (' + pk.row.role + ')' : ''}` : h('span', { class: 'muted' }, 'Not chosen. Add names under Support team'))); return; }
+    facts.append(h('dd', null, h('select', {
+      'aria-label': label, value: pk.id,
+      onchange: e => { Log.session({ kind: 'cover' }, 'cover_edited', `Cover: ${label} changed`); p[key] = e.target.value; }
+    }, h('option', { value: '' }, pk.rows.length ? 'Choose from Support team' : 'Add names under Support team first'), pk.rows.map(r => h('option', { value: r.id }, `${r.name}${r.role ? ' (' + r.role + ')' : ''}`)))));
+  };
+  const auto = (label, val, id) => { facts.append(h('dt', null, label), h('dd', null, h('div', { class: 'auto', id }, val || h('span', { class: 'muted' }, 'Set from Reviews')))); };
+  typed('preferredName', 'Preferred name'); typed('fullName', 'Full name'); typed('dob', 'Date of birth', 'date'); typed('address', 'Address');
+  typed('movedIn', 'Moved in', 'date'); typed('commLine', 'How I communicate (one line)');
+  picked('keyWorkerRowId', 'Key worker', /key\s*worker/i); picked('managerRowId', 'Registered manager', /manager/i);
+  typed('funder', 'Funder');
+  const rv = reviewInfo();
+  auto('Plan created', fmtDate(p.createdAt), 'coverCreated'); auto('Last reviewed', fmtDate(rv.last), 'coverLast');
+  auto('Next review date', fmtDate(rv.next), 'coverNext'); auto('Plan version', 'Version ' + p.version, 'coverVersion');
+  right.append(facts);
+  el.append(h('div', { class: 'cover-main' }, left, right));
+  return el;
+}
+
+/* cover photo: upload, take, crop, replace, remove */
+function openCoverPhoto() {
+  const p = S.plan; const has = p.coverPhotoMediaId && mediaMeta(p.coverPhotoMediaId);
+  const go = async (files, existing) => {
+    try {
+      const blob = existing || files[0]; if (!blob) return;
+      if (!existing && !/^image\//.test(blob.type) && !/\.(jpe?g|png|webp|gif|heic)$/i.test(blob.name || '')) return alertDialog('Please choose a picture file.');
+      m.close();
+      const cropped = await openCropper(blob); if (!cropped) return;
+      const rec = await Media.add({ kind: 'image', blob: cropped, fileName: 'cover-photo.jpg', mimeType: 'image/jpeg' });
+      const oldId = p.coverPhotoMediaId; p.coverPhotoMediaId = rec.id;
+      Log.event({}, 'cover_photo', oldId ? 'Cover photo replaced' : 'Cover photo uploaded');
+      renderCoverNow();
+    } catch (e) { alertDialog(e.message); }
+  };
+  const btn = (label, fn, kind = 'ghost') => h('button', { class: 'btn btn-' + kind, type: 'button', onclick: fn }, label);
+  const m = modal({
+    title: 'Cover photo',
+    body: [h('p', { class: 'muted' }, 'The photo is cropped to a square and prints on page 1. Remember to record consent once it is added.'),
+      h('div', { class: 'pick-list' },
+        btn('Upload from this device', async () => go(await pickFiles({ accept: 'image/*' })), 'primary'),
+        btn('Take a photo with the camera', async () => go(await pickFiles({ accept: 'image/*', capture: true }))),
+        has ? btn('Crop the current photo again', async () => go(null, await Media.blobFor(p.coverPhotoMediaId))) : null,
+        has ? btn('Consent for this photo', () => { m.close(); openConsent(p.coverPhotoMediaId, renderCoverNow); }) : null,
+        has ? btn('Remove the photo', async () => {
+          m.close();
+          if (await confirmDialog('Remove the cover photo? The file is kept in the backup, but it will no longer show on the plan.', 'Remove', true)) {
+            p.coverPhotoMediaId = null; Log.event({}, 'cover_photo', 'Cover photo removed'); renderCoverNow();
+          }
+        }) : null)],
+    actions: [{ label: 'Close' }]
+  });
+}
+function renderCoverNow() { const old = $('#cover'); if (old) old.replaceWith(renderCover()); refreshAlertbar(); }
+function openCropper(blob) {
+  return new Promise(async resolve => {
+    let img;
+    try { img = await decodeImage(blob); } catch (e) { alertDialog(e.message); return resolve(null); }
+    const W = img.width || img.naturalWidth, H = img.height || img.naturalHeight, SZ = 360;
+    const cv = h('canvas', { class: 'crop-box', width: SZ, height: SZ });
+    const minSc = Math.max(SZ / W, SZ / H); let sc = minSc, ox = (SZ - W * sc) / 2, oy = (SZ - H * sc) / 2;
+    const clamp = () => { ox = Math.min(0, Math.max(SZ - W * sc, ox)); oy = Math.min(0, Math.max(SZ - H * sc, oy)); };
+    const draw = () => { const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, SZ, SZ); g.drawImage(img, ox, oy, W * sc, H * sc); };
+    let drag = null;
+    cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY }; cv.setPointerCapture(e.pointerId); });
+    cv.addEventListener('pointermove', e => { if (!drag) return; const k = SZ / cv.clientWidth; ox += (e.clientX - drag.x) * k; oy += (e.clientY - drag.y) * k; drag = { x: e.clientX, y: e.clientY }; clamp(); draw(); });
+    cv.addEventListener('pointerup', () => { drag = null; });
+    const zoom = h('input', { type: 'range', min: 1, max: 4, step: 0.01, value: 1, 'aria-label': 'Zoom', oninput: e => {
+      const cx = (SZ / 2 - ox) / sc, cy = (SZ / 2 - oy) / sc; sc = minSc * e.target.value; ox = SZ / 2 - cx * sc; oy = SZ / 2 - cy * sc; clamp(); draw(); } });
+    draw();
+    let chosen = false;
+    const m = modal({
+      title: 'Crop to a square', body: [h('p', { class: 'muted' }, 'Drag the picture to move it. Use the slider to zoom.'), cv, field('Zoom', zoom)],
+      actions: [{ label: 'Cancel' }, { label: 'Use this crop', kind: 'primary', run: async () => {
+        const out = document.createElement('canvas'); out.width = out.height = 1200; const f = 1200 / SZ;
+        const g = out.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 1200, 1200); g.drawImage(img, ox * f, oy * f, W * sc * f, H * sc * f);
+        chosen = true; resolve(await canvasBlob(out, 'image/jpeg', 0.88));
+      } }], dismissible: true
+    });
+    const orig = m.close; m.close = () => { orig(); if (!chosen) resolve(null); };
+  });
+}
+
+/* ═══ LEFT MENU ═══ */
+function renderMenu() {
+  const nav = $('#menu'); const ul = h('ul');
+  const item = (href, label, num, cls = '') => h('a', { class: 'mi ' + cls, href, 'data-target': href.slice(1), onclick: () => document.body.classList.remove('menu-open') }, num !== null ? h('span', { class: 'n' }, num) : null, h('span', null, label));
+  ul.append(h('li', null, item('#cover', 'Cover', null)));
+  shownSections().forEach(sec => {
+    const li = h('li', { 'data-sec': sec.id, draggable: ui.edit ? 'true' : null });
+    li.append(item('#' + sec.id, sec.title + (sec.visible ? '' : ' (hidden)'), sec.visible ? String(secNo(sec)) : '•', sec.visible ? '' : 'hidden-sec'));
+    if (ui.edit) {
+      li.append(h('button', { class: 'mini', type: 'button', 'aria-label': `Move ${sec.title} up`, onclick: () => moveSection(sec.id, -1) }, '↑'),
+        h('button', { class: 'mini', type: 'button', 'aria-label': `Move ${sec.title} down`, onclick: () => moveSection(sec.id, 1) }, '↓'));
+      li.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', sec.id); e.dataTransfer.effectAllowed = 'move'; });
+      li.addEventListener('dragover', e => { e.preventDefault(); li.classList.add('dragover'); });
+      li.addEventListener('dragleave', () => li.classList.remove('dragover'));
+      li.addEventListener('drop', e => { e.preventDefault(); li.classList.remove('dragover'); const from = e.dataTransfer.getData('text/plain'); if (from && from !== sec.id) moveSectionTo(from, sec.id); });
+    }
+    ul.append(li);
+  });
+  ul.append(h('li', null, item('#log', 'Version log', null)));
+  nav.replaceChildren(h('h2', null, 'Contents'), ul);
+  if (ui.edit) nav.append(h('div', { style: 'padding:.8rem .4rem' }, h('button', { class: 'btn btn-primary', type: 'button', style: 'width:100%', onclick: addSectionDialog }, '+ Add section')),
+    h('p', { class: 'menu-note' }, 'Drag a section, or use the arrows, to put it somewhere else.'));
+  else nav.append(h('p', { class: 'menu-note' }, 'Press Edit to change the plan or add a section.'));
+}
+let sectionObserver = null;
+function observeSections() {
+  if (sectionObserver) sectionObserver.disconnect();
+  if (!('IntersectionObserver' in window)) return;
+  sectionObserver = new IntersectionObserver(entries => {
+    entries.forEach(en => { if (en.isIntersecting) { $$('.mi.active').forEach(a => a.classList.remove('active')); const a = $(`.mi[data-target="${en.target.id}"]`); if (a) a.classList.add('active'); } });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  $$('#main > section').forEach(s => sectionObserver.observe(s));
+}
+
+/* ═══ SECTIONS ═══ */
+function addSectionDialog() {
+  const name = h('input', { type: 'text', placeholder: 'For example: School and college' });
+  modal({ title: 'Add a section', body: [h('p', { class: 'muted' }, 'It gets the same three headings as every other section, and goes just before Review and sign-off.'), field('Section name', name)],
+    actions: [{ label: 'Cancel' }, { label: 'Add section', kind: 'primary', run: () => {
+      const t = name.value.trim(); if (!t) { alertDialog('Please type a name for the section.'); return false; }
+      const sec = { id: uid('sec'), key: 'custom', title: t, order: 0, isDefault: false, visible: true, deleted: false, panels: makePanels() };
+      const rev = S.sections.findIndex(s => s.key === 'review' && !s.deleted);
+      S.sections.splice(rev >= 0 ? rev : S.sections.length, 0, sec);
+      Log.event({ sectionId: sec.id }, 'section_added', `Section "${t}" added`);
+      renderAll(); goToSection(sec.id);
+    } }] });
+}
+function moveSection(id, dir) {
+  const live = liveSections(); const i = live.findIndex(s => s.id === id); const j = i + dir;
+  if (j < 0 || j >= live.length) return;
+  const a = S.sections.indexOf(live[i]), b = S.sections.indexOf(live[j]);
+  [S.sections[a], S.sections[b]] = [S.sections[b], S.sections[a]];
+  Log.event({ sectionId: id }, 'section_moved', `Section "${live[i].title}" moved ${dir < 0 ? 'up' : 'down'}`);
+  renderAll(); const t = document.getElementById(id); if (t) t.scrollIntoView({ block: 'start' });
+}
+function moveSectionTo(fromId, toId) {
+  const from = S.sections.findIndex(s => s.id === fromId), to = S.sections.findIndex(s => s.id === toId);
+  if (from < 0 || to < 0) return;
+  const [sec] = S.sections.splice(from, 1); S.sections.splice(S.sections.findIndex(s => s.id === toId) + (from < to ? 1 : 0), 0, sec);
+  Log.event({ sectionId: fromId }, 'section_moved', `Section "${sec.title}" moved by dragging`);
+  renderAll();
+}
+function goToSection(id) { const t = document.getElementById(id); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+function setSectionVisible(sec, visible) {
+  sec.visible = visible;
+  Log.event({ sectionId: sec.id }, visible ? 'section_shown' : 'section_hidden', `Section "${sec.title}" ${visible ? 'shown again' : 'hidden (content kept)'}`);
+  renderAll();
+}
+async function deleteSection(sec) {
+  if (!ui.user.manager) return alertDialog('Only a manager can delete a section.');
+  if (!await confirmDialog(`Delete the section "${sec.title}"? Its content is kept in the version log and a manager can restore it.`, 'Delete section', true)) return;
+  sec.deleted = true; sec.deletedBy = ui.user.name; sec.deletedAt = nowISO();
+  Log.event({ sectionId: sec.id }, 'section_deleted', `Section "${sec.title}" deleted`);
+  renderAll();
+}
+function renderSection(sec) {
+  const el = h('section', { class: 'section', id: sec.id, 'data-sec': sec.id, 'aria-labelledby': sec.id + '-t' });
+  if (!sec.visible) {
+    el.append(h('div', { class: 'sec-hidden' }, h('strong', { id: sec.id + '-t' }, `${sec.title} (hidden)`), h('span', null, 'This section is switched off. Its content is kept.'),
+      h('button', { class: 'btn btn-primary btn-sm', type: 'button', onclick: () => setSectionVisible(sec, true) }, 'Show section')));
+    return el;
+  }
+  const head = h('div', { class: 'sec-head' }, h('span', { class: 'sec-num', 'aria-hidden': 'true' }, String(secNo(sec))));
+  if (ui.edit) {
+    head.append(h('input', { class: 'sec-title-input', id: sec.id + '-t', value: sec.title, 'aria-label': 'Section name',
+      onchange: e => { const old = sec.title; const t = e.target.value.trim() || old; sec.title = t; e.target.value = t; if (t !== old) { Log.event({ sectionId: sec.id }, 'section_renamed', `Section renamed from "${old}" to "${t}"`); renderMenu(); } } }));
+    head.append(h('div', { class: 'sec-tools edit-only' },
+      h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => moveSection(sec.id, -1) }, '↑ Up'),
+      h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => moveSection(sec.id, 1) }, '↓ Down'),
+      h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => setSectionVisible(sec, false) }, 'Hide section'),
+      ui.user.manager ? h('button', { class: 'btn btn-ghost btn-sm', type: 'button', style: 'color:var(--red)', onclick: () => deleteSection(sec) }, 'Delete section') : null));
+  } else head.append(h('h2', { id: sec.id + '-t' }, sec.title));
+  el.append(head);
+  sec.panels.forEach(p => el.append(renderPanel(sec, p)));
+  return el;
+}
+function renderPanel(sec, panel) {
+  const key = sec.id + ':' + panel.key; const collapsed = !!ui.collapsed[key] && !ui.printing;
+  const el = h('div', { class: 'panel' + (collapsed ? ' collapsed' : ''), 'data-panel': key });
+  const btn = h('button', { class: 'panel-head', type: 'button', 'aria-expanded': String(!collapsed), 'aria-controls': 'pb-' + key,
+    onclick: () => { ui.collapsed[key] = !ui.collapsed[key]; el.classList.toggle('collapsed', ui.collapsed[key]); btn.setAttribute('aria-expanded', String(!ui.collapsed[key])); } },
+  h('span', { class: 'chev', 'aria-hidden': 'true' }, '▾'), HEADINGS[panel.key]);
+  el.append(h('h3', { style: 'font-size:inherit' }, btn));
+  const body = h('div', { class: 'panel-body', id: 'pb-' + key });
+  let shown = 0;
+  panel.blocks.forEach((b, i) => {
+    if (b.deleted) return;
+    shown++;
+    if (ui.edit) body.append(addSlot(sec, panel, i));
+    body.append(renderBlock({ sec, panel, block: b, index: i }));
+  });
+  if (ui.edit) body.append(addSlot(sec, panel, panel.blocks.length));
+  else if (!shown) body.append(h('p', { class: 'panel-empty' }, 'Nothing added here yet.'));
+  const dels = panel.blocks.filter(b => b.deleted);
+  if (ui.edit && ui.user.manager && dels.length) {
+    body.append(h('details', { class: 'deleted-tray' }, h('summary', null, `${dels.length} deleted block${dels.length > 1 ? 's' : ''} (manager only)`),
+      h('ul', null, dels.map(b => h('li', null, h('span', null, `${blockLabel(b)}, deleted by ${b.deletedBy || 'unknown'} on ${fmtDT(b.deletedAt)}`),
+        h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => restoreBlock(b.id) }, 'Restore'))))));
+  }
+  el.append(body);
+  return el;
+}
+const addSlot = (sec, panel, index) => h('div', { class: 'add-slot edit-only' }, h('button', { type: 'button', 'aria-label': `Add content to "${HEADINGS[panel.key]}" here`, onclick: () => openAddMenu(sec, panel, index) }, '+ Add'));
+
+/* re-render helpers (keep scroll position by replacing only what changed) */
+function rerenderBlock(id) { const loc = locate(id), old = document.querySelector(`[data-blk="${id}"]`); if (loc && old) { old.replaceWith(renderBlock(loc)); autosizeAll(); } }
+function rerenderPanel(secId, key) { const sec = getSec(secId), old = document.querySelector(`[data-panel="${secId}:${key}"]`); if (sec && old) { old.replaceWith(renderPanel(sec, panelOf(sec, key))); autosizeAll(); } }
+function goTo(blockId) {
+  const loc = locate(blockId); if (!loc) return;
+  ui.collapsed[loc.sec.id + ':' + loc.panel.key] = false; rerenderPanel(loc.sec.id, loc.panel.key);
+  const el = document.querySelector(`[data-blk="${blockId}"]`);
+  if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1900); }
+}
+
+/* ═══ ADDING, MOVING, DELETING BLOCKS ═══ */
+function insertBlock(sec, panel, index, block, action, summary) {
+  panel.blocks.splice(index, 0, block);
+  Log.event({ sectionId: sec.id, panelKey: panel.key, blockId: block.id }, action, summary, { after: Log.snapBlock(block.id) });
+  rerenderPanel(sec.id, panel.key);
+  const el = document.querySelector(`[data-blk="${block.id}"]`); const f = el && el.querySelector('[contenteditable],input:not([type=checkbox]),textarea');
+  if (el) el.scrollIntoView({ block: 'nearest' }); if (f && block.type === 'text') f.focus();
+}
+function openAddMenu(sec, panel, index) {
+  const by = ui.user.name;
+  const t = (ico, label, fn) => h('button', { class: 'pick', type: 'button', onclick: () => { m.close(); fn(); } }, h('span', { class: 'ico', 'aria-hidden': 'true' }, ico), label);
+  const m = modal({
+    title: 'Add to "' + HEADINGS[panel.key] + '"',
+    body: [h('div', { class: 'type-grid' },
+      t('Aa', 'Text', () => { const b = baseBlock('text', by); b.html = ''; insertBlock(sec, panel, index, b, 'block_added', 'Text block added'); }),
+      t('•', 'Bullet points', () => { const b = baseBlock('text', by); b.html = '<ul><li><br></li></ul>'; insertBlock(sec, panel, index, b, 'block_added', 'Bullet list added'); }),
+      t('▦', 'Table', () => openTablePicker(sec, panel, index)),
+      t('🖼', 'Photo', () => addPhotoFlow(sec, panel, index)),
+      t('▶', 'Video', () => addVideoFlow(sec, panel, index)),
+      t('📎', 'File', () => addFileFlow(sec, panel, index)))],
+    actions: [{ label: 'Cancel' }]
+  });
+}
+function openTablePicker(sec, panel, index) {
+  const by = ui.user.name; const filter = h('input', { type: 'search', placeholder: 'Type to find a ready-made table' });
+  const list = h('div', { class: 'pick-list', style: 'max-height:50vh;overflow:auto;margin-top:.5rem' });
+  const secTitle = key => (SECTION_DEFS.find(d => d[0] === key) || [0, key])[1];
+  const draw = () => {
+    const q = filter.value.toLowerCase();
+    list.replaceChildren(h('button', { class: 'pick', type: 'button', onclick: () => { m.close(); const b = makeBlankTable(by); insertBlock(sec, panel, index, b, 'block_added', 'Blank table added'); } }, h('strong', null, 'Blank table'), h('small', null, '3 columns and 3 rows to start from')),
+      ...TPL.filter(t => !q || (t.title + ' ' + secTitle(t.sec)).toLowerCase().includes(q)).map(t =>
+        h('button', { class: 'pick', type: 'button', onclick: () => {
+          m.close();
+          if (t.bound) { const ex = firstByTemplate('contacts'); if (ex) return alertDialog('The Contacts directory is already in the plan. Contacts are stored once, so there is only one directory.'); }
+          const b = makeTableBlock(t, by); insertBlock(sec, panel, index, b, 'block_added', `${t.title} table added`);
+        } }, h('strong', null, t.title), h('small', null, `${secTitle(t.sec)}, ${t.cols.length} columns`))));
+  };
+  filter.addEventListener('input', draw); draw();
+  const m = modal({ title: 'Add a table', body: [filter, list], actions: [{ label: 'Cancel' }], wide: true });
+}
+function blockToolsFor(loc) {
+  const { block, panel, index } = loc;
+  const arr = panel.blocks; const live = arr.filter(b => !b.deleted); const pos = live.indexOf(block);
+  return h('div', { class: 'block-bar edit-only' }, h('span', { class: 'lbl' }, BLOCK_LABELS[block.type]),
+    h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Move block up', disabled: pos === 0, onclick: () => moveBlock(loc, -1) }, '↑'),
+    h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Move block down', disabled: pos === live.length - 1, onclick: () => moveBlock(loc, 1) }, '↓'),
+    h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => moveBlockDialog(loc) }, 'Move to...'),
+    h('button', { class: 'btn btn-ghost btn-sm', type: 'button', style: 'color:var(--red)', onclick: () => deleteBlock(loc) }, 'Delete'));
+}
+function moveBlock(loc, dir) {
+  const arr = loc.panel.blocks; let j = loc.index + dir;
+  while (j >= 0 && j < arr.length && arr[j].deleted) j += dir;
+  if (j < 0 || j >= arr.length) return;
+  [arr[loc.index], arr[j]] = [arr[j], arr[loc.index]];
+  Log.event(ctxOf(loc), 'block_moved', `${blockLabel(loc.block)} moved ${dir < 0 ? 'up' : 'down'}`);
+  touchBlock(loc.block); rerenderPanel(loc.sec.id, loc.panel.key);
+  const el = document.querySelector(`[data-blk="${loc.block.id}"]`); if (el) el.scrollIntoView({ block: 'nearest' });
+}
+function moveBlockDialog(loc) {
+  const secSel = h('select', null, liveSections().map(s => h('option', { value: s.id }, s.title + (s.visible ? '' : ' (hidden)'))));
+  const panSel = h('select', null, PANEL_KEYS.map(k => h('option', { value: k }, HEADINGS[k])));
+  secSel.value = loc.sec.id; panSel.value = loc.panel.key;
+  modal({ title: `Move ${blockLabel(loc.block)}`, body: [field('Section', secSel), field('Heading', panSel)],
+    actions: [{ label: 'Cancel' }, { label: 'Move', kind: 'primary', run: () => {
+      const tsec = getSec(secSel.value), tpan = panelOf(tsec, panSel.value);
+      if (tpan === loc.panel) return;
+      loc.panel.blocks.splice(loc.index, 1); tpan.blocks.push(loc.block);
+      Log.event({ sectionId: tsec.id, panelKey: tpan.key, blockId: loc.block.id }, 'block_moved', `${blockLabel(loc.block)} moved from ${loc.sec.title}, ${HEADINGS[loc.panel.key]} to ${tsec.title}, ${HEADINGS[tpan.key]}`);
+      touchBlock(loc.block);
+      rerenderPanel(loc.sec.id, loc.panel.key); rerenderPanel(tsec.id, tpan.key); goTo(loc.block.id);
+    } }] });
+}
+async function deleteBlock(loc) {
+  if (!await confirmDialog(`Delete this ${blockLabel(loc.block)}? It is hidden from the plan and recorded in the version log. A manager can restore it.`, 'Delete', true)) return;
+  const before = Log.snapBlock(loc.block.id);
+  loc.block.deleted = true; loc.block.deletedBy = ui.user.name; loc.block.deletedAt = nowISO();
+  Log.event(ctxOf(loc), 'block_deleted', `${blockLabel(loc.block)} deleted`, { before });
+  rerenderPanel(loc.sec.id, loc.panel.key);
+}
+function restoreBlock(id) {
+  const loc = locate(id); if (!loc) return;
+  if (!ui.user.manager) return alertDialog('Only a manager can restore a deleted block.');
+  loc.block.deleted = false; delete loc.block.deletedBy; delete loc.block.deletedAt;
+  touchBlock(loc.block);
+  Log.event(ctxOf(loc), 'block_restored', `${blockLabel(loc.block)} restored`, { after: Log.snapBlock(id) });
+  rerenderPanel(loc.sec.id, loc.panel.key);
+}
+function autosize(ta) { if (ta.scrollHeight) { ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight + 2) + 'px'; } }
+function autosizeAll() { if (!CSS.supports('field-sizing', 'content')) requestAnimationFrame(() => $$('textarea.auto').forEach(autosize)); }
+
+/* ═══ BLOCKS ═══ */
+function renderBlock(loc) {
+  const { block } = loc;
+  const el = h('article', { class: 'block block-' + block.type, 'data-blk': block.id });
+  if (ui.edit) el.append(blockToolsFor(loc));
+  const body = h('div', { class: 'block-body' });
+  ({ text: renderText, table: renderTable, image: renderImage, video: renderVideo, file: renderFile })[block.type](loc, body);
+  el.append(body, h('div', { class: 'block-meta' }, metaText(block)));
+  el.addEventListener('focusout', e => { if (!el.contains(e.relatedTarget)) Log.flush(block.id); });
+  return el;
+}
+
+/* ── text ── */
+function renderText(loc, body) {
+  const { block } = loc;
+  if (!ui.edit) {
+    const html = sanitize(block.html);
+    body.append(stripHtml(html) || /<li/.test(html) ? h('div', { class: 'rich', html }) : h('p', { class: 'muted' }, 'No text yet.'));
+    return;
+  }
+  const ed = h('div', { class: 'rich rte', contenteditable: 'true', role: 'textbox', 'aria-multiline': 'true', 'aria-label': 'Text', html: sanitize(block.html) });
+  const cmd = (label, aria, fn) => h('button', { class: 'icon-btn', type: 'button', 'aria-label': aria, title: aria,
+    onmousedown: e => e.preventDefault(), onclick: () => { ed.focus(); fn(); ed.dispatchEvent(new Event('input')); } }, label);
+  body.append(h('div', { class: 'rte-tools' },
+    cmd(h('b', null, 'B'), 'Bold', () => document.execCommand('bold')),
+    cmd('• List', 'Bullet list', () => document.execCommand('insertUnorderedList')),
+    cmd('1. List', 'Numbered list', () => document.execCommand('insertOrderedList')),
+    cmd('Sub-heading', 'Small sub-heading', () => document.execCommand('formatBlock', false, String(document.queryCommandValue('formatBlock')).toLowerCase() === 'h4' ? 'p' : 'h4'))), ed);
+  ed.addEventListener('input', () => { Log.session(ctxOf(loc), 'text_edited', 'Text edited'); block.html = sanitize(ed.innerHTML); touchBlock(block); scheduleSave(); });
+  ed.addEventListener('paste', e => { e.preventDefault(); document.execCommand('insertText', false, (e.clipboardData || window.clipboardData).getData('text/plain')); });
+}
+
+/* ── photos ── */
+async function importImages(files, max) {
+  const out = []; const b = busy('Resizing and saving photos...');
+  try {
+    for (const f of files.slice(0, max)) {
+      const blob = await resizeImage(f, 2000);
+      const m = await Media.add({ kind: 'image', blob, fileName: f.name || 'photo.jpg', mimeType: 'image/jpeg' });
+      out.push({ mediaId: m.id, caption: '', alt: '' });
+    }
+  } catch (e) { b.done(); alertDialog(e.message); return out; }
+  b.done(); return out;
+}
+function photoSourceDialog(title, then) {
+  const m = modal({ title, body: [h('p', { class: 'muted' }, 'You can show 1 to 6 photos together. Pictures are resized to 2000 px on the long side before they are saved.'),
+    h('div', { class: 'pick-list' },
+      h('button', { class: 'btn btn-primary', type: 'button', onclick: async () => { m.close(); then(await pickFiles({ accept: 'image/*', multiple: true })); } }, 'Upload from this device'),
+      h('button', { class: 'btn btn-ghost', type: 'button', onclick: async () => { m.close(); then(await pickFiles({ accept: 'image/*', capture: true })); } }, 'Take a photo with the camera'))],
+  actions: [{ label: 'Cancel' }] });
+}
+function addPhotoFlow(sec, panel, index) {
+  photoSourceDialog('Add photos', async files => {
+    if (!files.length) return;
+    if (files.length > 6) alertDialog('A photo block shows up to 6 photos, so only the first 6 were added. Add another photo block for the rest.');
+    const items = await importImages(files, 6); if (!items.length) return;
+    const b = baseBlock('image', ui.user.name); b.items = items;
+    insertBlock(sec, panel, index, b, 'photo_uploaded', `${items.length} photo${items.length > 1 ? 's' : ''} uploaded`);
+  });
+}
+function renderImage(loc, body) {
+  const { block } = loc; const items = block.items; const ctx = ctxOf(loc);
+  if (!items.length) body.append(h('p', { class: 'muted' }, 'No photos in this block.'));
+  const grid = h('div', { class: 'photo-grid n' + Math.min(Math.max(items.length, 1), 6) });
+  items.forEach((it, i) => {
+    const img = h('img', { alt: it.alt || it.caption || 'Photo' });
+    Media.urlFor(it.mediaId).then(u => { if (u) img.src = u; });
+    const fig = h('figure', { class: 'ph' }, h('button', { class: 'ph-btn', type: 'button', 'aria-label': 'Enlarge photo' + (it.caption ? ': ' + it.caption : ''), onclick: () => openLightbox(items, i) }, img));
+    if (ui.edit) {
+      fig.append(h('label', null, 'Caption'),
+        h('input', { type: 'text', value: it.caption || '', placeholder: 'Caption', oninput: e => { Log.session(ctx, 'caption_edited', 'Photo caption or alt text edited'); it.caption = e.target.value; touchBlock(block); } }),
+        h('label', null, 'Alt text (for screen readers)'),
+        h('input', { type: 'text', value: it.alt || '', placeholder: 'Describe the picture', oninput: e => { Log.session(ctx, 'caption_edited', 'Photo caption or alt text edited'); it.alt = e.target.value; touchBlock(block); } }),
+        h('div', { class: 'cell-tools' }, consentChip(it.mediaId, () => rerenderBlock(block.id), loc),
+          h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => rowOp(loc, 'media_removed', 'Photo removed', () => { block.items.splice(i, 1); }) }, 'Remove')));
+    } else {
+      if (it.caption) fig.append(h('figcaption', null, it.caption));
+      fig.append(consentChip(it.mediaId, null, loc));
+    }
+    grid.append(fig);
+  });
+  body.append(grid);
+  if (ui.edit && items.length < 6) {
+    body.append(h('div', { class: 'tbl-tools' }, h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => photoSourceDialog('Add more photos', async files => {
+      if (!files.length) return;
+      const room = 6 - block.items.length; if (files.length > room) alertDialog(`A photo block shows up to 6 photos, so only the first ${room} were added.`);
+      const more = await importImages(files, room); if (!more.length) return;
+      rowOp(loc, 'photo_uploaded', `${more.length} photo${more.length > 1 ? 's' : ''} uploaded`, () => block.items.push(...more));
+    }) }, '+ Add photos')));
+  }
+}
+
+/* ── video ── */
+async function importVideo(file) {
+  const lim = S.plan.settings.maxVideoMB;
+  if (!/^video\/(mp4|webm)$/.test(file.type) && !/\.(mp4|webm)$/i.test(file.name)) throw new Error('Please choose an MP4 or WebM video.');
+  if (file.size > lim * 1048576) throw new Error(`This video is ${fmtSize(file.size)} and the limit is ${lim} MB. You can change the limit in Settings.`);
+  const mime = file.type || (/\.webm$/i.test(file.name) ? 'video/webm' : 'video/mp4');
+  const b = busy('Saving the video and making its poster picture...');
+  try {
+    const poster = await videoPoster(file);
+    return await Media.add({ kind: 'video', blob: new Blob([file], { type: mime }), fileName: file.name, mimeType: mime, poster });
+  } finally { b.done(); }
+}
+async function addVideoFlow(sec, panel, index) {
+  const [f] = await pickFiles({ accept: 'video/mp4,video/webm,.mp4,.webm' }); if (!f) return;
+  try {
+    const m = await importVideo(f);
+    const b = baseBlock('video', ui.user.name); b.mediaId = m.id; b.caption = '';
+    insertBlock(sec, panel, index, b, 'video_uploaded', `Video uploaded: ${f.name}`);
+  } catch (e) { alertDialog(e.message); }
+}
+function renderVideo(loc, body) {
+  const { block } = loc; const ctx = ctxOf(loc); const m = mediaMeta(block.mediaId);
+  const v = h('video', { controls: true, preload: 'metadata', playsinline: true, 'aria-label': block.caption || 'Video' });
+  const pimg = h('img', { class: 'print-poster', alt: block.caption || 'Video poster' });
+  Media.urlFor(block.mediaId).then(u => { if (u) v.src = u; });
+  Media.urlFor(block.mediaId, true).then(u => { if (u) { v.poster = u; pimg.src = u; } });
+  body.append(h('div', { class: 'video-wrap' }, v, pimg));
+  if (ui.edit) {
+    body.append(h('input', { class: 'caption-input', type: 'text', value: block.caption || '', placeholder: 'Caption', 'aria-label': 'Video caption', oninput: e => { Log.session(ctx, 'caption_edited', 'Video caption edited'); block.caption = e.target.value; touchBlock(block); } }),
+      h('div', { class: 'cell-tools' }, consentChip(block.mediaId, () => rerenderBlock(block.id), loc),
+        h('span', { class: 'muted' }, m ? `${m.fileName}, ${fmtSize(m.sizeBytes)}` : ''),
+        h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: async () => {
+          const [f] = await pickFiles({ accept: 'video/mp4,video/webm,.mp4,.webm' }); if (!f) return;
+          try { const nm = await importVideo(f); rowOp(loc, 'video_uploaded', `Video replaced: ${f.name}`, () => { block.mediaId = nm.id; }); } catch (e) { alertDialog(e.message); }
+        } }, 'Replace video')));
+  } else {
+    if (block.caption) body.append(h('p', { style: 'margin-top:.4rem' }, block.caption));
+    body.append(h('div', { class: 'cell-tools' }, consentChip(block.mediaId, null, loc)));
+  }
+}
+
+/* ── files (PDF or Word) ── */
+async function addFileFlow(sec, panel, index) {
+  const [f] = await pickFiles({ accept: '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document' }); if (!f) return;
+  if (!/\.(pdf|docx?)$/i.test(f.name)) return alertDialog('Please choose a PDF or Word file.');
+  try {
+    const m = await Media.add({ kind: 'file', blob: new Blob([f], { type: f.type || (/\.pdf$/i.test(f.name) ? 'application/pdf' : 'application/octet-stream') }), fileName: f.name, mimeType: f.type });
+    const b = baseBlock('file', ui.user.name); b.mediaId = m.id; b.name = f.name.replace(/\.[^.]+$/, ''); b.date = todayStr();
+    insertBlock(sec, panel, index, b, 'file_uploaded', `File attached: ${f.name}`);
+  } catch (e) { alertDialog(e.message); }
+}
+function renderFile(loc, body) {
+  const { block } = loc; const ctx = ctxOf(loc); const m = mediaMeta(block.mediaId);
+  const ext = m ? (m.fileName.split('.').pop() || 'FILE').toUpperCase().slice(0, 4) : 'FILE';
+  const link = h('a', { href: '#', target: '_blank', rel: 'noopener' }, block.name || 'File');
+  Media.urlFor(block.mediaId).then(u => { if (u) link.href = u; });
+  if (!ui.edit) { body.append(h('div', { class: 'file-row' }, h('span', { class: 'file-icon' }, ext), h('div', null, h('strong', null, link), h('div', { class: 'muted' }, `${fmtDate(block.date)}${m ? ', ' + fmtSize(m.sizeBytes) : ''}. Opens in a new tab.`)))); return; }
+  body.append(h('div', { class: 'file-row' }, h('span', { class: 'file-icon' }, ext),
+    h('div', { style: 'flex:1;min-width:200px' },
+      h('input', { class: 'caption-input', style: 'margin:0 0 .4rem', type: 'text', value: block.name || '', 'aria-label': 'File name', oninput: e => { Log.session(ctx, 'caption_edited', 'File name edited'); block.name = e.target.value; touchBlock(block); } }),
+      h('input', { class: 'caption-input', style: 'margin:0 0 .4rem', type: 'date', value: block.date || '', 'aria-label': 'File date', oninput: e => { Log.session(ctx, 'caption_edited', 'File date edited'); block.date = e.target.value; touchBlock(block); } }),
+      h('div', { class: 'muted' }, m ? `${m.fileName}, ${fmtSize(m.sizeBytes)}. ` : '', link)),
+    h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: async () => {
+      const [f] = await pickFiles({ accept: '.pdf,.doc,.docx' }); if (!f) return;
+      if (!/\.(pdf|docx?)$/i.test(f.name)) return alertDialog('Please choose a PDF or Word file.');
+      const nm = await Media.add({ kind: 'file', blob: new Blob([f], { type: f.type }), fileName: f.name, mimeType: f.type });
+      rowOp(loc, 'file_uploaded', `File replaced: ${f.name}`, () => { block.mediaId = nm.id; });
+    } }, 'Replace file')));
+}
+
+/* ═══ TABLES ═══ */
+const cellGet = (block, row, col) => { const v = block.bound ? row[col.id] : row.cells[col.id]; return v === undefined || v === null ? blankFor(col) : v; };
+const cellSet = (block, row, col, v) => { if (block.bound) row[col.id] = v; else row.cells[col.id] = v; };
+const contactName = ct => ct.name || '(unnamed contact)';
+const contactSum = ct => [ct.role, ct.phone].filter(Boolean).join(', ');
+let dragRow = null;
+
+/* a change that happens in one go: snapshot, change, log with before and after, redraw */
+function rowOp(loc, action, summary, fn) {
+  Log.flushAll();
+  const before = Log.snapBlock(loc.block.id);
+  fn();
+  touchBlock(loc.block);
+  Log.event(ctxOf(loc), action, summary, { before, after: Log.snapBlock(loc.block.id) });
+  rerenderBlock(loc.block.id);
+}
+const tname = b => b.title || 'Table';
+
+function riskOf(block, row) {
+  const lc = colByLabel(block, /^likelihood/i), sc = colByLabel(block, /^severity/i);
+  const l = +(lc && row.cells[lc.id]) || 0, s = +(sc && row.cells[sc.id]) || 0;
+  if (!l || !s) return null;
+  const score = l * s;
+  return { score, level: score >= 15 ? 'High' : score >= 5 ? 'Medium' : 'Low' };
+}
+function updateRisk(block, row, tr) {
+  const rc = block.columns.find(cl => cl.calc === 'risk'); if (!rc) return;
+  const r = riskOf(block, row); row.cells[rc.id] = r ? r.level : '';
+  const chip = tr && tr.querySelector('.risk'); if (chip) { chip.className = 'risk ' + (r ? r.level.toLowerCase() : 'none'); chip.textContent = r ? `${r.score}: ${r.level}` : 'Set likelihood and severity'; }
+}
+
+function renderTable(loc, body) {
+  const { block } = loc; const bound = !!block.bound; const ctx = ctxOf(loc);
+  if (ui.edit) body.append(h('input', { class: 'block-title-input', value: block.title || '', placeholder: 'Table title', 'aria-label': 'Table title', oninput: e => { Log.session(ctx, 'title_edited', 'Table title edited'); block.title = e.target.value; touchBlock(block); } }));
+  else body.append(h('h4', { class: 'block-title' }, block.title || 'Table'));
+  const trh = h('tr');
+  if (ui.edit) trh.append(h('th', { class: 'ctl' }));
+  block.columns.forEach(col => {
+    const inner = h('div', { class: 'th-in' }, h('span', { class: 'th-label' }, col.label));
+    if (ui.edit && !bound) inner.append(h('button', { class: 'icon-btn', type: 'button', 'aria-label': `Settings for column ${col.label}`, title: 'Column settings', onclick: () => openColumnDialog(loc, col) }, '⋮'));
+    trh.append(h('th', { scope: 'col' }, inner));
+  });
+  const tbody = h('tbody');
+  visibleRows(block).forEach(row => tbody.append(renderRow(loc, row)));
+  body.append(h('div', { class: 'tbl-wrap' }, h('table', { class: 'dt' }, h('thead', null, trh), tbody)));
+  if (!visibleRows(block).length) body.append(h('p', { class: 'muted' }, bound ? 'No contacts yet.' : 'No rows.'));
+  if (ui.edit) {
+    body.append(h('div', { class: 'tbl-tools' },
+      h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => { rowOp(loc, 'row_added', `${tname(block)}: row added`, () => { if (bound) S.contacts.push(makeContact()); else block.rows.push(makeRow(block.columns)); }); const last = $$(`[data-blk="${block.id}"] tbody tr`).pop(); const f = last && last.querySelector('input:not([type=checkbox]),textarea,select'); if (f) f.focus(); } }, bound ? '+ Contact' : '+ Row'),
+      bound ? null : h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => openColumnDialog(loc, null) }, '+ Column')));
+  }
+  if (block.templateKey === 'signoff' && ui.user.manager) body.append(h('div', { class: 'tbl-tools' }, h('button', { class: 'btn btn-primary btn-sm', type: 'button', onclick: signOffDialog }, 'Manager sign-off of this review')));
+}
+
+function renderRow(loc, row) {
+  const { block } = loc; const tr = h('tr', { 'data-row': row.id });
+  if (ui.edit) {
+    const handle = h('button', { class: 'icon-btn', type: 'button', style: 'cursor:grab', 'aria-label': 'Drag to reorder this row', title: 'Drag to reorder', onpointerdown: () => { tr.draggable = true; }, onpointerup: () => { tr.draggable = false; }, onpointercancel: () => { tr.draggable = false; } }, '⠿');
+    tr.append(h('td', { class: 'ctl' }, h('div', { class: 'cell-tools', style: 'flex-wrap:nowrap' }, handle,
+      h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Move row up', onclick: () => moveRowBy(loc, row.id, -1) }, '↑'),
+      h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Move row down', onclick: () => moveRowBy(loc, row.id, 1) }, '↓'),
+      h('button', { class: 'icon-btn danger', type: 'button', 'aria-label': 'Delete this row', onclick: () => deleteRow(loc, row) }, '✕'))));
+    tr.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', row.id); e.dataTransfer.effectAllowed = 'move'; tr.classList.add('dragging'); dragRow = { blockId: block.id, rowId: row.id }; });
+    tr.addEventListener('dragend', () => { tr.draggable = false; tr.classList.remove('dragging'); dragRow = null; });
+    tr.addEventListener('dragover', e => { if (dragRow && dragRow.blockId === block.id) { e.preventDefault(); tr.classList.add('dragover'); } });
+    tr.addEventListener('dragleave', () => tr.classList.remove('dragover'));
+    tr.addEventListener('drop', e => { e.preventDefault(); tr.classList.remove('dragover'); if (dragRow && dragRow.blockId === block.id && dragRow.rowId !== row.id) moveRowTo(loc, dragRow.rowId, row.id); });
+  }
+  block.columns.forEach(col => tr.append(renderCell(loc, row, col, tr)));
+  return tr;
+}
+function rowIsEmpty(block, row) { return block.columns.every(cl => { const v = cellGet(block, row, cl); return !v || v === 0; }); }
+async function deleteRow(loc, row) {
+  const { block } = loc;
+  if (!rowIsEmpty(block, row) && !await confirmDialog('Delete this row? A manager can bring it back from the version log.', 'Delete row', true)) return;
+  rowOp(loc, 'row_deleted', `${tname(block)}: row deleted`, () => { if (block.bound) row.deleted = true; else block.rows.splice(block.rows.indexOf(row), 1); });
+}
+function moveRowBy(loc, rowId, dir) {
+  const vis = visibleRows(loc.block); const i = vis.findIndex(r => r.id === rowId), j = i + dir;
+  if (j < 0 || j >= vis.length) return;
+  rowOp(loc, 'row_moved', `${tname(loc.block)}: row moved ${dir < 0 ? 'up' : 'down'}`, () => { const arr = rowsArray(loc.block); const a = arr.indexOf(vis[i]), b = arr.indexOf(vis[j]); [arr[a], arr[b]] = [arr[b], arr[a]]; });
+}
+function moveRowTo(loc, fromId, toId) {
+  rowOp(loc, 'row_moved', `${tname(loc.block)}: row moved by dragging`, () => {
+    const arr = rowsArray(loc.block); const fi = arr.findIndex(r => r.id === fromId), ti = arr.findIndex(r => r.id === toId);
+    const [r] = arr.splice(fi, 1); const t2 = arr.findIndex(x => x.id === toId); arr.splice(fi < ti ? t2 + 1 : t2, 0, r);
+  });
+}
+
+function renderCell(loc, row, col, tr) {
+  const { block } = loc; const ctx = ctxOf(loc);
+  let val = cellGet(block, row, col);
+  const td = h('td', { class: 't-' + col.type });
+  if (col.calc === 'risk') { const r = riskOf(block, row); td.append(h('span', { class: 'risk ' + (r ? r.level.toLowerCase() : 'none') }, r ? `${r.score}: ${r.level}` : 'Set likelihood and severity')); return td; }
+  const commit = v => {
+    Log.session(ctx, 'cell_edited', `${tname(block)}: ${col.label} edited`);
+    val = v; cellSet(block, row, col, v); touchBlock(block);
+    if (block.columns.some(cl => cl.calc === 'risk')) updateRisk(block, row, tr);
+  };
+  const aria = col.label;
+  switch (col.type) {
+    case 'longtext':
+      if (!ui.edit) { td.append(h('div', { class: 'pre' }, val)); break; }
+      td.append(h('textarea', { class: 'auto', rows: 1, 'aria-label': aria, value: val, oninput: e => { commit(e.target.value); if (!CSS.supports('field-sizing', 'content')) autosize(e.target); } }));
+      break;
+    case 'date':
+      if (!ui.edit) td.append(fmtDate(val));
+      else td.append(h('input', { type: 'date', 'aria-label': aria, value: val, oninput: e => commit(e.target.value) }));
+      break;
+    case 'dropdown': {
+      if (!ui.edit) { td.append(val); break; }
+      const opts = col.options || [];
+      td.append(h('select', { 'aria-label': aria, value: val, onchange: e => commit(e.target.value) },
+        h('option', { value: '' }, ''), opts.map(o => h('option', { value: o }, o)), val && !opts.includes(val) ? h('option', { value: val }, val) : null));
+      break;
+    }
+    case 'tick':
+      if (!ui.edit) td.append(val ? '✓ Yes' : '');
+      else td.append(h('input', { type: 'checkbox', 'aria-label': aria, checked: !!val, onchange: e => commit(e.target.checked) }));
+      break;
+    case 'number':
+      if (!ui.edit) td.append(String(val));
+      else td.append(h('input', { type: 'number', 'aria-label': aria, value: val, oninput: e => commit(e.target.value) }));
+      break;
+    case 'rating': {
+      const max = col.max || 5; let cur = +val || 0;
+      if (!ui.edit) { td.append(cur ? h('span', { class: 'stars-static', 'aria-label': `${cur} out of ${max}` }, '★'.repeat(cur), h('span', { class: 'off' }, '★'.repeat(max - cur))) : ''); break; }
+      const wrap = h('div', { class: 'stars', role: 'radiogroup', 'aria-label': aria });
+      const paint = () => $$('.star', wrap).forEach((b, i) => { b.classList.toggle('on', cur >= i + 1); b.setAttribute('aria-checked', String(cur === i + 1)); });
+      for (let n = 1; n <= max; n++) wrap.append(h('button', { class: 'star', type: 'button', role: 'radio', 'aria-label': `${n} out of ${max}`, onclick: () => { cur = cur === n ? 0 : n; commit(cur); paint(); } }, '★'));
+      paint(); td.append(wrap);
+      break;
+    }
+    case 'contact': {
+      const ct = contactById(val);
+      if (!ui.edit) {
+        if (ct && !ct.deleted) { td.append(h('strong', null, contactName(ct)), h('div', { class: 'muted' }, contactSum(ct) && (ct.phone ? [ct.role ? ct.role + ', ' : '', h('a', { href: 'tel:' + ct.phone.replace(/\s+/g, '') }, ct.phone)] : ct.role))); }
+        else if (val) td.append(h('span', { class: 'muted' }, '(removed contact)'));
+        break;
+      }
+      const sum = h('div', { class: 'contact-sum' }, ct && !ct.deleted ? contactSum(ct) : '');
+      const sel = h('select', { 'aria-label': aria, onchange: e => {
+        if (e.target.value === '__new') { e.target.value = val || ''; addContactDialog(id => { commit(id); rerenderBlock(block.id); }); return; }
+        commit(e.target.value); const c2 = contactById(e.target.value); sum.textContent = c2 ? contactSum(c2) : '';
+      } }, h('option', { value: '' }, 'Choose a contact'), liveContacts().map(x => h('option', { value: x.id }, contactName(x))),
+      val && ct && ct.deleted ? h('option', { value: val }, '(removed contact)') : null, h('option', { value: '__new' }, '+ Add a new contact...'));
+      sel.value = val || '';
+      td.append(sel, sum);
+      break;
+    }
+    default: { // text (and signature cells)
+      const isImg = typeof val === 'string' && val.startsWith('data:image/');
+      if (col.sig && isImg) { td.append(h('img', { class: 'sig-img', src: val, alt: 'Drawn signature' })); if (ui.edit) td.append(h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => { commit(''); rerenderBlock(block.id); } }, 'Clear signature')); break; }
+      if (!ui.edit) { td.append(val); break; }
+      td.append(h('input', { type: 'text', 'aria-label': aria, value: val, oninput: e => commit(e.target.value) }));
+      if (col.sig) td.append(h('div', { class: 'cell-tools' }, h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => drawSignature(data => { commit(data); rerenderBlock(block.id); }) }, 'Draw signature')));
+    }
+  }
+  return td;
+}
+function drawSignature(done) {
+  const cv = h('canvas', { class: 'sig-pad', width: 600, height: 240 }); const g = cv.getContext('2d');
+  g.lineWidth = 3; g.lineCap = 'round'; g.strokeStyle = '#0d3278'; let down = false, any = false;
+  const pt = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; };
+  cv.addEventListener('pointerdown', e => { down = true; any = true; cv.setPointerCapture(e.pointerId); g.beginPath(); g.moveTo(...pt(e)); });
+  cv.addEventListener('pointermove', e => { if (down) { g.lineTo(...pt(e)); g.stroke(); } });
+  cv.addEventListener('pointerup', () => { down = false; });
+  modal({ title: 'Draw a signature', body: [h('p', { class: 'muted' }, 'Sign with a finger, pen or mouse.'), cv],
+    actions: [{ label: 'Clear', run: () => { g.clearRect(0, 0, cv.width, cv.height); any = false; return false; } }, { label: 'Cancel' },
+      { label: 'Use signature', kind: 'primary', run: () => { if (!any) { alertDialog('Please draw a signature first.'); return false; } done(cv.toDataURL('image/png')); } }] });
+}
+function addContactDialog(cb) {
+  const name = h('input', { type: 'text' }), role = h('select', null, h('option', { value: '' }, ''), CONTACT_ROLES.map(r => h('option', { value: r }, r)));
+  const org = h('input', { type: 'text' }), phone = h('input', { type: 'tel' }), email = h('input', { type: 'email' });
+  modal({ title: 'Add a contact', body: [h('p', { class: 'muted' }, 'Contacts are stored once, in the Contacts directory. Any table that picks this contact will show changes made there.'),
+    field('Name', name), field('Role', role), field('Organisation', org), field('Phone', phone), field('Email', email)],
+  actions: [{ label: 'Cancel' }, { label: 'Add contact', kind: 'primary', run: () => {
+    if (!name.value.trim()) { alertDialog('Please type a name.'); return false; }
+    const ct = makeContact(); Object.assign(ct, { name: name.value.trim(), role: role.value, organisation: org.value.trim(), phone: phone.value.trim(), email: email.value.trim() });
+    S.contacts.push(ct);
+    const dir = firstByTemplate('contacts'); const loc = dir && locate(dir.id);
+    Log.event(loc ? ctxOf(loc) : {}, 'row_added', `Contacts directory: contact "${ct.name}" added`, loc ? { after: Log.snapBlock(dir.id) } : {});
+    if (loc) { touchBlock(dir); rerenderBlock(dir.id); }
+    cb(ct.id);
+  } }] });
+}
+
+/* ── column settings ── */
+function convertCell(v, type) {
+  switch (type) {
+    case 'tick': return v === true || /^(yes|true|y|1)$/i.test(String(v));
+    case 'rating': { const n = parseInt(v, 10); return n >= 0 && n <= 5 ? n : 0; }
+    case 'number': return isNaN(parseFloat(v)) ? '' : String(parseFloat(v));
+    case 'date': return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : '';
+    case 'contact': return contactById(v) ? v : '';
+    default: return v === true ? 'Yes' : (v === 0 || v == null ? '' : String(v));
+  }
+}
+function openColumnDialog(loc, col) {
+  const { block } = loc; const isNew = !col; const calc = col && col.calc;
+  const label = h('input', { type: 'text', value: col ? col.label : '', placeholder: 'Column name' });
+  const type = h('select', null, Object.entries(COLTYPES).map(([k, v]) => h('option', { value: k }, v))); type.value = col ? col.type : 'text';
+  if (calc) type.disabled = true;
+  const opts = h('textarea', null); opts.value = ((col && col.options) || []).join('\n');
+  const optsField = field('Choices (one per line)', opts);
+  const sync = () => { optsField.hidden = type.value !== 'dropdown'; }; type.addEventListener('change', sync); sync();
+  const act = (text, fn, danger) => h('button', { class: 'btn btn-ghost btn-sm', type: 'button', style: danger ? 'color:var(--red)' : '', onclick: () => { m.close(); fn(); } }, text);
+  const idx = isNew ? -1 : block.columns.indexOf(col);
+  const extra = isNew ? null : h('div', { class: 'tbl-tools' },
+    act('← Move left', () => idx > 0 && rowOp(loc, 'column_edited', `${tname(block)}: column "${col.label}" moved left`, () => { [block.columns[idx - 1], block.columns[idx]] = [block.columns[idx], block.columns[idx - 1]]; })),
+    act('Move right →', () => idx < block.columns.length - 1 && rowOp(loc, 'column_edited', `${tname(block)}: column "${col.label}" moved right`, () => { [block.columns[idx + 1], block.columns[idx]] = [block.columns[idx], block.columns[idx + 1]]; })),
+    act('Sort A to Z', () => sortRows(loc, col, 1)), act('Sort Z to A', () => sortRows(loc, col, -1)),
+    block.columns.length > 1 ? act('Delete column', async () => {
+      const has = visibleRows(block).some(r => { const v = cellGet(block, r, col); return v && v !== 0; });
+      if (has && !await confirmDialog(`Delete the column "${col.label}" and what is typed in it? A manager can bring it back from the version log.`, 'Delete column', true)) return;
+      rowOp(loc, 'column_deleted', `${tname(block)}: column "${col.label}" deleted`, () => { block.columns.splice(block.columns.indexOf(col), 1); block.rows.forEach(r => delete r.cells[col.id]); });
+    }, true) : null);
+  const m = modal({
+    title: isNew ? 'Add a column' : `Column: ${col.label}`,
+    body: [field('Column name', label), calc ? h('p', { class: 'muted' }, 'This column is worked out from likelihood and severity.') : field('Type', type), optsField,
+      isNew ? null : h('p', { class: 'muted' }, 'Changing the type clears entries that do not fit. They stay in the version log.'), extra],
+    actions: [{ label: 'Cancel' }, { label: isNew ? 'Add column' : 'Save column', kind: 'primary', run: () => {
+      const lb = label.value.trim(); if (!lb) { alertDialog('Please type a column name.'); return false; }
+      const choices = opts.value.split('\n').map(s => s.trim()).filter(Boolean);
+      if (isNew) {
+        const nc = { id: uid('c'), label: lb, type: type.value };
+        if (nc.type === 'dropdown') nc.options = choices.length ? choices : ['Option 1', 'Option 2'];
+        if (nc.type === 'rating') nc.max = 5;
+        rowOp(loc, 'column_added', `${tname(block)}: column "${lb}" added`, () => { block.columns.push(nc); block.rows.forEach(r => { r.cells[nc.id] = blankFor(nc); }); });
+      } else {
+        rowOp(loc, 'column_edited', `${tname(block)}: column "${col.label}" edited`, () => {
+          col.label = lb;
+          if (!calc && type.value !== col.type) { col.type = type.value; block.rows.forEach(r => { r.cells[col.id] = convertCell(r.cells[col.id], col.type); }); if (col.type === 'rating') col.max = 5; }
+          if (col.type === 'dropdown') col.options = choices.length ? choices : (col.options || ['Option 1']); else delete col.options;
+        });
+      }
+    } }]
+  });
+}
+function sortRows(loc, col, dir) {
+  const { block } = loc;
+  const key = r => { const v = cellGet(block, r, col); if (col.type === 'contact') { const c2 = contactById(v); return c2 ? c2.name.toLowerCase() : ''; } if (col.type === 'number' || col.type === 'rating') return v === '' ? null : +v; if (col.type === 'tick') return v ? 1 : 0; return String(v || '').toLowerCase() || null; };
+  rowOp(loc, 'rows_sorted', `${tname(block)}: sorted by ${col.label}${dir < 0 ? ' (Z to A)' : ''}`, () => {
+    rowsArray(block).sort((a, b) => { const x = key(a), y = key(b); if (x === null && y === null) return 0; if (x === null) return 1; if (y === null) return -1; return (typeof x === 'number' ? x - y : x.localeCompare(y, undefined, { numeric: true })) * dir; });
+  });
+}
+
+/* ═══ VERSION LOG PAGE ═══ */
+const actionLabel = a => ACTIONS[a] || a;
+const entryWhere = e => (e.sectionTitle ? e.sectionTitle + (e.panelHeading ? ', ' + e.panelHeading : '') : 'Whole plan');
+function logFiltered() {
+  const f = ui.logFilter;
+  return LOG.filter(e => (!f.section || (e.sectionTitle || 'Whole plan') === f.section) && (!f.by || e.by === f.by)
+    && (!f.from || fmtDT(e.at).slice(0, 10) >= f.from) && (!f.to || fmtDT(e.at).slice(0, 10) <= f.to)).reverse();
+}
+function renderLogSection() {
+  const el = h('section', { class: 'logsec', id: 'log', 'aria-labelledby': 'log-t' });
+  el.append(h('div', { class: 'sec-head' }, h('h2', { id: 'log-t' }, 'Version log'),
+    h('div', { class: 'sec-tools no-print' },
+      h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: exportLogCsv }, 'Export CSV'),
+      h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: printPlan }, 'Print'),
+      ui.user.manager ? h('button', { class: 'btn btn-primary btn-sm', type: 'button', onclick: signOffDialog }, 'Manager sign-off') : null)),
+  h('p', { class: 'log-note' }, 'Every change is written here automatically. This page has no way to edit or delete an entry. A manager can open an entry to see before and after, and restore it.'),
+  h('div', { class: 'log-filters no-print', id: 'logFilters' }), h('div', { id: 'logBody' }));
+  return el;
+}
+function refreshLogBody() {
+  const body = $('#logBody'); if (!body) return;
+  const fl = $('#logFilters'); const f = ui.logFilter;
+  const secs = [...new Set(LOG.map(e => e.sectionTitle || 'Whole plan'))], people = [...new Set(LOG.map(e => e.by))];
+  const sig = secs.join('|') + '#' + people.join('|');
+  if (fl.dataset.sig !== sig) {
+    fl.dataset.sig = sig;
+    const sel = (label, key, opts) => h('label', null, label, h('select', { onchange: e => { f[key] = e.target.value; refreshLogBody(); }, value: f[key] }, h('option', { value: '' }, 'All'), opts.map(o => h('option', { value: o }, o))));
+    fl.replaceChildren(sel('Section', 'section', secs), sel('Person', 'by', people),
+      h('label', null, 'From', h('input', { type: 'date', value: f.from, onchange: e => { f.from = e.target.value; refreshLogBody(); } })),
+      h('label', null, 'To', h('input', { type: 'date', value: f.to, onchange: e => { f.to = e.target.value; refreshLogBody(); } })));
+  }
+  const rows = logFiltered(); const lim = ui.logShowAll ? rows.length : 100;
+  const manager = ui.user.manager;
+  const tb = h('tbody');
+  rows.slice(0, lim).forEach(e => tb.append(h('tr', null,
+    h('td', null, e.version), h('td', null, fmtDT(e.at)), h('td', null, e.by), h('td', null, entryWhere(e)), h('td', null, actionLabel(e.action)),
+    h('td', null, e.summary), h('td', null, e.reason || ''), h('td', null, e.approvedBy || ''),
+    manager ? h('td', { class: 'no-print' }, h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => openLogEntry(e) }, 'Open')) : null)));
+  body.replaceChildren(...[
+    h('div', { class: 'tbl-wrap' }, h('table', { class: 'lg' }, h('thead', null, h('tr', null,
+      ['Version', 'Date and time', 'Changed by', 'Section and heading', 'Action', 'What changed', 'Reason', 'Approved by'].map(t => h('th', { scope: 'col' }, t)), manager ? h('th', { class: 'no-print' }, '') : null)), tb)),
+    rows.length > lim ? h('button', { class: 'btn btn-ghost btn-sm no-print', type: 'button', onclick: () => { ui.logShowAll = true; refreshLogBody(); } }, `Show all ${rows.length} entries`) : null,
+    !rows.length ? h('p', { class: 'muted' }, 'No entries match.') : null].filter(Boolean));
+}
+function csvCell(v) { v = String(v == null ? '' : v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+function exportLogCsv() {
+  const head = ['Version', 'Date and time', 'Changed by', 'Section', 'Heading', 'Action', 'What changed', 'Reason', 'Approved by'];
+  const lines = [head.map(csvCell).join(',')].concat(logFiltered().reverse().map(e => [e.version, fmtDT(e.at), e.by, e.sectionTitle || 'Whole plan', e.panelHeading, actionLabel(e.action), e.summary, e.reason, e.approvedBy || ''].map(csvCell).join(',')));
+  download(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv' }), `version-log-${todayStr()}.csv`);
+}
+function blockToText(b) {
+  if (!b) return '(nothing)';
+  if (b.consent) return `Consent recorded: ${b.consent.recorded ? 'yes' : 'no'}\nAgreed by: ${b.consent.agreedBy || ''}\nDate: ${b.consent.date || ''}`;
+  if (b.type === 'text') { const d = document.createElement('div'); d.innerHTML = sanitize(b.html).replace(/<li>/gi, '• ').replace(/<\/(p|div|li|h4)>/gi, '\n').replace(/<br\s*\/?>/gi, '\n'); return d.textContent.trim() || '(empty text)'; }
+  if (b.type === 'table') {
+    const cell = (r, cl) => { const v = b.bound ? r[cl.id] : r.cells[cl.id]; if (cl.type === 'contact') { const c2 = contactById(v); return c2 ? c2.name : ''; } if (cl.type === 'tick') return v ? 'Yes' : ''; if (cl.type === 'rating') return v ? v + '/5' : ''; if (typeof v === 'string' && v.startsWith('data:image')) return '(drawn signature)'; return v == null ? '' : String(v); };
+    return [b.title || 'Table', b.columns.map(c2 => c2.label).join(' | ')].concat((b.rows || []).filter(r => !r.deleted).map(r => b.columns.map(cl => cell(r, cl)).join(' | '))).join('\n');
+  }
+  if (b.type === 'image') return (b.items || []).map((it, i) => `Photo ${i + 1}: ${it.caption || '(no caption)'}`).join('\n') || '(no photos)';
+  if (b.type === 'video') return `Video: ${(mediaMeta(b.mediaId) || {}).fileName || ''}\nCaption: ${b.caption || ''}`;
+  if (b.type === 'file') return `File: ${b.name || ''} (${fmtDate(b.date)})`;
+  return JSON.stringify(b, null, 1);
+}
+function canRestore(e) {
+  if (!ui.user.manager) return false;
+  if (e.action === 'section_deleted') return e.sectionId && getSec(e.sectionId) && getSec(e.sectionId).deleted;
+  if (e.action === 'block_deleted') return !!(e.blockId && locate(e.blockId) && locate(e.blockId).block.deleted);
+  return !!(e.before && e.before.type && e.blockId && locate(e.blockId));
+}
+function restoreFromEntry(e) {
+  if (e.action === 'section_deleted') {
+    const sec = getSec(e.sectionId); sec.deleted = false; delete sec.deletedBy; delete sec.deletedAt;
+    Log.event({ sectionId: sec.id }, 'section_restored', `Section "${sec.title}" restored (from entry ${e.version})`); renderAll(); return;
+  }
+  const loc = locate(e.blockId); if (!loc) return;
+  if (e.action === 'block_deleted') { restoreBlock(e.blockId); return; }
+  const cur = Log.snapBlock(e.blockId); const prev = clone(e.before);
+  if (loc.block.bound) { S.contacts = prev.rows; delete prev.rows; }
+  Object.keys(loc.block).forEach(k => delete loc.block[k]); Object.assign(loc.block, prev, { deleted: false });
+  touchBlock(loc.block);
+  Log.event(ctxOf(loc), 'block_restored', `${blockLabel(loc.block)}: earlier version restored (from entry ${e.version})`, { before: cur, after: Log.snapBlock(e.blockId) });
+  rerenderPanel(loc.sec.id, loc.panel.key); refreshCover();
+}
+function openLogEntry(e) {
+  const dl = h('dl', { class: 'facts' });
+  [['Version', e.version], ['Date and time', fmtDT(e.at)], ['Changed by', e.by], ['Where', entryWhere(e)], ['Action', actionLabel(e.action)], ['What changed', e.summary], ['Reason', e.reason || 'None given'], ['Approved by', e.approvedBy || '']]
+    .forEach(([k, v]) => dl.append(h('dt', null, k), h('dd', null, v)));
+  const body = [dl];
+  if (e.before || e.after) body.push(h('div', { class: 'diff' }, h('div', null, h('h4', null, 'Before'), h('pre', null, blockToText(e.before))), h('div', null, h('h4', null, 'After'), h('pre', null, blockToText(e.after)))));
+  const actions = [{ label: 'Close' }];
+  if (e.snapshotRef) actions.unshift({ label: 'Download full snapshot', run: async () => { const b = await Storage.fetchFile(e.snapshotRef); if (b) download(b, `snapshot-v${e.version}.json`); return false; } });
+  if (canRestore(e)) actions.push({ label: 'Restore this', kind: 'primary', run: async () => {
+    if (!await confirmDialog('Restoring replaces what is there now with the earlier version. The change is itself written to the log.', 'Restore')) return false;
+    restoreFromEntry(e);
+  } });
+  modal({ title: `Log entry ${e.version}`, body, actions, wide: true });
+}
+function signOffDialog() {
+  if (!ui.user.manager) return alertDialog('Only a manager can sign off a review.');
+  const by = h('input', { type: 'text', value: ui.user.name }), note = h('input', { type: 'text', placeholder: 'For example: Annual review agreed' });
+  modal({ title: 'Manager sign-off', body: [h('p', { class: 'muted' }, 'This closes the current review. The number before the dot goes up by one and a full copy of the plan is stored with the log entry.'), field('Approved by', by), field('Reason or note', note)],
+    actions: [{ label: 'Cancel' }, { label: 'Sign off', kind: 'primary', run: async () => {
+      if (!by.value.trim()) { alertDialog('Please type who approved it.'); return false; }
+      Log.commit();
+      const next = (+S.plan.version.split('.')[0]) + 1; const ref = `${PLAN_ID}/snapshot-v${next}.0.json`;
+      try { await Storage.uploadFile(ref, new Blob([JSON.stringify({ plan: S.plan, sections: S.sections, contacts: S.contacts, media: S.media, versionLog: LOG })], { type: 'application/json' })); }
+      catch (err) { alertDialog('The snapshot could not be stored: ' + err.message); return false; }
+      Log.append({ signoff: true, action: 'signed_off', summary: `Review signed off: version ${next}.0`, reason: note.value.trim() || ui.reason, approvedBy: by.value.trim(), snapshotRef: ref });
+      toast(`Signed off as version ${next}.0`);
+    } }] });
+}
+
+/* ═══ SEARCH ═══ */
+function searchIndex() {
+  const out = []; const add = (where, text, target) => { text = String(text == null ? '' : text).trim(); if (text) out.push({ where, text, target }); };
+  const p = S.plan;
+  [['Preferred name', p.preferredName], ['Full name', p.fullName], ['Date of birth', fmtDate(p.dob)], ['Address', p.address], ['Moved in', fmtDate(p.movedIn)], ['How I communicate', p.commLine], ['Funder', p.funder]]
+    .forEach(([k, v]) => add('Cover, ' + k, v, { cover: true }));
+  shownSections().forEach(sec => {
+    add('Section', sec.title, { sec: sec.id });
+    sec.panels.forEach(panel => panel.blocks.forEach(b => {
+      if (b.deleted) return;
+      const where = `${sec.title}, ${HEADINGS[panel.key]}`; const t = { block: b.id };
+      if (b.type === 'text') add(where, stripHtml(b.html), t);
+      else if (b.type === 'table') {
+        add(where + ', ' + (b.title || 'table'), b.title, t);
+        visibleRows(b).forEach(r => b.columns.forEach(cl => {
+          let v = cellGet(b, r, cl); if (cl.type === 'contact') { const c2 = contactById(v); v = c2 ? [c2.name, c2.role, c2.phone].join(' ') : ''; }
+          if (cl.type === 'tick' || cl.type === 'rating' || (typeof v === 'string' && v.startsWith('data:image'))) return;
+          add(`${where}, ${b.title || 'table'}, ${cl.label}`, v, t);
+        }));
+      } else if (b.type === 'image') b.items.forEach(it => { add(where + ', photo', it.caption, t); add(where + ', photo', it.alt, t); });
+      else if (b.type === 'video') add(where + ', video', b.caption, t);
+      else if (b.type === 'file') add(where + ', file', b.name, t);
+    }));
+  });
+  return out;
+}
+function runSearch() {
+  const q = $('#search').value.trim().toLowerCase(); const box = $('#searchResults');
+  if (q.length < 2) { box.hidden = true; return; }
+  const hits = searchIndex().filter(x => x.text.toLowerCase().includes(q)).slice(0, 40);
+  box.replaceChildren();
+  if (!hits.length) box.append(h('div', { class: 'sr-empty' }, 'Nothing found.'));
+  hits.forEach(x => {
+    const i = x.text.toLowerCase().indexOf(q); const start = Math.max(0, i - 30);
+    const snippet = [start > 0 ? '...' : '', x.text.slice(start, i), h('mark', null, x.text.slice(i, i + q.length)), x.text.slice(i + q.length, i + q.length + 60)];
+    box.append(h('button', { class: 'sr-item', type: 'button', onclick: () => {
+      box.hidden = true;
+      if (x.target.block) goTo(x.target.block); else if (x.target.sec) goToSection(x.target.sec); else document.getElementById('cover').scrollIntoView({ behavior: 'smooth' });
+    } }, h('div', { class: 'sr-where' }, x.where), h('div', null, snippet)));
+  });
+  box.hidden = false;
+}
+
+/* ═══ BACKUP, SETTINGS, DEMO ═══ */
+async function exportBackup() {
+  await flushNow();
+  const b = busy('Building the backup file...');
+  try {
+    const json = o => new Blob([JSON.stringify(o)], { type: 'application/json' });
+    const files = [{ name: 'plan.json', blob: json({ format: 'cs-support-plan-backup', formatVersion: 1, exportedAt: nowISO(), plan: S.plan, sections: S.sections, contacts: S.contacts, media: S.media }) }, { name: 'versionLog.json', blob: json(LOG) }];
+    const refs = new Set(); S.media.forEach(m => { refs.add(m.storageRef); if (m.posterRef) refs.add(m.posterRef); }); LOG.forEach(e => e.snapshotRef && refs.add(e.snapshotRef));
+    for (const ref of refs) { const blob = await Storage.fetchFile(ref); if (blob) files.push({ name: 'files/' + ref, blob }); }
+    download(await zipWrite(files), `${(S.plan.preferredName || 'plan').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-support-plan-backup-${todayStr()}.zip`);
+  } catch (e) { alertDialog('The backup could not be built: ' + e.message); } finally { b.done(); }
+}
+async function importBackup() {
+  const [f] = await pickFiles({ accept: '.zip,application/zip' }); if (!f) return;
+  if (!await confirmDialog('This replaces everything in this browser (the plan, photos, videos and the version log) with what is in the backup file. Download a backup of the current plan first if you may need it.', 'Replace with the backup', true)) return;
+  const b = busy('Reading the backup...');
+  try {
+    const z = await zipRead(f);
+    if (!z.get('plan.json') || !z.get('versionLog.json')) throw new Error('This file is not a support plan backup.');
+    const data = JSON.parse(await z.get('plan.json').text()); const log = JSON.parse(await z.get('versionLog.json').text());
+    if (data.format !== 'cs-support-plan-backup' || !data.plan || !data.sections) throw new Error('This file is not a support plan backup.');
+    await Storage.wipe(); Media.clearUrls();
+    for (const [name, blob] of z) if (name.startsWith('files/')) {
+      const ref = name.slice(6); const meta = data.media.find(m => m.storageRef === ref);
+      await Storage.uploadFile(ref, new Blob([blob], { type: meta ? meta.mimeType : (ref.endsWith('-poster.jpg') ? 'image/jpeg' : 'application/json') }));
+    }
+    S = { plan: data.plan, sections: data.sections, contacts: data.contacts || [], media: data.media || [] }; S.plan.pending = { sessions: [], queue: [] }; LOG = [];
+    Log.reset();
+    for (const e of log) { LOG.push(e); await Storage.addLog(e); }
+    Log.append({ action: 'backup_imported', summary: `Backup imported from ${f.name}` });
+    await doSave(); renderAll(); toast('Backup restored');
+  } catch (e) { alertDialog('The backup could not be restored: ' + e.message); } finally { b.done(); }
+}
+function backupDialog() {
+  const m = modal({ title: 'Backup', body: [h('p', { class: 'muted' }, 'A backup is one .zip file holding the plan, every photo, video and file, and the version log. Keep copies somewhere safe: this sample only stores data in this browser on this device.'),
+    h('div', { class: 'pick-list' },
+      h('button', { class: 'btn btn-primary', type: 'button', onclick: () => { m.close(); exportBackup(); } }, 'Download a full backup (.zip)'),
+      h('button', { class: 'btn btn-ghost', type: 'button', onclick: () => { m.close(); importBackup(); } }, 'Restore from a backup file'),
+      h('button', { class: 'btn btn-ghost', type: 'button', onclick: () => { m.close(); exportLogCsv(); } }, 'Download the version log (CSV)'))], actions: [{ label: 'Close' }] });
+}
+function settingsDialog() {
+  const logo = h('input', { type: 'url', value: S.plan.settings.logoUrl }), mb = h('input', { type: 'number', min: 1, max: 2000, value: S.plan.settings.maxVideoMB });
+  const m = modal({ title: 'Settings', wide: true, body: [
+    h('p', { class: 'muted' }, 'Sample (Phase 1). Data is saved in this browser only. There is no sign-in, so the name typed at the start is what the version log records.'),
+    field('Logo web address', logo, 'Loaded from this address on the cover, the top bar and the print-out.'), field('Largest video allowed (MB)', mb, '200 MB is suggested.'),
+    h('div', { class: 'pick-list', style: 'margin-top:1rem' },
+      h('button', { class: 'btn btn-ghost', type: 'button', onclick: () => { m.close(); fillDemo(); } }, 'Fill the empty tables with fictional demo content'),
+      h('button', { class: 'btn btn-ghost', type: 'button', style: 'color:var(--red)', onclick: () => { m.close(); eraseDialog(); } }, 'Erase everything and start again'))],
+  actions: [{ label: 'Cancel' }, { label: 'Save settings', kind: 'primary', run: () => {
+    const lim = Math.max(1, Math.min(2000, +mb.value || 200)); const url = logo.value.trim() || DEFAULT_LOGO;
+    if (url !== S.plan.settings.logoUrl || lim !== S.plan.settings.maxVideoMB) {
+      S.plan.settings.logoUrl = url; S.plan.settings.maxVideoMB = lim;
+      Log.event({}, 'settings_changed', `Settings changed: logo address, video limit ${lim} MB`); renderCoverNow(); refreshChrome();
+    }
+  } }] });
+}
+function eraseDialog() {
+  const t = h('input', { type: 'text', placeholder: 'Type ERASE' });
+  modal({ title: 'Erase everything?', body: [h('p', null, 'This deletes the plan, every photo, video and file, and the version log from this browser. It cannot be undone. Download a backup first if you might need it.'), field('Type ERASE to confirm', t)],
+    actions: [{ label: 'Cancel' }, { label: 'Erase everything', kind: 'danger', run: async () => {
+      if (t.value.trim() !== 'ERASE') { alertDialog('Type ERASE exactly to confirm.'); return false; }
+      await Storage.wipe(); Media.clearUrls(); Log.reset(); S = defaultState(); LOG = [];
+      Log.append({ by: 'System', action: 'plan_created', summary: 'Plan created from the 12 default sections' });
+      await doSave(); renderAll(); toast('Started again');
+    } }] });
+}
+async function fillDemo() {
+  if (!await confirmDialog('This writes fictional example entries into several tables and the cover, replacing what is in those tables. Use it on a test plan only.', 'Fill with demo content')) return;
+  const p = S.plan; Object.assign(p, { preferredName: 'Leslie', fullName: 'Leslie Example (fictional)', dob: '2008-03-14', address: '1 Example Road, Sampletown', movedIn: '2025-01-06', commLine: 'Uses Makaton signs and short phrases', funder: 'Example Borough Council' });
+  const rows = (key, list) => { const b = firstByTemplate(key); if (!b) return null; b.rows = list.map(v => makeRow(b.columns, v)); b.updatedBy = ui.user.name; b.updatedAt = nowISO(); return b; };
+  const gp = Object.assign(makeContact(), { name: 'Dr Alex Example', role: 'GP', organisation: 'Example Surgery', phone: '020 7946 0100', email: 'surgery@example.invalid', involvement: 'Registered GP', shareInfo: 'Yes' });
+  const sw = Object.assign(makeContact(), { name: 'Pat Sample', role: 'Social worker', organisation: 'Example Borough Council', phone: '020 7946 0101', shareInfo: 'Ask first' });
+  S.contacts = [gp, sw];
+  rows('team', [['Key worker', 'Sam Example', '020 7946 0001'], ['Registered manager', 'Jo Sample', '020 7946 0002']]);
+  rows('allergies', [['Peanuts', 'Swelling of the lips and difficulty breathing', 'Severe', 'Use the adrenaline pen and call 999', 'GP letter', '2026-09-01']]);
+  rows('communicate', [['Covers ears', 'It is too noisy', 'Move to a quiet room and speak softly']]);
+  rows('goals', [['Travel to the shops on the bus', 'I want to be more independent', 'Practise the route with staff', 'Key worker', '2026-10-01', '2027-03-01', 'In progress', '']]);
+  rows('regmeds', [['Example medicine A', '1 tablet', 'By mouth', '08:00', 'Example purpose', 'Dr Alex Example', '2026-01-10', '2027-01-10', 'Staff', 'Drowsiness', 'Locked cabinet']]);
+  rows('risk', [['Leaving the building alone', 'Could get lost near the road', 'Staff check the door and practise the route together', 3, 4, '', 'Sam Example', '2027-01-15']]);
+  rows('emergency', [[1, gp.id, 'Any health emergency', '020 7946 0199']]);
+  rows('reviews', [['2026-09-30', 'Routine', 'Leslie, Sam, Jo', 'Leslie chose the pictures for the agenda', 'Plan agreed', '2027-03-30']]);
+  const rb = firstByTemplate('risk'); if (rb) updateRisk(rb, rb.rows[0], null);
+  Log.event({}, 'demo_loaded', 'Fictional demo content loaded into the cover and eight tables');
+  renderAll(); toast('Demo content added');
+}
+
+/* ═══ PAGE, MODES, START-UP ═══ */
+let prefs = { name: '', manager: false, fs: 16, hc: false };
+function loadPrefs() { try { Object.assign(prefs, JSON.parse(localStorage.getItem('csPlanSamplePrefs') || '{}')); } catch (e) { /* storage may be blocked */ } }
+function savePrefs() { try { localStorage.setItem('csPlanSamplePrefs', JSON.stringify(prefs)); } catch (e) { /* optional */ } }
+function applyPrefs() {
+  document.documentElement.style.setProperty('--fs', prefs.fs + 'px');
+  document.body.classList.toggle('hc', !!prefs.hc);
+  const b = $('#btnContrast'); b.classList.toggle('on', !!prefs.hc); b.setAttribute('aria-pressed', String(!!prefs.hc));
+  setStickyHeight();
+}
+function askUser(dismissible = false) {
+  return new Promise(res => {
+    const name = h('input', { type: 'text', value: ui.user.name || prefs.name || '', placeholder: 'For example: A. Smith' });
+    const mgr = h('input', { type: 'checkbox', checked: ui.user.name ? ui.user.manager : !!prefs.manager });
+    modal({ title: 'Who is using the plan?', dismissible, body: [
+      h('p', { class: 'muted' }, 'This sample has no sign-in yet. The name you type is written into the version log next to every change you make.'),
+      field('Your name', name),
+      h('div', { class: 'field' }, h('label', { class: 'check' }, mgr, 'I am acting as a manager (needed to restore deleted items, delete a section, open log entries and sign off). Sample only: real roles arrive with sign-in in Phase 2.'))],
+    actions: [{ label: 'Continue', kind: 'primary', run: () => {
+      if (!name.value.trim()) { name.focus(); return false; }
+      Log.commit(); ui.user = { name: name.value.trim(), manager: mgr.checked }; prefs.name = ui.user.name; prefs.manager = ui.user.manager; savePrefs();
+      $('#btnUser').textContent = ui.user.name + (ui.user.manager ? ' (manager)' : ''); res();
+    } }] });
+  });
+}
+function renderAll() {
+  document.body.classList.toggle('editing', ui.edit);
+  $('#editbar').hidden = !ui.edit; $('#btnEdit').textContent = ui.edit ? 'View mode' : 'Edit';
+  const main = $('#main');
+  main.replaceChildren(renderCover(), ...shownSections().map(renderSection), renderLogSection());
+  renderMenu(); refreshChrome(); autosizeAll(); observeSections(); setStickyHeight();
+}
+function askReason() {
+  return new Promise(res => {
+    const r = h('input', { type: 'text', placeholder: 'For example: After GP appointment' }); let done = false;
+    const m = modal({ title: 'Reason for these changes', body: [h('p', { class: 'muted' }, 'This is written into the version log next to your changes. You can skip it.'), field('Reason', r)],
+      actions: [{ label: 'Keep editing', run: () => { done = true; res(null); } }, { label: 'Skip', run: () => { done = true; res(''); } }, { label: 'Save reason', kind: 'primary', run: () => { done = true; res(r.value.trim()); } }] });
+    const orig = m.close; m.close = () => { orig(); if (!done) res(null); };
+  });
+}
+async function toggleEdit() {
+  if (!ui.edit) { ui.edit = true; renderAll(); return; }
+  Log.flushAll();
+  if (!ui.reason.trim() && Log.pending()) { const r = await askReason(); if (r === null) return; ui.reason = r; }
+  Log.commit(); await doSave();
+  ui.edit = false; ui.reason = ''; ui.editCount = 0; $('#reason').value = ''; renderAll();
+}
+function waitForImages() {
+  return new Promise(res => setTimeout(async () => {
+    await Promise.race([Promise.all($$('#main img').map(i => (i.complete ? null : new Promise(r => { i.onload = i.onerror = r; })))), new Promise(r => setTimeout(r, 3000))]);
+    res();
+  }, 250));
+}
+function enterPrintMode() { if (ui.printing) return; ui.printing = true; ui._wasEdit = ui.edit; ui.edit = false; ui.logShowAll = true; renderAll(); }
+function leavePrintMode() { if (!ui.printing) return; ui.printing = false; ui.edit = ui._wasEdit; ui.logShowAll = false; renderAll(); }
+async function printPlan() { await flushNow(); enterPrintMode(); await waitForImages(); window.print(); }
+
+async function init() {
+  loadPrefs(); applyPrefs();
+  await Storage.init();
+  const saved = await Storage.loadPlan();
+  S = saved || defaultState();
+  LOG = await Storage.listLog();
+  if (!saved) { Log.append({ by: 'System', action: 'plan_created', summary: 'Plan created from the 12 default sections' }); await doSave(); }
+  if (Storage.volatile) { setTimeout(() => alertDialog('This browser is not letting the page save anything (for example a private window). You can try the sample, but everything is lost when you close the page.', 'Saving is switched off'), 600); }
+  await askUser();
+  Log.recover(S.plan.pending); S.plan.pending = { sessions: [], queue: [] };
+  renderAll();
+
+  $('#btnEdit').onclick = toggleEdit; $('#btnDone').onclick = toggleEdit;
+  $('#reason').oninput = e => { ui.reason = e.target.value; };
+  $('#btnUser').onclick = async () => { await askUser(true); renderAll(); };
+  $('#btnSettings').onclick = settingsDialog; $('#btnBackup').onclick = backupDialog; $('#btnPrint').onclick = printPlan;
+  $('#btnTextMinus').onclick = () => { prefs.fs = Math.max(12, prefs.fs - 2); savePrefs(); applyPrefs(); };
+  $('#btnTextPlus').onclick = () => { prefs.fs = Math.min(24, prefs.fs + 2); savePrefs(); applyPrefs(); };
+  $('#btnContrast').onclick = () => { prefs.hc = !prefs.hc; savePrefs(); applyPrefs(); };
+  $('#btnMenu').onclick = () => document.body.classList.toggle('menu-open'); $('#scrim').onclick = () => document.body.classList.remove('menu-open');
+  $('#search').addEventListener('input', debounce(runSearch, 150));
+  $('#search').addEventListener('keydown', e => { if (e.key === 'Escape') { $('#searchResults').hidden = true; e.target.blur(); } if (e.key === 'Enter') { const f = $('#searchResults .sr-item'); if (f) f.click(); } });
+  document.addEventListener('click', e => { if (!e.target.closest('.searchbox')) $('#searchResults').hidden = true; });
+  window.addEventListener('pagehide', flushNow);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });
+  window.addEventListener('beforeprint', enterPrintMode); window.addEventListener('afterprint', leavePrintMode);
+  if ('ResizeObserver' in window) new ResizeObserver(setStickyHeight).observe($('#sticky'));
+  window.addEventListener('resize', setStickyHeight);
+  window.__plan = { get S() { return S; }, get LOG() { return LOG; }, ui, Storage }; // handy for testing in the console
+}
+init().catch(e => { console.error(e); document.body.prepend(h('p', { style: 'padding:1rem;color:#c0392b' }, 'The page could not start: ' + e.message)); });
+</script>
+</body>
+</html>
