@@ -98,6 +98,10 @@ mark{background:#cfe0ff;color:inherit;border-radius:3px;padding:0 1px}
 .chip.warn{background:var(--amber-bg);color:var(--amber-strong)}
 button.chip{cursor:pointer}
 
+/* notice */
+.notice{background:var(--brand-light);border-radius:var(--r);padding:.7rem 1rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;color:var(--brand-dark);font-weight:500}
+.notice span{flex:1 1 260px}
+
 /* cover */
 .cover{background:var(--surface);border-radius:14px;box-shadow:var(--sh-md);padding:1.4rem;margin-bottom:1.6rem;scroll-margin-top:calc(var(--stickyh,64px) + 10px)}
 .cover-top{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1.2rem;flex-wrap:wrap;background:var(--brand);border-radius:12px;padding:.8rem 1.3rem}
@@ -368,6 +372,7 @@ body.hc a{text-decoration:underline}
 
 /* ── constants ── */
 const PLAN_ID = 'plan-001';
+const BUILD = '2026-10-19 demo-data v2';
 const DEFAULT_LOGO = 'https://raw.githubusercontent.com/CS-Documentation/invoice/refs/heads/main/front%20page%20header.png';
 const HEADINGS = {
   know: 'What you need to know about me',
@@ -1998,7 +2003,7 @@ function demoPdf() {
 /* Fills the cover, every table, contacts, text, pictures, a video, a PDF and an extra section.
    Safe to run again: blocks and the section added by an earlier run are replaced. */
 async function applyDemo() {
-  const realUser = ui.user;
+  const realUser = ui.user; let failedCount = 0;
   Log.commit();
   ui.user = { name: DEMO_BY, manager: false };
   try {
@@ -2019,34 +2024,43 @@ async function applyDemo() {
       });
     }
     const dir = firstByTemplate('contacts'); if (dir) { dir.updatedBy = DEMO_BY; dir.updatedAt = nowISO(); }
-    // 5. pictures, video, file, text
+    // 5. pictures, video, file, text. A picture that cannot be made on this device is skipped, never fatal.
+    const failed = [];
+    const safe = async fn => { try { return await fn(); } catch (e) { console.warn('Demo content:', e); failed.push(e.message); return null; } };
     const consent = () => ({ recorded: true, agreedBy: 'Demo data, not a real person', date: todayStr() });
-    const cover = await Media.add({ kind: 'image', blob: await demoPicture('cover', 1200, 1200), fileName: 'demo-cover.jpg', mimeType: 'image/jpeg' });
-    cover.consent = consent(); S.plan.coverPhotoMediaId = cover.id;
+    await safe(async () => {
+      const m = await Media.add({ kind: 'image', blob: await demoPicture('cover', 1200, 1200), fileName: 'demo-cover.jpg', mimeType: 'image/jpeg' });
+      m.consent = consent(); S.plan.coverPhotoMediaId = m.id;
+    });
     const pics = [];
     for (const [name, caption, alt, withConsent] of [
       ['park', 'Swinging at the park, my favourite place', 'A drawing of a swing and a tree in a park', true],
       ['baking', 'Baking cupcakes with Jo', 'A drawing of three cupcakes on a tray', true],
       ['bus', 'Waiting for the bus to the shops (consent not yet recorded, to show the warning)', 'A drawing of a red bus at a bus stop', false]]) {
-      const m = await Media.add({ kind: 'image', blob: await demoPicture(name, 800, 600), fileName: 'demo-' + name + '.jpg', mimeType: 'image/jpeg' });
-      if (withConsent) m.consent = consent();
-      pics.push({ mediaId: m.id, caption, alt });
+      await safe(async () => {
+        const m = await Media.add({ kind: 'image', blob: await demoPicture(name, 800, 600), fileName: 'demo-' + name + '.jpg', mimeType: 'image/jpeg' });
+        if (withConsent) m.consent = consent();
+        pics.push({ mediaId: m.id, caption, alt });
+      });
     }
-    const webm = await (await fetch('data:video/webm;base64,' + DEMO_WEBM_B64)).blob();
-    const poster = await videoPoster(webm).catch(() => null);
-    const vid = await Media.add({ kind: 'video', blob: webm, fileName: 'demo-bus-practice.webm', mimeType: 'video/webm', poster });
-    vid.consent = consent();
-    const pdf = await Media.add({ kind: 'file', blob: demoPdf(), fileName: 'demo-capacity-assessment.pdf', mimeType: 'application/pdf' });
+    const vid = await safe(async () => {
+      const webm = await (await fetch('data:video/webm;base64,' + DEMO_WEBM_B64)).blob();
+      const poster = await videoPoster(webm).catch(() => null);
+      const m = await Media.add({ kind: 'video', blob: webm, fileName: 'demo-bus-practice.webm', mimeType: 'video/webm', poster });
+      m.consent = consent(); return m;
+    });
+    const pdf = await safe(() => Media.add({ kind: 'file', blob: demoPdf(), fileName: 'demo-capacity-assessment.pdf', mimeType: 'application/pdf' }));
+    failedCount = failed.length;
     const mk = (type, props) => Object.assign(baseBlock(type, DEMO_BY), { demo: true }, props);
     const put = (secKey, panelKey, block, atStart) => {
       const sec = S.sections.find(s => s.key === secKey && !s.deleted); if (!sec) return;
       const p = panelOf(sec, panelKey); if (atStart) p.blocks.unshift(block); else p.blocks.push(block);
     };
     put('about', 'know', mk('text', { html: '<p><b>Hello, I am Leslie.</b> I love animals, music and baking. This plan is written with me, so you know how I like to be supported.</p><h4>What people like about me</h4><ul><li>I am funny and kind</li><li>I never give up when I am learning something new</li><li>I give the best hugs when I am ready</li></ul>' }), true);
-    put('about', 'know', mk('image', { items: pics }));
+    if (pics.length) put('about', 'know', mk('image', { items: pics }));
     put('about', 'like', mk('text', { html: '<h4>Things that help me feel calm</h4><ul><li>My headphones and my favourite playlist</li><li>The weighted blanket on the sofa</li><li>Looking at photos of Biscuit</li><li>A drink of squash with ice</li></ul>' }), true);
-    put('decisions', 'know', mk('file', { mediaId: pdf.id, name: 'Capacity assessment: managing money (demo)', date: '2026-05-12' }));
-    put('goals', 'further', mk('video', { mediaId: vid.id, caption: 'Practising the bus route with Sam (demo cartoon)' }));
+    if (pdf) put('decisions', 'know', mk('file', { mediaId: pdf.id, name: 'Capacity assessment: managing money (demo)', date: '2026-05-12' }));
+    if (vid) put('goals', 'further', mk('video', { mediaId: vid.id, caption: 'Practising the bus route with Sam (demo cartoon)' }));
     put('daily', 'like', mk('text', { html: '<h4>My morning routine</h4><ol><li>Wake up and say good morning (sign "morning")</li><li>Choose my clothes from two outfits</li><li>Wash and clean my teeth</li><li>Breakfast: banana and toast</li><li>Check the picture timetable for the day</li></ol>' }), true);
     // 6. an extra section, to show that a new section gets the same three headings
     const sec = { id: uid('sec'), key: 'custom', title: 'School and college', order: 0, isDefault: false, visible: true, deleted: false, demoSection: true, panels: makePanels() };
@@ -2058,6 +2072,7 @@ async function applyDemo() {
     S.sections.splice(rev >= 0 ? rev : S.sections.length, 0, sec);
   } finally { ui.user = realUser; }
   Log.event({}, 'demo_loaded', 'Fictional demo content loaded: cover, every table, contacts, text, pictures, a video, a PDF and a College section');
+  return failedCount;
 }
 
 /* ═══ VERSION LOG PAGE ═══ */
@@ -2258,6 +2273,7 @@ function backupDialog() {
 function settingsDialog() {
   const logo = h('input', { type: 'url', value: S.plan.settings.logoUrl }), mb = h('input', { type: 'number', min: 1, max: 2000, value: S.plan.settings.maxVideoMB });
   const m = modal({ title: 'Settings', wide: true, body: [
+    h('p', { class: 'muted' }, 'Page version: ' + BUILD),
     h('p', { class: 'muted' }, 'Sample (Phase 1). Data is saved in this browser only. There is no sign-in, so the name typed at the start is what the version log records.'),
     field('Logo web address', logo, 'Loaded from this address on the cover, the top bar and the print-out.'), field('Largest video allowed (MB)', mb, '200 MB is suggested.'),
     h('p', { class: 'muted', style: 'margin-top:.8rem' }, 'A new browser starts with the fictional demo plan. To start with an empty plan instead, add ?blank to the end of the web address.'),
@@ -2285,12 +2301,20 @@ function eraseDialog() {
 async function fillDemo() {
   if (!await confirmDialog('This loads the fictional demo plan for "Leslie Example": the cover, every table, contacts, text, pictures, a video and a PDF. It replaces what is in those tables and removes demo blocks added by an earlier load. Use it on a test plan only.', 'Load demo content')) return;
   const b = busy('Loading the fictional demo content...');
-  try { await applyDemo(); } catch (e) { b.done(); return alertDialog('The demo content could not be loaded: ' + e.message); }
+  let bad = 0;
+  try { bad = await applyDemo(); } catch (e) { b.done(); return alertDialog('The demo content could not be loaded: ' + e.message); }
   b.done(); renderAll(); toast('Demo content loaded');
+  if (bad) alertDialog('Some demo pictures or the video could not be made on this device, so they are missing. The tables and text loaded.');
+}
+function demoNotice() {
+  return h('div', { class: 'notice no-print', role: 'note' },
+    h('span', null, 'This plan has no demo content. To see it filled in, load the fictional demo plan (Leslie Example).'),
+    h('button', { class: 'btn btn-primary btn-sm', type: 'button', onclick: fillDemo }, 'Load demo content'),
+    h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onclick: () => { prefs.hideDemoNotice = true; savePrefs(); const n = $('.notice'); if (n) n.remove(); } }, 'Hide this message'));
 }
 
 /* ═══ PAGE, MODES, START-UP ═══ */
-let prefs = { name: '', manager: false, fs: 16, hc: false };
+let prefs = { name: '', manager: false, fs: 16, hc: false, hideDemoNotice: false };
 function loadPrefs() { try { Object.assign(prefs, JSON.parse(localStorage.getItem('csPlanSamplePrefs') || '{}')); } catch (e) { /* storage may be blocked */ } }
 function savePrefs() { try { localStorage.setItem('csPlanSamplePrefs', JSON.stringify(prefs)); } catch (e) { /* optional */ } }
 function applyPrefs() {
@@ -2318,7 +2342,7 @@ function renderAll() {
   document.body.classList.toggle('editing', ui.edit);
   $('#editbar').hidden = !ui.edit; $('#btnEdit').textContent = ui.edit ? 'View mode' : 'Edit';
   const main = $('#main');
-  main.replaceChildren(renderCover(), ...shownSections().map(renderSection), renderLogSection());
+  main.replaceChildren(...[(!S.plan.demo && !prefs.hideDemoNotice && !ui.printing) ? demoNotice() : null, renderCover(), ...shownSections().map(renderSection), renderLogSection()].filter(Boolean));
   renderMenu(); refreshChrome(); autosizeAll(); observeSections(); setStickyHeight();
 }
 function askReason() {
@@ -2352,15 +2376,21 @@ async function init() {
   await Storage.init();
   const saved = await Storage.loadPlan();
   S = saved || defaultState();
+  if (!saved && startBlank) S.plan.blankChosen = true;      // asked for an empty plan: never auto-load the demo later
   LOG = await Storage.listLog();
   if (!saved) { Log.append({ by: 'System', action: 'plan_created', summary: 'Plan created from the 12 default sections' }); await doSave(); }
   if (Storage.volatile) { setTimeout(() => alertDialog('This browser is not letting the page save anything (for example a private window). You can try the sample, but everything is lost when you close the page.', 'Saving is switched off'), 600); }
   await askUser();
   Log.recover(S.plan.pending); S.plan.pending = { sessions: [], queue: [] };
-  if (!saved && !startBlank) {
+  // A brand-new browser gets the demo. So does a plan nobody has touched (only the "Plan created" entry),
+  // for example one saved by an earlier visit before the demo existed.
+  const untouched = !!saved && !S.plan.demo && !S.plan.blankChosen && LOG.length === 1 && LOG[0].action === 'plan_created';
+  if ((!saved && !startBlank) || (untouched && !startBlank)) {
     const b = busy('Setting up the sample plan with fictional demo content...');
-    try { await applyDemo(); } catch (e) { console.error(e); }
+    let bad = 0;
+    try { bad = await applyDemo(); } catch (e) { console.error(e); bad = -1; }
     b.done();
+    if (bad) alertDialog(bad < 0 ? 'The demo content could not be loaded on this device. You can still use the plan, and you can try again from Settings.' : 'Some demo pictures or the video could not be made on this device, so they are missing. The tables and text loaded.');
   }
   renderAll();
 
