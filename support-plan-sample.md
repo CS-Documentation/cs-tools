@@ -5,7 +5,12 @@ An editable support plan for one young person (default "Leslie") in a CQC-regula
 
 This is a **sample for testing before it goes into the live workflow**. It is not linked from `index.html`, uses **no Firebase and no login**, and sends nothing anywhere. Everything lives in the browser (IndexedDB) on the device it is opened on.
 
-**It opens with fictional demo content.** The first time it is opened in a browser it loads a made-up plan for "Leslie Example" (see *Demo content* below) so there is something to look at. Add `?blank` to the web address (`support-plan-sample.html?blank`) to start with an empty plan instead. A browser that already has a saved plan keeps it; use Settings, "Load the fictional demo content" to load the demo into it.
+**It opens with fictional demo content.** It loads a made-up plan for "Leslie Example" (see *Demo content* below) so there is something to look at:
+- on the first visit from a browser;
+- on a return visit, if the saved plan is **untouched** (its log holds only "Plan created", for example a blank plan saved by a visit before the demo existed);
+- never when the address ends in `?blank` (`support-plan-sample.html?blank`). That plan is marked `plan.blankChosen` so a later visit without `?blank` does not replace it.
+
+A saved plan that has been edited is never overwritten automatically. Any plan without demo content shows a banner at the top, **Load demo content** (one click, asks first) with **Hide this message** (remembered in `localStorage`, `hideDemoNotice`). Settings has the same load button and shows the **page version** (`BUILD`), which helps tell whether an old cached copy of the page is being shown.
 
 ## Access
 - No sign-in. When the page opens it asks **"Who is using the plan?"**. The typed name is written into the version log against every change.
@@ -105,7 +110,7 @@ Everything is fictional. "Leslie Example" is not a real person; phone numbers us
 - text and bullet blocks (About me, Daily support), a 3-photo block (two with consent, one left without so the warning icon shows), a 3 second cartoon video with poster (a 20 KB WebM embedded as base64 in `DEMO_WEBM_B64`), a PDF file block (built in the page by `demoPdf()`), and an extra **School and college** section placed before Review and sign-off.
 - Pictures are small SVG drawings (`DEMO_ART`) turned into JPEGs by `demoPicture()`. Nothing is downloaded.
 
-Demo blocks are marked `demo: true`, the extra section `demoSection: true`, and `plan.demo = true` changes the top bar subtitle. Running the load again first removes those blocks and the section, so it never duplicates. Demo blocks and rows show "Last edited by Demo data (fictional)". The log records one entry "Fictional demo content loaded", attributed to whoever was using the page. On a brand-new browser the demo loads right after the name prompt, unless the address has `?blank`.
+Demo blocks are marked `demo: true`, the extra section `demoSection: true`, and `plan.demo = true` changes the top bar subtitle. Running the load again first removes those blocks and the section, so it never duplicates. A picture, the video or the PDF that cannot be made on a device (`safe()` in `applyDemo`) is skipped with a message, and the cover and tables still load; `applyDemo()` returns how many parts failed. Demo blocks and rows show "Last edited by Demo data (fictional)". The log records one entry "Fictional demo content loaded", attributed to whoever was using the page. On a brand-new browser the demo loads right after the name prompt, unless the address has `?blank`.
 
 ## Look, access and print
 - Brand blue `#1446a0` for headings, buttons, links; gold appears only inside the star logo (the logo is gold star + white wordmark, so it sits on a blue band). Roboto body, Roboto Black (900) headings, as the spec requires (the other tools use DM Sans). Logo loaded from the address in Settings (default: the official logo in `CS-Documentation/invoice`).
@@ -130,7 +135,7 @@ Demo blocks are marked `demo: true`, the extra section `demoSection: true`, and 
 S                 // { plan, sections, contacts, media } the live plan
 LOG               // version log entries (append only)
 ui                // { edit, printing, user:{name,manager}, collapsed{}, reason, editCount, logFilter{}, logShowAll }
-prefs             // { name, manager, fs, hc } mirrored to localStorage
+prefs             // { name, manager, fs, hc, hideDemoNotice } mirrored to localStorage
 Log.sessions      // open editing sessions by block id ('cover' for the cover)
 Log.queue         // finished entries waiting for Done editing
 Media.urls        // object-URL cache by storageRef
@@ -157,7 +162,7 @@ Media.urls        // object-URL cache by storageRef
 | `runSearch()` / `searchIndex()` | Search |
 | `exportBackup()` / `importBackup()`, `zipWrite()` / `zipRead()` | Backup file |
 | `printPlan()`, `enterPrintMode()` / `leavePrintMode()` | Print layout |
-| `applyDemo()` / `fillDemo()` | Load the fictional demo plan (`fillDemo` is the Settings button: asks first, then calls `applyDemo`) |
+| `applyDemo()` / `fillDemo()` / `demoNotice()` | Load the fictional demo plan (`fillDemo` is the Settings/banner button: asks first, then calls `applyDemo`); banner shown on plans with no demo |
 | `demoPicture()`, `demoPdf()` | Draw a demo picture from SVG; build the demo PDF |
 | `window.__plan` | Console/test handle: `{ S, LOG, ui, Storage }` |
 
