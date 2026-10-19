@@ -1004,6 +1004,7 @@ function refreshChrome() {
   document.title = `${name}’s support plan`;
   const logo = $('#tbLogo'); if (logo.getAttribute('src') !== S.plan.settings.logoUrl) logo.src = S.plan.settings.logoUrl || DEFAULT_LOGO;
   const h1 = $('#cover h1'); if (h1) h1.textContent = `${name}’s support plan`;
+  const sub = $('.tb-title span'); if (sub) sub.textContent = S.plan.demo ? 'Sample with fictional demo data, saved on this device only' : 'Sample: saved on this device only';
   const v = $('#coverVersion'); if (v) v.textContent = 'Version ' + S.plan.version;
   refreshAlertbar(); refreshFooter(); refreshLogBody();
 }
@@ -1813,6 +1814,252 @@ function sortRows(loc, col, dir) {
   });
 }
 
+/* ═══ FICTIONAL DEMO CONTENT ═══
+   "Leslie Example" is not a real person. Phone numbers use the reserved UK
+   drama range (020 7946 0xxx) and emails end in .invalid. The pictures are
+   drawn from small SVG sketches, the video is a 3 second cartoon, and the PDF
+   is made in the page, so nothing needs downloading.                    */
+const DEMO_WEBM_B64 = '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';
+const DEMO_BY = 'Demo data (fictional)';
+const DEMO_CONTACTS = {
+  '@gp': { name: 'Dr Alex Example', role: 'GP', organisation: 'Example Surgery', phone: '020 7946 0100', email: 'surgery@example.invalid', involvement: 'Registered GP. Does the annual health check.', shareInfo: 'Yes', lastContact: '2026-09-20' },
+  '@sw': { name: 'Pat Sample', role: 'Social worker', organisation: 'Example Borough Council', phone: '020 7946 0101', email: 'pat.sample@example.invalid', involvement: 'Placing social worker. Comes to reviews.', shareInfo: 'Yes', lastContact: '2026-09-30' },
+  '@mum': { name: 'Robin Example', role: 'Family member', organisation: '', phone: '020 7946 0102', email: '', involvement: 'Leslie\'s mum. Visits on Sundays and phones on Wednesdays.', shareInfo: 'Yes', lastContact: '2026-10-11' },
+  '@adv': { name: 'Alex Advocate', role: 'Advocate', organisation: 'Example Advocacy Service', phone: '020 7946 0103', email: 'advocacy@example.invalid', involvement: 'Independent advocate for reviews and big decisions.', shareInfo: 'Ask first', lastContact: '2026-08-04' },
+  '@cldt': { name: 'Community Learning Disability Team', role: 'Community learning disability team', organisation: 'Example NHS Trust', phone: '020 7946 0104', email: 'cldt@example.invalid', involvement: 'Speech and language therapy and psychiatry reviews.', shareInfo: 'Yes', lastContact: '2026-07-15' }
+};
+/* rows are in column order. A value like '@gp' in a Contact column becomes that contact. */
+const DEMO_ROWS = {
+  important: [
+    ['My cat Biscuit and the photos on my wall', 'Taking my medicines at the same time every day'],
+    ['Listening to music with my headphones', 'Eating regular meals and drinking enough water'],
+    ['Choosing my own clothes each morning', 'A calm, predictable start to the day']],
+  gooddaybadday: [
+    ['Good day', 'Humming, laughing, choosing the music, helping in the kitchen', 'Offer a choice of two things to do and say well done for trying'],
+    ['Bad day', 'Covering my ears, pacing, saying "no" many times, staying in my room', 'A quiet room, a soft voice, my headphones, no demands for ten minutes, then offer a drink']],
+  communicate: [
+    ['Signs "more" and points at the kitchen', 'I would like a snack or a drink', 'Offer two picture cards to choose from'],
+    ['Covers my ears and turns away', 'It is too loud or there are too many people', 'Move somewhere quiet and speak softly'],
+    ['Says "home" again and again', 'I feel unsure or I am missing my family', 'Reassure me and look at my family photo book together']],
+  commtools: [
+    ['Makaton signs', 'All day, especially at mealtimes', 'Use signs with short sentences. Keep it calm.'],
+    ['Picture choice board', 'Choosing activities and food', 'The board lives on the fridge door. Offer two choices only.']],
+  sensory: [
+    ['Sound', 'Avoids', 'Loud TV, hand dryers, sirens', 'Headphones. Tell me before a loud noise.'],
+    ['Touch', 'Seeks', 'Soft blankets and firm hugs from people I know', 'Weighted blanket in the evening'],
+    ['Sight', 'Seeks', 'Bright colours and spinning lights', 'Sensory lamp in the lounge'],
+    ['Taste', 'Avoids', 'Very spicy food and mixed textures', 'Keep foods apart on my plate']],
+  capacity: [
+    ['Managing my own money', '2026-05-12', 'Pat Sample, social worker', 'Lacks capacity', 'Staff keep my money safe and I choose what to buy. Asked: mum, key worker, social worker.', '2027-05-12'],
+    ['Choosing what I do each day', '2026-05-12', 'Sam Example, key worker', 'Has capacity', 'I choose using my picture cards.', '2027-05-12'],
+    ['Having the flu vaccination', '2026-09-20', 'Dr Alex Example, GP', 'Fluctuates', 'Best interests decision to have it. Mum was asked and agreed.', '2027-09-20']],
+  legalreps: [
+    ['Advocate', '@adv', 'Independent advocate for reviews and big decisions', 'ADV-2026-044'],
+    ['Deputy', '@mum', 'Deputy for property and affairs, appointed by the Court of Protection', 'COP-2025-1180']],
+  dols: [
+    ['Standard authorisation', 'DOLS/2026/0192', '2026-02-01', '2027-01-31', 'Reviewed every year. Staff help me to go out into the community every day.']],
+  goals: [
+    ['Travel to the shops on the bus', 'I want to be more independent', 'Practise the route. Wait at the stop. Pay with my card. Press the bell.', 'Sam (key worker)', '2026-09-01', '2027-03-01', 'In progress', 'Bus practice video below. I can now press the bell by myself.'],
+    ['Bake a cake for mum\'s birthday', 'Mum loves cake and I love baking', 'Choose a recipe. Shop for ingredients. Bake with staff. Decorate.', 'Jo and the kitchen team', '2026-10-01', '2026-12-15', 'Not started', ''],
+    ['Make two new friends at college', 'I want friends my own age', 'Go to the Thursday art club. Say hello with a sign or a card.', 'College support worker', '2026-09-10', '2027-06-30', 'In progress', 'Sat next to Sam J. at art club on 8 October']],
+  weekly: [
+    ['Monday', '08:00', 'Get up, wash, choose clothes, breakfast', 'Prompts and a picture routine', '1:1'],
+    ['Tuesday', '09:30', 'College (art and music)', 'Travel with a support worker', '1:1'],
+    ['Wednesday', '14:00', 'Shopping trip on the bus', 'Help with money and the bell', '1:1'],
+    ['Thursday', '09:30', 'College (art club)', 'Travel with a support worker', '1:1'],
+    ['Friday', '16:00', 'Baking in the kitchen', 'Hand over hand help with cutting', '1:1'],
+    ['Saturday', '11:00', 'Swimming', 'Changing room support', '1:1'],
+    ['Sunday', '13:00', 'Mum visits', 'Keep it quiet and calm', '1:1']],
+  personalcare: [
+    ['Washing and showering', 'Warm water, my own soap, music on in the bathroom', 'Some help', 'I like to wash my own face and hair'],
+    ['Dressing', 'I choose from two outfits laid out the night before', 'Prompted', 'Help with buttons and zips'],
+    ['Cleaning teeth', 'Twice a day, with a timer and my electric toothbrush', 'Prompted', 'Staff check the back teeth'],
+    ['Making a drink', 'I use the kettle with staff beside me', 'Some help', 'Aim to do it on my own with the cool-touch kettle']],
+  funded: [
+    ['Daytime, 08:00 to 20:00', '12', '1:1', 'Waking', 'Example Borough Council'],
+    ['Night, 20:00 to 08:00', '12', '1:1', 'Sleep-in', 'Example Borough Council']],
+  nhs: [
+    ['Full name', 'Leslie Example (fictional)', ''],
+    ['Date of birth', '14 March 2008', ''],
+    ['NHS number', '000 000 0000 (demo only)', ''],
+    ['GP practice and phone', 'Example Surgery, 020 7946 0100', '2026-09-20'],
+    ['Dentist', 'Smile Dental, 020 7946 0110', '2026-05-02'],
+    ['Optician', 'Clear View Opticians, 020 7946 0111', '2026-03-18'],
+    ['Pharmacy', 'High Street Pharmacy, 020 7946 0112', ''],
+    ['Community learning disability team', 'Example NHS Trust, 020 7946 0104', '2026-07-15'],
+    ['Preferred hospital', 'Example General Hospital', ''],
+    ['Annual health check (last)', 'Done. No concerns.', '2026-06-10'],
+    ['Annual health check (next due)', 'June 2027', ''],
+    ['Health action plan updated', 'Yes', '2026-06-12'],
+    ['Hospital passport updated', 'Yes', '2026-06-12']],
+  diagnoses: [
+    ['Autism', '2014-06-01', 'Community learning disability team', 'I find noise, crowds and change hard', 'Keep routines. Give warnings before changes.'],
+    ['Learning disability (moderate)', '2012-02-10', 'Community learning disability team', 'I need simple words, pictures and time', 'Use short sentences and Makaton. Give me time to answer.'],
+    ['Mild asthma', '2018-11-05', 'Example Surgery', 'I may wheeze when I run or when it is cold', 'Reliever inhaler with a spacer. Call 999 if I cannot speak.']],
+  allergies: [
+    ['Peanuts', 'Swelling of the lips and trouble breathing', 'Severe', 'Use the adrenaline pen at once and call 999. Check every label.', 'GP letter', '2026-09-01'],
+    ['Pollen', 'Sneezing and itchy eyes', 'Mild', 'Offer the antihistamine from the medicine cupboard', 'Parent', '2026-09-01']],
+  eating: [
+    ['Likes', 'Pasta, bananas, cheese sandwiches, tomato soup, fish fingers', 'Key worker'],
+    ['Dislikes', 'Spicy food, mushrooms, mixed textures on one plate', 'Key worker'],
+    ['Food texture level', 'Level 7 (regular). Cut food into small bite-sized pieces.', 'Speech and language therapy'],
+    ['Choking risk', 'Low. Sit upright and stay with Leslie at mealtimes.', 'Speech and language therapy'],
+    ['Equipment', 'Lipped plate and a deep spoon', 'Occupational therapy'],
+    ['Fluid needs', 'About 1.5 litres a day. Offer a drink every two hours.', 'GP'],
+    ['Speech and language therapy advice', 'Review due in January 2027', 'Speech and language therapy']],
+  appointments: [
+    ['2026-09-20', 'Dr Alex Example (GP)', 'Flu vaccination', 'Done. Leslie stayed calm with headphones on.', 'None', '2027-09-20'],
+    ['2026-10-14', 'Smile Dental', 'Check-up', 'No problems found', 'Book a six-month check', '2027-04-14'],
+    ['2026-11-18', 'Community learning disability team', 'Speech and language review', '', 'Bring the picture choice board', '']],
+  regmeds: [
+    ['Example medicine A (demo)', '1 tablet', 'By mouth', '08:00', 'Example reason A', 'Dr Alex Example', '2026-01-10', '2027-01-10', 'Staff', 'Feeling sleepy. Tell the GP if it lasts.', 'Locked medicine cabinet'],
+    ['Example medicine B (demo)', '1 spoonful', 'By mouth', '20:00', 'Example reason B', 'Dr Alex Example', '2026-03-02', '2027-03-02', 'Prompted', 'Upset tummy', 'Locked medicine cabinet'],
+    ['Example inhaler (demo)', '2 puffs with a spacer', 'Inhaled', 'When needed', 'Asthma', 'Dr Alex Example', '2025-11-01', '2026-11-01', 'Prompted', 'Shaky hands for a few minutes', 'In the grab bag']],
+  prn: [
+    ['Example pain relief (demo)', 'Headache or toothache', '1 tablet. No more than 4 in 24 hours.', '4 hours', 'Holding my head, rubbing my jaw, not eating', 'A quiet rest and a drink of water', 'If the pain lasts more than a day', 'Dr Alex Example']],
+  stomp: [
+    ['Example medicine B (demo)', 'Example reason B', '2026-08-15', 'Dr Alex Example', 'Keep the dose the same. Review again in six months.', '2027-02-15']],
+  risk: [
+    ['Leaving the building alone', 'Leslie could get lost near the busy road', 'Staff check the front door. Practise the route together. Carry the phone card.', 3, 4, '', 'Sam Example', '2027-01-15'],
+    ['Choking on food', 'Leslie could choke on large pieces of food', 'Cut food small. Staff stay at the table. Know first aid for choking.', 2, 5, '', 'Jo Sample', '2027-01-15'],
+    ['Getting upset in crowds', 'Leslie could become very upset and hit out', 'Avoid busy times. Use headphones. Plan a quiet place to go.', 2, 3, '', 'Sam Example', '2027-01-15'],
+    ['Using the kettle', 'Leslie could be scalded', 'Cool-touch kettle. Staff stand beside Leslie.', 1, 3, '', 'Sam Example', '2027-01-15']],
+  evac: [
+    ['Moving to the assembly point on my own', 'A staff member walks with me and uses my picture of the fire exit', 'Picture card of the fire exit', '1', 'Car park at the front of the house'],
+    ['Alarm noise', 'Give me my headphones before we leave', 'Noise-cancelling headphones kept by the front door', '1', 'Car park at the front of the house']],
+  missing: [
+    ['Description', 'Slim build, shoulder-length dark brown hair, usually wears a blue hoodie'],
+    ['Places I may go', 'The park on Mill Lane, the bus stop outside the library, mum\'s street'],
+    ['What to do if I am not back', 'Search the house and garden first. Call the manager. If not found in 15 minutes call 999.'],
+    ['Consent to share a photo with police', 'Yes, agreed by mum and the placing authority']],
+  behaviours: [
+    ['Covering ears and shouting', 'Loud sudden sounds, crowded rooms', 'It is too much for me and I need space', 'Humming louder, rocking, pulling at sleeves'],
+    ['Pacing the corridor', 'Waiting, unclear plans', 'I do not know what happens next', 'Asking "when" again and again']],
+  strategies: [
+    ['Prevent', 'Use the visual timetable. Give a warning before changes. Keep noise low.', 'Do not rush me. Do not give long instructions.'],
+    ['Respond', 'Speak quietly. Offer headphones. Move to the quiet room.', 'Do not crowd me. Do not touch me without asking.'],
+    ['After', 'Offer a drink and a calm activity. Say it is all right and the upset is over.', 'Do not ask lots of questions or talk about what happened straight away.']],
+  restrictions: [
+    ['Front door is locked at night', 'To keep me safe near the busy road at night', 'A door alarm. Room checks.', 'Best interests meeting with mum, social worker and manager', '2026-02-01', '2027-01-31', 'Try the door alarm only, once I show I can wait for staff at night']],
+  people: [
+    ['Robin Example', 'Mum', 'Visits on Sundays and phones on Wednesdays', 'Help to make a card for the visit', 'Loves it when mum brings photos of Biscuit'],
+    ['Sam J.', 'Friend from art club', 'Sits next to me and we paint together', 'A card with my name and a friendly sign', 'New friend'],
+    ['Biscuit', 'My cat (at mum\'s house)', 'Photos and video calls', '', 'My favourite']],
+  activities: [
+    ['Education', 'College art and music', 'Example College', 'Tuesday and Thursday mornings', 'Travel with a support worker', 'Painting with bright colours'],
+    ['Activity', 'Swimming', 'Example Leisure Centre', 'Saturday 11:00', 'Changing room support', 'Floating on my back'],
+    ['Volunteering', 'Helping at the garden centre', 'Green Roots Garden Centre', 'First Wednesday of the month', 'One support worker', 'Watering the plants']],
+  emergency: [
+    ['1', '@mum', 'Any emergency or if Leslie goes missing', '020 7946 0102'],
+    ['2', '@gp', 'Health worries in the daytime', '111'],
+    ['3', '@sw', 'Safeguarding concerns', '020 7946 0105']],
+  team: [
+    ['Key worker', 'Sam Example', '020 7946 0001'],
+    ['Registered manager', 'Jo Sample', '020 7946 0002'],
+    ['Deputy manager', 'Chris Placeholder', '020 7946 0003'],
+    ['Night lead', 'Dana Demo', '020 7946 0004']],
+  skills: [
+    ['Makaton level 1', 'Leslie uses signs to say what they want', 'Sam, Chris, Dana', '2026-06-01', '2027-06-01'],
+    ['Autism awareness', 'To understand sensory needs and changes', 'All staff', '2026-04-15', '2027-04-15'],
+    ['Emergency adrenaline pen', 'Leslie has a severe peanut allergy', 'Sam, Jo, Chris, Dana', '2026-09-05', '2027-09-05']],
+  reviews: [
+    ['2026-03-30', 'Routine', 'Leslie, mum, Sam, Jo, Pat', 'Leslie chose the pictures for the agenda and led part of it', 'Plan agreed. New goal about the bus.', '2026-09-30'],
+    ['2026-09-30', 'Routine', 'Leslie, mum, Sam, Jo, Pat', 'Leslie showed the bus practice video', 'Plan agreed. Add baking goal.', '2027-03-30']],
+  signoff: [
+    ['Jo Sample', 'Registered manager', 'Jo Sample', '2026-09-30'],
+    ['Pat Sample', 'Social worker', 'P. Sample', '2026-09-30']]
+};
+
+/* ── small pictures drawn as SVG, turned into JPEGs when needed ── */
+const DEMO_ART = {
+  cover: '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#cfe0ff"/><circle cx="110" cy="110" r="46" fill="#f4a261"/><path d="M0 520 Q150 440 300 500 T600 480 V600 H0Z" fill="#9ed4a6"/><path d="M120 600 Q130 440 300 430 Q470 440 480 600Z" fill="#1446a0"/><rect x="262" y="360" width="76" height="90" rx="20" fill="#e8b88f"/><ellipse cx="300" cy="270" rx="118" ry="132" fill="#f1c9a5"/><path d="M178 250 Q175 120 300 112 Q430 118 424 250 Q400 180 300 170 Q205 176 178 250Z" fill="#4a2f27"/><circle cx="258" cy="268" r="12" fill="#2b2b3a"/><circle cx="342" cy="268" r="12" fill="#2b2b3a"/><circle cx="224" cy="308" r="16" fill="#f4a8a0" opacity=".6"/><circle cx="376" cy="308" r="16" fill="#f4a8a0" opacity=".6"/><path d="M250 322 Q300 372 350 322" stroke="#2b2b3a" stroke-width="9" fill="none" stroke-linecap="round"/><polygon points="300,470 312,498 342,500 318,518 326,548 300,532 274,548 282,518 258,500 288,498" fill="#fff"/></svg>',
+  park: '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600"><rect width="800" height="600" fill="#bfe3ff"/><circle cx="680" cy="110" r="60" fill="#f4a261"/><ellipse cx="260" cy="170" rx="70" ry="24" fill="#fff"/><ellipse cx="310" cy="152" rx="46" ry="22" fill="#fff"/><ellipse cx="200" cy="580" rx="440" ry="200" fill="#7bc47f"/><ellipse cx="650" cy="600" rx="380" ry="170" fill="#5fae68"/><rect x="113" y="330" width="36" height="180" fill="#6b4f3a"/><circle cx="131" cy="300" r="92" fill="#3f9b55"/><circle cx="82" cy="350" r="60" fill="#4aa862"/><circle cx="184" cy="350" r="60" fill="#4aa862"/><rect x="400" y="190" width="250" height="14" rx="6" fill="#1446a0"/><path d="M412 198 L378 500 M638 198 L672 500" stroke="#1446a0" stroke-width="12" stroke-linecap="round"/><path d="M490 204 V392 M570 204 V392" stroke="#6b4f3a" stroke-width="6"/><rect x="474" y="390" width="112" height="16" rx="6" fill="#c0392b"/><g fill="#e86a92"><circle cx="300" cy="520" r="9"/><circle cx="340" cy="545" r="9"/><circle cx="720" cy="520" r="9"/></g><g fill="#fff"><circle cx="270" cy="550" r="8"/><circle cx="690" cy="555" r="8"/></g></svg>',
+  baking: '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600"><rect width="800" height="600" fill="#fdebd0"/><rect x="70" y="60" width="210" height="170" fill="#bfe3ff" stroke="#8a6d3b" stroke-width="12"/><path d="M175 60 V230 M70 145 H280" stroke="#8a6d3b" stroke-width="8"/><rect y="420" width="800" height="180" fill="#b07d4f"/><rect x="170" y="390" width="460" height="28" rx="8" fill="#d6d6d6"/><g><polygon points="205,340 295,340 285,392 215,392" fill="#e6b17e"/><ellipse cx="250" cy="330" rx="56" ry="40" fill="#f4a8c0"/><circle cx="250" cy="292" r="13" fill="#c0392b"/></g><g><polygon points="355,340 445,340 435,392 365,392" fill="#e6b17e"/><ellipse cx="400" cy="330" rx="56" ry="40" fill="#b6e3ff"/><circle cx="400" cy="292" r="13" fill="#c0392b"/></g><g><polygon points="505,340 595,340 585,392 515,392" fill="#e6b17e"/><ellipse cx="550" cy="330" rx="56" ry="40" fill="#d7f0b2"/><circle cx="550" cy="292" r="13" fill="#c0392b"/></g><ellipse cx="690" cy="470" rx="80" ry="34" fill="#fff"/><ellipse cx="690" cy="452" rx="70" ry="20" fill="#eaeaea"/></svg>',
+  bus: '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600"><rect width="800" height="600" fill="#bfe3ff"/><circle cx="130" cy="110" r="58" fill="#f4a261"/><ellipse cx="560" cy="120" rx="80" ry="26" fill="#fff"/><ellipse cx="610" cy="100" rx="50" ry="24" fill="#fff"/><ellipse cx="200" cy="420" rx="420" ry="120" fill="#7bc47f"/><rect y="420" width="800" height="180" fill="#4b4f58"/><g fill="#fff"><rect x="40" y="505" width="90" height="12"/><rect x="230" y="505" width="90" height="12"/><rect x="420" y="505" width="90" height="12"/><rect x="610" y="505" width="90" height="12"/></g><rect x="156" y="270" width="380" height="170" rx="26" fill="#c0392b"/><g fill="#dff1ff"><rect x="186" y="298" width="64" height="58" rx="8"/><rect x="268" y="298" width="64" height="58" rx="8"/><rect x="350" y="298" width="64" height="58" rx="8"/><rect x="438" y="298" width="72" height="116" rx="8"/></g><rect x="156" y="372" width="380" height="14" fill="#8e2a20"/><g fill="#222"><circle cx="230" cy="444" r="36"/><circle cx="450" cy="444" r="36"/></g><g fill="#9a9a9a"><circle cx="230" cy="444" r="14"/><circle cx="450" cy="444" r="14"/></g><rect x="660" y="230" width="14" height="210" fill="#6b4f3a"/><rect x="620" y="180" width="94" height="66" rx="8" fill="#1446a0"/><text x="667" y="224" font-size="30" font-family="sans-serif" font-weight="700" fill="#fff" text-anchor="middle">BUS</text></svg>'
+};
+async function demoPicture(name, w, h) {
+  const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('A demo picture could not be drawn')); i.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(DEMO_ART[name]); });
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  cv.getContext('2d').drawImage(img, 0, 0, w, h);
+  return canvasBlob(cv, 'image/jpeg', 0.85);
+}
+function demoPdf() {
+  const esc = s => s.replace(/([()\\])/g, '\\$1');
+  const lines = ['DEMO ONLY (fictional)', '', 'Mental capacity assessment: managing money', 'Person: Leslie Example', 'Date: 12 May 2026', 'Assessed by: Pat Sample, social worker', 'Outcome: lacks capacity for this decision.', 'Best interests: staff keep money safe, Leslie chooses what to buy.', '', 'This is an example document made inside the page.'];
+  const content = 'BT /F1 14 Tf 56 780 Td 22 TL\n' + lines.map(l => '(' + esc(l) + ') Tj T*').join('\n') + '\nET';
+  const objs = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>', '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>', '<< /Length ' + content.length + ' >>\nstream\n' + content + '\nendstream', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'];
+  let out = '%PDF-1.4\n'; const offs = [];
+  objs.forEach((o, i) => { offs.push(out.length); out += (i + 1) + ' 0 obj\n' + o + '\nendobj\n'; });
+  const xref = out.length;
+  out += 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n' + offs.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('') + 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF';
+  return new Blob([out], { type: 'application/pdf' });
+}
+
+/* Fills the cover, every table, contacts, text, pictures, a video, a PDF and an extra section.
+   Safe to run again: blocks and the section added by an earlier run are replaced. */
+async function applyDemo() {
+  const realUser = ui.user;
+  Log.commit();
+  ui.user = { name: DEMO_BY, manager: false };
+  try {
+    // 1. clear what an earlier run added
+    S.sections = S.sections.filter(s => !s.demoSection);
+    S.sections.forEach(sec => sec.panels.forEach(p => { p.blocks = p.blocks.filter(b => !b.demo); }));
+    // 2. cover facts
+    Object.assign(S.plan, { preferredName: 'Leslie', fullName: 'Leslie Example (fictional)', dob: '2008-03-14', address: '1 Example Road, Sampletown, AB1 2CD', movedIn: '2025-01-06', commLine: 'Uses Makaton signs, picture cards and short phrases', funder: 'Example Borough Council', keyWorkerRowId: '', managerRowId: '', demo: true });
+    // 3. contacts, stored once
+    const ids = {};
+    S.contacts = Object.entries(DEMO_CONTACTS).map(([k, v]) => { const ct = Object.assign(makeContact(), v); ids[k] = ct.id; return ct; });
+    // 4. table rows
+    for (const [key, list] of Object.entries(DEMO_ROWS)) {
+      allBlocks(b => b.templateKey === key && !b.bound).forEach(({ block }) => {
+        block.rows = list.map(vals => makeRow(block.columns, vals.map((v, i) => (block.columns[i] && block.columns[i].type === 'contact' && ids[v] ? ids[v] : v))));
+        block.updatedBy = DEMO_BY; block.updatedAt = nowISO();
+        if (block.columns.some(cl => cl.calc === 'risk')) block.rows.forEach(r => updateRisk(block, r, null));
+      });
+    }
+    const dir = firstByTemplate('contacts'); if (dir) { dir.updatedBy = DEMO_BY; dir.updatedAt = nowISO(); }
+    // 5. pictures, video, file, text
+    const consent = () => ({ recorded: true, agreedBy: 'Demo data, not a real person', date: todayStr() });
+    const cover = await Media.add({ kind: 'image', blob: await demoPicture('cover', 1200, 1200), fileName: 'demo-cover.jpg', mimeType: 'image/jpeg' });
+    cover.consent = consent(); S.plan.coverPhotoMediaId = cover.id;
+    const pics = [];
+    for (const [name, caption, alt, withConsent] of [
+      ['park', 'Swinging at the park, my favourite place', 'A drawing of a swing and a tree in a park', true],
+      ['baking', 'Baking cupcakes with Jo', 'A drawing of three cupcakes on a tray', true],
+      ['bus', 'Waiting for the bus to the shops (consent not yet recorded, to show the warning)', 'A drawing of a red bus at a bus stop', false]]) {
+      const m = await Media.add({ kind: 'image', blob: await demoPicture(name, 800, 600), fileName: 'demo-' + name + '.jpg', mimeType: 'image/jpeg' });
+      if (withConsent) m.consent = consent();
+      pics.push({ mediaId: m.id, caption, alt });
+    }
+    const webm = await (await fetch('data:video/webm;base64,' + DEMO_WEBM_B64)).blob();
+    const poster = await videoPoster(webm).catch(() => null);
+    const vid = await Media.add({ kind: 'video', blob: webm, fileName: 'demo-bus-practice.webm', mimeType: 'video/webm', poster });
+    vid.consent = consent();
+    const pdf = await Media.add({ kind: 'file', blob: demoPdf(), fileName: 'demo-capacity-assessment.pdf', mimeType: 'application/pdf' });
+    const mk = (type, props) => Object.assign(baseBlock(type, DEMO_BY), { demo: true }, props);
+    const put = (secKey, panelKey, block, atStart) => {
+      const sec = S.sections.find(s => s.key === secKey && !s.deleted); if (!sec) return;
+      const p = panelOf(sec, panelKey); if (atStart) p.blocks.unshift(block); else p.blocks.push(block);
+    };
+    put('about', 'know', mk('text', { html: '<p><b>Hello, I am Leslie.</b> I love animals, music and baking. This plan is written with me, so you know how I like to be supported.</p><h4>What people like about me</h4><ul><li>I am funny and kind</li><li>I never give up when I am learning something new</li><li>I give the best hugs when I am ready</li></ul>' }), true);
+    put('about', 'know', mk('image', { items: pics }));
+    put('about', 'like', mk('text', { html: '<h4>Things that help me feel calm</h4><ul><li>My headphones and my favourite playlist</li><li>The weighted blanket on the sofa</li><li>Looking at photos of Biscuit</li><li>A drink of squash with ice</li></ul>' }), true);
+    put('decisions', 'know', mk('file', { mediaId: pdf.id, name: 'Capacity assessment: managing money (demo)', date: '2026-05-12' }));
+    put('goals', 'further', mk('video', { mediaId: vid.id, caption: 'Practising the bus route with Sam (demo cartoon)' }));
+    put('daily', 'like', mk('text', { html: '<h4>My morning routine</h4><ol><li>Wake up and say good morning (sign "morning")</li><li>Choose my clothes from two outfits</li><li>Wash and clean my teeth</li><li>Breakfast: banana and toast</li><li>Check the picture timetable for the day</li></ol>' }), true);
+    // 6. an extra section, to show that a new section gets the same three headings
+    const sec = { id: uid('sec'), key: 'custom', title: 'School and college', order: 0, isDefault: false, visible: true, deleted: false, demoSection: true, panels: makePanels() };
+    const tcols = ['Day', 'Class', 'Support needed'].map(l => ({ id: uid('c'), label: l, type: 'text' }));
+    const tt = mk('table', { title: 'College timetable', templateKey: null, columns: tcols, rows: [['Tuesday', 'Art and music', 'Travel with a support worker'], ['Thursday', 'Art club', 'Support worker nearby']].map(v => makeRow(tcols, v)) });
+    sec.panels[0].blocks.push(mk('text', { html: '<p>Leslie goes to <b>Example College</b> on Tuesday and Thursday mornings. This section was added to show that new sections get the same three headings.</p>' }), tt);
+    sec.panels[1].blocks.push(mk('text', { html: '<ul><li>Tell the tutor about my headphones</li><li>Sit near the door so I can leave if it gets loud</li></ul>' }));
+    const rev = S.sections.findIndex(s => s.key === 'review' && !s.deleted);
+    S.sections.splice(rev >= 0 ? rev : S.sections.length, 0, sec);
+  } finally { ui.user = realUser; }
+  Log.event({}, 'demo_loaded', 'Fictional demo content loaded: cover, every table, contacts, text, pictures, a video, a PDF and a College section');
+}
+
 /* ═══ VERSION LOG PAGE ═══ */
 const actionLabel = a => ACTIONS[a] || a;
 const entryWhere = e => (e.sectionTitle ? e.sectionTitle + (e.panelHeading ? ', ' + e.panelHeading : '') : 'Whole plan');
@@ -2013,8 +2260,9 @@ function settingsDialog() {
   const m = modal({ title: 'Settings', wide: true, body: [
     h('p', { class: 'muted' }, 'Sample (Phase 1). Data is saved in this browser only. There is no sign-in, so the name typed at the start is what the version log records.'),
     field('Logo web address', logo, 'Loaded from this address on the cover, the top bar and the print-out.'), field('Largest video allowed (MB)', mb, '200 MB is suggested.'),
+    h('p', { class: 'muted', style: 'margin-top:.8rem' }, 'A new browser starts with the fictional demo plan. To start with an empty plan instead, add ?blank to the end of the web address.'),
     h('div', { class: 'pick-list', style: 'margin-top:1rem' },
-      h('button', { class: 'btn btn-ghost', type: 'button', onclick: () => { m.close(); fillDemo(); } }, 'Fill the empty tables with fictional demo content'),
+      h('button', { class: 'btn btn-ghost', type: 'button', onclick: () => { m.close(); fillDemo(); } }, 'Load the fictional demo content (Leslie Example)'),
       h('button', { class: 'btn btn-ghost', type: 'button', style: 'color:var(--red)', onclick: () => { m.close(); eraseDialog(); } }, 'Erase everything and start again'))],
   actions: [{ label: 'Cancel' }, { label: 'Save settings', kind: 'primary', run: () => {
     const lim = Math.max(1, Math.min(2000, +mb.value || 200)); const url = logo.value.trim() || DEFAULT_LOGO;
@@ -2035,23 +2283,10 @@ function eraseDialog() {
     } }] });
 }
 async function fillDemo() {
-  if (!await confirmDialog('This writes fictional example entries into several tables and the cover, replacing what is in those tables. Use it on a test plan only.', 'Fill with demo content')) return;
-  const p = S.plan; Object.assign(p, { preferredName: 'Leslie', fullName: 'Leslie Example (fictional)', dob: '2008-03-14', address: '1 Example Road, Sampletown', movedIn: '2025-01-06', commLine: 'Uses Makaton signs and short phrases', funder: 'Example Borough Council' });
-  const rows = (key, list) => { const b = firstByTemplate(key); if (!b) return null; b.rows = list.map(v => makeRow(b.columns, v)); b.updatedBy = ui.user.name; b.updatedAt = nowISO(); return b; };
-  const gp = Object.assign(makeContact(), { name: 'Dr Alex Example', role: 'GP', organisation: 'Example Surgery', phone: '020 7946 0100', email: 'surgery@example.invalid', involvement: 'Registered GP', shareInfo: 'Yes' });
-  const sw = Object.assign(makeContact(), { name: 'Pat Sample', role: 'Social worker', organisation: 'Example Borough Council', phone: '020 7946 0101', shareInfo: 'Ask first' });
-  S.contacts = [gp, sw];
-  rows('team', [['Key worker', 'Sam Example', '020 7946 0001'], ['Registered manager', 'Jo Sample', '020 7946 0002']]);
-  rows('allergies', [['Peanuts', 'Swelling of the lips and difficulty breathing', 'Severe', 'Use the adrenaline pen and call 999', 'GP letter', '2026-09-01']]);
-  rows('communicate', [['Covers ears', 'It is too noisy', 'Move to a quiet room and speak softly']]);
-  rows('goals', [['Travel to the shops on the bus', 'I want to be more independent', 'Practise the route with staff', 'Key worker', '2026-10-01', '2027-03-01', 'In progress', '']]);
-  rows('regmeds', [['Example medicine A', '1 tablet', 'By mouth', '08:00', 'Example purpose', 'Dr Alex Example', '2026-01-10', '2027-01-10', 'Staff', 'Drowsiness', 'Locked cabinet']]);
-  rows('risk', [['Leaving the building alone', 'Could get lost near the road', 'Staff check the door and practise the route together', 3, 4, '', 'Sam Example', '2027-01-15']]);
-  rows('emergency', [[1, gp.id, 'Any health emergency', '020 7946 0199']]);
-  rows('reviews', [['2026-09-30', 'Routine', 'Leslie, Sam, Jo', 'Leslie chose the pictures for the agenda', 'Plan agreed', '2027-03-30']]);
-  const rb = firstByTemplate('risk'); if (rb) updateRisk(rb, rb.rows[0], null);
-  Log.event({}, 'demo_loaded', 'Fictional demo content loaded into the cover and eight tables');
-  renderAll(); toast('Demo content added');
+  if (!await confirmDialog('This loads the fictional demo plan for "Leslie Example": the cover, every table, contacts, text, pictures, a video and a PDF. It replaces what is in those tables and removes demo blocks added by an earlier load. Use it on a test plan only.', 'Load demo content')) return;
+  const b = busy('Loading the fictional demo content...');
+  try { await applyDemo(); } catch (e) { b.done(); return alertDialog('The demo content could not be loaded: ' + e.message); }
+  b.done(); renderAll(); toast('Demo content loaded');
 }
 
 /* ═══ PAGE, MODES, START-UP ═══ */
@@ -2113,6 +2348,7 @@ async function printPlan() { await flushNow(); enterPrintMode(); await waitForIm
 
 async function init() {
   loadPrefs(); applyPrefs();
+  const startBlank = /[?&]blank\b/.test(location.search);
   await Storage.init();
   const saved = await Storage.loadPlan();
   S = saved || defaultState();
@@ -2121,6 +2357,11 @@ async function init() {
   if (Storage.volatile) { setTimeout(() => alertDialog('This browser is not letting the page save anything (for example a private window). You can try the sample, but everything is lost when you close the page.', 'Saving is switched off'), 600); }
   await askUser();
   Log.recover(S.plan.pending); S.plan.pending = { sessions: [], queue: [] };
+  if (!saved && !startBlank) {
+    const b = busy('Setting up the sample plan with fictional demo content...');
+    try { await applyDemo(); } catch (e) { console.error(e); }
+    b.done();
+  }
   renderAll();
 
   $('#btnEdit').onclick = toggleEdit; $('#btnDone').onclick = toggleEdit;
