@@ -29,6 +29,7 @@ task-manager-pro.html       — PIN-locked task viewer (unit/YP tasks, new)
 task-manager-pro-admin.html — Admin panel for Task Manager Pro (new)
 body-map-tracker.html       — PIN-locked daily body map dashboard, reads a Google Sheet (new)
 body-map-admin.html         — Admin panel for the Body Map Tracker (new)
+support-plan-sample.html    — Interactive Support Plan, no-login sample (Phase 1, browser storage, new)
 ```
 
 ## Tool Documentation
@@ -41,6 +42,7 @@ Read these instead of the full HTML files:
 - [hounslow.md](hounslow.md) — Hounslow on-site kiosk + admin panel
 - [task-manager-pro.md](task-manager-pro.md) — Task Manager Pro viewer + admin panel
 - [body-map-tracker.md](body-map-tracker.md) — Body Map Tracker viewer + admin panel
+- [support-plan-sample.md](support-plan-sample.md) — Interactive Support Plan sample (no login, no Firebase, data stays in the browser)
 
 ## Shared Firestore Collections
 These collections are read/written by multiple tools:
