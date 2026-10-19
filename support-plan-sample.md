@@ -5,6 +5,8 @@ An editable support plan for one young person (default "Leslie") in a CQC-regula
 
 This is a **sample for testing before it goes into the live workflow**. It is not linked from `index.html`, uses **no Firebase and no login**, and sends nothing anywhere. Everything lives in the browser (IndexedDB) on the device it is opened on.
 
+**It opens with fictional demo content.** The first time it is opened in a browser it loads a made-up plan for "Leslie Example" (see *Demo content* below) so there is something to look at. Add `?blank` to the web address (`support-plan-sample.html?blank`) to start with an empty plan instead. A browser that already has a saved plan keeps it; use Settings, "Load the fictional demo content" to load the demo into it.
+
 ## Access
 - No sign-in. When the page opens it asks **"Who is using the plan?"**. The typed name is written into the version log against every change.
 - A tick box, "I am acting as a manager", stands in for roles. It is needed to: restore a deleted block or section, delete a section, open a log entry (before/after + restore), and sign off a review. Real roles (manager / staff / viewer) arrive with sign-in in Phase 2.
@@ -91,7 +93,19 @@ media: [{ id, kind: 'image'|'video'|'file', fileName, mimeType, sizeBytes, stora
 One box in the top bar searches the cover facts, section titles, text blocks, every table cell (contact cells by name/role/phone), table titles, photo captions and alt text, video captions and file names. Click a result to jump to it (panel opens, block flashes). Hidden sections are not searched in view mode.
 
 ## Backup and restore
-**Backup** makes one `.zip` (files stored uncompressed, valid ZIP with CRC): `plan.json`, `versionLog.json`, `files/<storageRef>` for every photo, video, file, poster and sign-off snapshot. **Restore** replaces everything in this browser from such a file (after a warning), then logs "Backup imported". Version log also exports as CSV on its own. Settings has **Fill the empty tables with fictional demo content** and **Erase everything** (must type ERASE).
+**Backup** makes one `.zip` (files stored uncompressed, valid ZIP with CRC): `plan.json`, `versionLog.json`, `files/<storageRef>` for every photo, video, file, poster and sign-off snapshot. **Restore** replaces everything in this browser from such a file (after a warning), then logs "Backup imported". Version log also exports as CSV on its own. Settings has **Load the fictional demo content (Leslie Example)** and **Erase everything** (must type ERASE; this gives a blank plan, not the demo).
+
+## Demo content
+Everything is fictional. "Leslie Example" is not a real person; phone numbers use the reserved UK drama range (`020 7946 0xxx`) and emails end in `.invalid`. Medicine names are generic placeholders ("Example medicine A").
+
+`applyDemo()` (in the `FICTIONAL DEMO CONTENT` block) fills:
+- the cover facts, and a cartoon cover photo (with consent recorded);
+- every one of the 34 ready-made tables from `DEMO_ROWS` (rows follow each template's column order; a value such as `'@gp'` in a Contact column becomes that contact), including a severe peanut allergy (so the red strip shows), calculated risk ratings, and Reviews dates that drive "Last reviewed" and "Next review date";
+- the Contacts directory (`DEMO_CONTACTS`, stored once, picked by the Legal representatives and Emergency contacts tables);
+- text and bullet blocks (About me, Daily support), a 3-photo block (two with consent, one left without so the warning icon shows), a 3 second cartoon video with poster (a 20 KB WebM embedded as base64 in `DEMO_WEBM_B64`), a PDF file block (built in the page by `demoPdf()`), and an extra **School and college** section placed before Review and sign-off.
+- Pictures are small SVG drawings (`DEMO_ART`) turned into JPEGs by `demoPicture()`. Nothing is downloaded.
+
+Demo blocks are marked `demo: true`, the extra section `demoSection: true`, and `plan.demo = true` changes the top bar subtitle. Running the load again first removes those blocks and the section, so it never duplicates. Demo blocks and rows show "Last edited by Demo data (fictional)". The log records one entry "Fictional demo content loaded", attributed to whoever was using the page. On a brand-new browser the demo loads right after the name prompt, unless the address has `?blank`.
 
 ## Look, access and print
 - Brand blue `#1446a0` for headings, buttons, links; gold appears only inside the star logo (the logo is gold star + white wordmark, so it sits on a blue band). Roboto body, Roboto Black (900) headings, as the spec requires (the other tools use DM Sans). Logo loaded from the address in Settings (default: the official logo in `CS-Documentation/invoice`).
@@ -105,6 +119,7 @@ One box in the top bar searches the cover facts, section titles, text blocks, ev
 - **"Changed by" is a typed name**, not a verified identity, and the manager tick is not security.
 - **One device only.** No sharing, and data is lost if site data is cleared. **Not suitable as the live record.** Use Backup regularly.
 - Health information and photos are special category data. Before live use: sign-in with roles, encryption in transit and at rest, UK/EEA hosting, no public links, recorded consent, backups and a DPIA (spec "Data protection").
+- Demo content is for looking at and testing only. The cover, tables and contacts are fictional; delete it (Settings, Erase everything) before anyone types real information, and do not use the demo on a live plan.
 - The Phase 2 overdue-date alert strip (review/expiry dates that have passed) is not built.
 - Roboto and the logo load from the internet; offline they fall back to a system font and the logo is hidden.
 - Word files download rather than open in a tab (browser behaviour). HEIC photos only work where the browser can decode them.
@@ -142,6 +157,8 @@ Media.urls        // object-URL cache by storageRef
 | `runSearch()` / `searchIndex()` | Search |
 | `exportBackup()` / `importBackup()`, `zipWrite()` / `zipRead()` | Backup file |
 | `printPlan()`, `enterPrintMode()` / `leavePrintMode()` | Print layout |
+| `applyDemo()` / `fillDemo()` | Load the fictional demo plan (`fillDemo` is the Settings button: asks first, then calls `applyDemo`) |
+| `demoPicture()`, `demoPdf()` | Draw a demo picture from SVG; build the demo PDF |
 | `window.__plan` | Console/test handle: `{ S, LOG, ui, Storage }` |
 
 ## Moving to Phase 2 (online, with sign-in)
