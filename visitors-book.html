@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1446a0">
+<title>Visitors Book — Connected Stars</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brand:#1446a0;--brand-dark:#0d3278;--brand-mid:#2d5bbf;--brand-light:#e8eef8;
+  --bg:#f4f6fb;--surface:#fff;
+  --text:#1a1a2e;--text2:#4a5568;--text3:#6b7280;
+  --border:#dde3ef;--border2:#b8c5e0;
+  --green:#27ae60;--amber:#e67e22;--red:#c0392b;--red-bg:#fdf0ef;--red-bd:#f5c6c2;
+  --teal:#0e7490;--teal-dark:#0a5a70;--teal-light:#e0f7fa;
+  --r:10px;--rs:8px;
+  --sh:0 2px 12px rgba(20,70,160,.08);
+  --sh-md:0 4px 16px rgba(20,70,160,.12);
+  --sh-lg:0 12px 40px rgba(20,70,160,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;font-size:16px;line-height:1.45}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--brand-mid);outline-offset:2px}
+
+/* ── HEADER ── */
+.top{background:linear-gradient(135deg,var(--brand-dark) 0%,var(--brand) 60%,var(--brand-mid) 100%);padding:14px 20px;display:flex;align-items:center;gap:16px;box-shadow:var(--sh-md)}
+.top img{height:52px;width:auto;display:block}
+.top-title{color:#fff;font-size:15px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;opacity:.92;margin-left:auto;text-align:right}
+
+/* ── LAYOUT ── */
+main{flex:1;display:flex;justify-content:center;align-items:flex-start;padding:28px 16px 40px}
+.screen{display:none;width:100%;max-width:560px}
+.screen.active{display:block}
+.card{background:var(--surface);border-radius:20px;box-shadow:var(--sh-lg);padding:32px 28px}
+h1{font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-.4px;line-height:1.2}
+.lead{color:var(--text2);margin-top:8px}
+
+/* ── HOME CHOICE ── */
+.choices{display:grid;gap:16px;margin-top:28px}
+.choice{display:flex;align-items:center;gap:18px;width:100%;min-height:96px;padding:18px 22px;border:none;border-radius:16px;color:#fff;text-align:left;box-shadow:var(--sh-md);transition:transform .1s,box-shadow .1s}
+.choice:active{transform:scale(.985)}
+.choice.in{background:var(--brand)}
+.choice.in:hover{background:var(--brand-dark)}
+.choice.out{background:var(--teal)}
+.choice.out:hover{background:var(--teal-dark)}
+.choice-ic{flex-shrink:0;width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
+.choice-ic svg{width:28px;height:28px}
+.choice-t{font-size:24px;font-weight:800;line-height:1.15;display:block}
+.choice-s{font-size:14px;font-weight:500;opacity:.9;display:block;margin-top:2px}
+
+/* ── FORM ── */
+.back{background:none;border:none;color:var(--brand);font-size:15px;font-weight:700;padding:6px 0;margin-bottom:14px;display:inline-flex;align-items:center;gap:6px}
+.back:hover{text-decoration:underline}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:5px 12px;border-radius:20px;margin-bottom:12px}
+.badge.in{background:var(--brand-light);color:var(--brand)}
+.badge.out{background:var(--teal-light);color:var(--teal-dark)}
+form{margin-top:22px}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:.3px}
+.field .opt{font-weight:500;color:var(--text3)}
+.field input{width:100%;min-height:50px;padding:12px 14px;border:1.5px solid var(--border2);border-radius:var(--rs);font-family:inherit;font-size:16px;color:var(--text);background:#fff;transition:border-color .15s,box-shadow .15s}
+.field input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(20,70,160,.15)}
+.field input[aria-invalid="true"]{border-color:var(--red);background:var(--red-bg)}
+.hint{font-size:13px;color:var(--text3);margin-top:6px}
+.err{font-size:13px;font-weight:600;color:var(--red);margin-top:6px;display:none}
+.err.show{display:block}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:420px){.row2{grid-template-columns:1fr}}
+.when{background:var(--brand-light);border:1px solid var(--border);border-radius:var(--r);padding:16px 16px 6px;margin-bottom:18px}
+.when-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.when-head strong{font-size:13px;letter-spacing:.3px}
+.linkbtn{background:none;border:none;color:var(--brand);font-size:13px;font-weight:700;text-decoration:underline;padding:4px 0}
+.submit{width:100%;min-height:58px;border:none;border-radius:14px;font-size:19px;font-weight:800;color:#fff;box-shadow:var(--sh-md);margin-top:6px}
+.submit.in{background:var(--brand)}
+.submit.in:hover:not(:disabled){background:var(--brand-dark)}
+.submit.out{background:var(--teal)}
+.submit.out:hover:not(:disabled){background:var(--teal-dark)}
+.submit:disabled{opacity:.65;cursor:default}
+.form-err{background:var(--red-bg);border:1px solid var(--red-bd);color:var(--red);border-radius:var(--rs);padding:12px 14px;font-size:14px;font-weight:600;margin-bottom:16px;display:none}
+.form-err.show{display:block}
+.form-note{background:#fef9f0;border:1px solid #fad7a0;color:#8a5a14;border-radius:var(--rs);padding:12px 14px;font-size:14px;margin-bottom:16px;display:none}
+.form-note.show{display:block}
+
+/* ── DONE ── */
+.done{text-align:center;padding:40px 28px}
+.done-ic{width:84px;height:84px;border-radius:50%;background:#eafaf1;border:3px solid #a9dfbf;margin:0 auto 20px;display:flex;align-items:center;justify-content:center}
+.done-ic svg{width:44px;height:44px}
+.done h1{color:var(--text)}
+.done-detail{color:var(--text2);margin-top:10px;font-size:17px}
+.done-extra{color:var(--text3);margin-top:6px}
+.done .submit{background:var(--brand);margin-top:28px;max-width:320px}
+.done-count{color:var(--text3);font-size:13px;margin-top:14px}
+
+/* ── CONNECTION BANNER ── */
+#conn{display:none;background:var(--red);color:#fff;text-align:center;font-size:14px;font-weight:600;padding:10px 16px}
+#conn.show{display:block}
+
+.foot{text-align:center;color:var(--text3);font-size:12px;padding:0 16px 24px}
+@media (max-width:480px){
+  .card{padding:24px 18px}
+  h1{font-size:24px}
+  .top img{height:44px}
+  .top-title{font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <img src="https://raw.githubusercontent.com/CS-Documentation/invoice/refs/heads/main/front%20page%20header.png" alt="Connected Stars">
+  <div class="top-title">Visitors Book</div>
+</header>
+<div id="conn" role="alert">Can't connect right now — check the Wi-Fi and reload this page.</div>
+
+<main>
+
+  <!-- HOME: sign in or sign out -->
+  <section class="screen active" id="s-home" aria-labelledby="homeH">
+    <div class="card">
+      <h1 id="homeH">Welcome</h1>
+      <p class="lead">Please sign in when you arrive and sign out when you leave.</p>
+      <div class="choices">
+        <button type="button" class="choice in" id="goIn">
+          <span class="choice-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></span>
+          <span><span class="choice-t">Sign in</span><span class="choice-s">I'm arriving</span></span>
+        </button>
+        <button type="button" class="choice out" id="goOut">
+          <span class="choice-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span>
+          <span><span class="choice-t">Sign out</span><span class="choice-s">I'm leaving</span></span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SIGN IN -->
+  <section class="screen" id="s-in" aria-labelledby="inH">
+    <div class="card">
+      <button type="button" class="back" data-back>← Back</button><br>
+      <span class="badge in">Arriving</span>
+      <h1 id="inH">Sign in</h1>
+      <p class="lead">Please fill in your details below.</p>
+      <form id="formIn" novalidate>
+        <div class="form-err" id="inErr" role="alert"></div>
+        <div class="form-note" id="inNote" role="status"></div>
+
+        <div class="field">
+          <label for="inName">Your name</label>
+          <input id="inName" name="name" type="text" maxlength="100" autocomplete="name" autocapitalize="words" required>
+          <div class="err" id="inNameErr"></div>
+        </div>
+        <div class="field">
+          <label for="inYp">Young person you are visiting</label>
+          <input id="inYp" name="youngPerson" type="text" maxlength="100" autocomplete="off" autocapitalize="words" required>
+          <div class="hint">A name or initials is fine.</div>
+          <div class="err" id="inYpErr"></div>
+        </div>
+        <div class="field">
+          <label for="inPurpose">Purpose of your visit</label>
+          <input id="inPurpose" name="purpose" type="text" maxlength="300" autocomplete="off" required>
+          <div class="err" id="inPurposeErr"></div>
+        </div>
+
+        <div class="when">
+          <div class="when-head">
+            <strong>Date and time of sign in</strong>
+            <button type="button" class="linkbtn" data-now="in">Reset to now</button>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="inDate">Date</label>
+              <input id="inDate" type="date" required>
+            </div>
+            <div class="field">
+              <label for="inTime">Time</label>
+              <input id="inTime" type="time" step="60" required>
+            </div>
+          </div>
+          <div class="err" id="inWhenErr" style="margin:-6px 0 12px"></div>
+          <p class="hint" style="margin:-6px 0 12px">Filled in with the current UK time (<span data-tz>UK</span>). You can change it if it's wrong.</p>
+        </div>
+
+        <button type="submit" class="submit in" id="inBtn">Sign in</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- SIGN OUT -->
+  <section class="screen" id="s-out" aria-labelledby="outH">
+    <div class="card">
+      <button type="button" class="back" data-back>← Back</button><br>
+      <span class="badge out">Leaving</span>
+      <h1 id="outH">Sign out</h1>
+      <p class="lead">Please enter your name exactly as you did when you signed in.</p>
+      <form id="formOut" novalidate>
+        <div class="form-err" id="outErr" role="alert"></div>
+        <div class="form-note" id="outNote" role="status"></div>
+
+        <div class="field">
+          <label for="outName">Your name</label>
+          <input id="outName" name="name" type="text" maxlength="100" autocomplete="name" autocapitalize="words" required>
+          <div class="err" id="outNameErr"></div>
+        </div>
+
+        <div class="when">
+          <div class="when-head">
+            <strong>Date and time of sign out</strong>
+            <button type="button" class="linkbtn" data-now="out">Reset to now</button>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="outDate">Date</label>
+              <input id="outDate" type="date" required>
+            </div>
+            <div class="field">
+              <label for="outTime">Time</label>
+              <input id="outTime" type="time" step="60" required>
+            </div>
+          </div>
+          <div class="err" id="outWhenErr" style="margin:-6px 0 12px"></div>
+          <p class="hint" style="margin:-6px 0 12px">Filled in with the current UK time (<span data-tz>UK</span>). You can change it if it's wrong.</p>
+        </div>
+
+        <button type="submit" class="submit out" id="outBtn">Sign out</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- DONE -->
+  <section class="screen" id="s-done" aria-live="polite">
+    <div class="card done">
+      <div class="done-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <h1 id="doneH">Thank you</h1>
+      <p class="done-detail" id="doneDetail"></p>
+      <p class="done-extra" id="doneExtra"></p>
+      <button type="button" class="submit" id="doneBtn">Finished</button>
+      <p class="done-count" id="doneCount"></p>
+    </div>
+  </section>
+
+</main>
+<p class="foot">Connected Stars · Visitors Book</p>
+
+<script type="module">
+import { initializeApp }                          from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously }             from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc,
+         serverTimestamp }                        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCwHzZFibrc9SNP8vAV6Jr_NmQr4fVCEto",
+  authDomain: "connected-stars-handover.firebaseapp.com",
+  projectId: "connected-stars-handover",
+  storageBucket: "connected-stars-handover.firebasestorage.app",
+  messagingSenderId: "606134396217",
+  appId: "1:606134396217:web:6636e2fbe9b73b7723b4e8"
+};
+// A *named* app keeps this page's anonymous session separate from the staff login used by the other
+// tools on the same site. With the default app, opening this page on a computer where a staff member
+// is signed in would swap their login for an anonymous one.
+const fbApp = initializeApp(firebaseConfig, 'visitors-book');
+const auth  = getAuth(fbApp);
+const db    = getFirestore(fbApp);
+
+// ── UK TIME (Europe/London, so BST/GMT is handled automatically) ──
+const UK_FMT = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit',
+  hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZoneName: 'short'
+});
+function ukNow() {
+  const p = {};
+  UK_FMT.formatToParts(new Date()).forEach(x => { p[x.type] = x.value; });
+  const hh = p.hour === '24' ? '00' : p.hour;
+  return { date: `${p.year}-${p.month}-${p.day}`, time: `${hh}:${p.minute}`, tz: p.timeZoneName || 'UK' };
+}
+// Treat a date + time as a wall-clock value so two of them can be compared (minutes).
+function wallMinutes(date, time) {
+  const [y, m, d] = date.split('-').map(Number);
+  const [hh, mm]  = time.split(':').map(Number);
+  return Date.UTC(y, m - 1, d, hh, mm) / 60000;
+}
+function prettyWhen(date, time) {
+  const [y, m, d] = date.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  const day = dt.toLocaleDateString('en-GB', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  return `${time} on ${day}`;
+}
+
+// ── ANONYMOUS AUTH (no login for visitors; the form can only add entries) ──
+const connEl = document.getElementById('conn');
+const authReady = signInAnonymously(auth).catch(err => {
+  console.error('Anonymous sign-in failed', err);
+  connEl.classList.add('show');
+  throw err;
+});
+authReady.catch(() => {});
+
+// ── ROUTING (#sign-in / #sign-out so each can be linked or put on a QR code) ──
+const SCREENS = { home: 's-home', 'sign-in': 's-in', 'sign-out': 's-out', done: 's-done' };
+let doneTimer = null;
+
+function showScreen(name) {
+  clearInterval(doneTimer);
+  Object.entries(SCREENS).forEach(([k, id]) =>
+    document.getElementById(id).classList.toggle('active', k === name));
+  if (name === 'sign-in')  openForm('in');
+  if (name === 'sign-out') openForm('out');
+  window.scrollTo(0, 0);
+  const first = { 'sign-in': 'inName', 'sign-out': 'outName' }[name];
+  if (first) setTimeout(() => document.getElementById(first).focus({ preventScroll: true }), 50);
+}
+function route() {
+  const name = location.hash.replace('#', '');
+  showScreen(name === 'sign-in' || name === 'sign-out' ? name : 'home');
+}
+function navigate(name) {
+  if (name === 'home') history.pushState(null, '', location.pathname + location.search);
+  else history.pushState(null, '', '#' + name);
+  route();
+}
+window.addEventListener('popstate', route);
+
+document.getElementById('goIn').addEventListener('click',  () => navigate('sign-in'));
+document.getElementById('goOut').addEventListener('click', () => navigate('sign-out'));
+document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => navigate('home')));
+document.getElementById('doneBtn').addEventListener('click', () => navigate('home'));
+
+// ── FORMS ──
+const FORMS = {
+  in:  { form: 'formIn',  btn: 'inBtn',  err: 'inErr',  note: 'inNote',  date: 'inDate',  time: 'inTime',  when: 'inWhenErr',
+         fields: [['inName', 'inNameErr', 'Please enter your name.'],
+                  ['inYp', 'inYpErr', 'Please enter the young person you are visiting.'],
+                  ['inPurpose', 'inPurposeErr', 'Please enter the purpose of your visit.']] },
+  out: { form: 'formOut', btn: 'outBtn', err: 'outErr', note: 'outNote', date: 'outDate', time: 'outTime', when: 'outWhenErr',
+         fields: [['outName', 'outNameErr', 'Please enter your name.']] }
+};
+const $ = id => document.getElementById(id);
+
+// Fill the date/time boxes with the current UK time. Runs every time a form is opened (not just
+// on page load), so a page left open all day never shows a stale time.
+function fillNow(kind) {
+  const f = FORMS[kind], now = ukNow();
+  $(f.date).value = now.date;
+  $(f.time).value = now.time;
+  document.querySelectorAll('[data-tz]').forEach(el => { el.textContent = now.tz; });
+  $(f.when).classList.remove('show');
+  $(f.date).removeAttribute('aria-invalid');
+  $(f.time).removeAttribute('aria-invalid');
+}
+function openForm(kind) {
+  const f = FORMS[kind];
+  $(f.form).reset();
+  f.fields.forEach(([inputId, errId]) => { $(inputId).removeAttribute('aria-invalid'); $(errId).classList.remove('show'); });
+  [f.err, f.note].forEach(id => { $(id).classList.remove('show'); $(id).textContent = ''; });
+  $(f.btn).disabled = false;
+  $(f.btn).textContent = kind === 'in' ? 'Sign in' : 'Sign out';
+  fillNow(kind);
+}
+document.querySelectorAll('[data-now]').forEach(b => b.addEventListener('click', () => fillNow(b.dataset.now)));
+
+function tidy(s) { return s.replace(/\s+/g, ' ').trim(); }
+// Used to match a sign-out to its sign-in: ignores case, accents and extra spaces.
+function nameKey(s) { return tidy(s).normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+
+function validate(kind) {
+  const f = FORMS[kind];
+  let ok = true, firstBad = null;
+  f.fields.forEach(([inputId, errId, msg]) => {
+    const el = $(inputId), bad = !tidy(el.value);
+    el.setAttribute('aria-invalid', bad ? 'true' : 'false');
+    $(errId).textContent = msg;
+    $(errId).classList.toggle('show', bad);
+    if (bad) { ok = false; firstBad = firstBad || el; }
+  });
+  const date = $(f.date).value, time = $(f.time).value, whenEl = $(f.when);
+  let whenMsg = '';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) {
+    whenMsg = 'Please enter both a date and a time.';
+  } else {
+    const now = ukNow();
+    if (wallMinutes(date, time) > wallMinutes(now.date, now.time) + 10) {
+      whenMsg = 'That date and time is in the future — please check it.';
+    }
+  }
+  $(f.date).setAttribute('aria-invalid', whenMsg ? 'true' : 'false');
+  $(f.time).setAttribute('aria-invalid', whenMsg ? 'true' : 'false');
+  whenEl.textContent = whenMsg;
+  whenEl.classList.toggle('show', !!whenMsg);
+  if (whenMsg) { ok = false; firstBad = firstBad || $(f.date); }
+  if (firstBad) firstBad.focus();
+  return ok;
+}
+
+let sending = false;   // true while a save is in flight, so a double tap / Enter can never add the entry twice
+async function submitEntry(kind, e) {
+  e.preventDefault();
+  if (sending) return;
+  const f = FORMS[kind], btn = $(f.btn), errEl = $(f.err), noteEl = $(f.note);
+  errEl.classList.remove('show'); noteEl.classList.remove('show');
+  if (!validate(kind)) return;
+
+  const name = tidy($(kind === 'in' ? 'inName' : 'outName').value);
+  const entry = { type: kind, name, nameKey: nameKey(name), date: $(f.date).value, time: $(f.time).value };
+  if (kind === 'in') {
+    entry.youngPerson = tidy($('inYp').value);
+    entry.purpose     = tidy($('inPurpose').value);
+  }
+  entry.createdAt = serverTimestamp();
+
+  sending = true;
+  btn.disabled = true; btn.textContent = 'Saving…';
+  // If the network is slow the write stays queued and is sent once it reconnects; the button stays
+  // disabled meanwhile so a second tap can't create a duplicate entry.
+  const slowTimer = setTimeout(() => {
+    noteEl.textContent = 'Still saving — the connection looks slow. Please wait and don\'t tap again.';
+    noteEl.classList.add('show');
+  }, 10000);
+  try {
+    await authReady;
+    await addDoc(collection(db, 'visitorLog'), entry);
+  } catch (err) {
+    console.error('Visitor entry failed', err);
+    errEl.textContent = 'Sorry, that didn\'t save. Please check the Wi-Fi and try again — or tell a member of staff.';
+    errEl.classList.add('show');
+    btn.disabled = false; btn.textContent = kind === 'in' ? 'Sign in' : 'Sign out';
+    return;
+  } finally {
+    clearTimeout(slowTimer);
+    sending = false;
+  }
+  noteEl.classList.remove('show');
+  showDone(kind, entry);
+}
+$('formIn').addEventListener('submit',  e => submitEntry('in', e));
+$('formOut').addEventListener('submit', e => submitEntry('out', e));
+
+// ── DONE SCREEN (clears itself so the next visitor starts fresh) ──
+function showDone(kind, entry) {
+  $(FORMS[kind].form).reset();
+  history.replaceState(null, '', location.pathname + location.search);
+  $('doneH').textContent      = kind === 'in' ? 'You\'re signed in' : 'You\'re signed out';
+  $('doneDetail').textContent = `Thank you, ${entry.name}. Recorded at ${prettyWhen(entry.date, entry.time)}.`;
+  $('doneExtra').textContent  = kind === 'in' ? 'Please remember to sign out when you leave.' : 'Thank you for visiting. Safe journey home.';
+  showScreen('done');
+  let left = 10;
+  const tick = () => {
+    $('doneCount').textContent = `Returning to the start in ${left} second${left === 1 ? '' : 's'}…`;
+    if (left-- <= 0) { clearInterval(doneTimer); navigate('home'); }
+  };
+  tick();
+  doneTimer = setInterval(tick, 1000);
+}
+
+route();
+</script>
+</body>
+</html>

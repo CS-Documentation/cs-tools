@@ -30,6 +30,8 @@ task-manager-pro-admin.html — Admin panel for Task Manager Pro (new)
 body-map-tracker.html       — PIN-locked daily body map dashboard, reads a Google Sheet (new)
 body-map-admin.html         — Admin panel for the Body Map Tracker (new)
 support-plan-sample.html    — Interactive Support Plan, no-login sample (Phase 1, browser storage, new)
+visitors-book.html          — Public visitors' sign in / sign out form, no login (anonymous write-only, new)
+visitors-book-log.html      — Staff view of the visitors book: on site now, visit log, CSV export (new)
 ```
 
 ## Tool Documentation
@@ -43,6 +45,7 @@ Read these instead of the full HTML files:
 - [task-manager-pro.md](task-manager-pro.md) — Task Manager Pro viewer + admin panel
 - [body-map-tracker.md](body-map-tracker.md) — Body Map Tracker viewer + admin panel
 - [support-plan-sample.md](support-plan-sample.md) — Interactive Support Plan sample (no login, no Firebase, data stays in the browser)
+- [visitors-book.md](visitors-book.md) — Visitors Book public form + staff log (also holds the Firestore rules to add)
 
 ## Shared Firestore Collections
 These collections are read/written by multiple tools:
@@ -68,6 +71,7 @@ These collections are read/written by multiple tools:
 | `bodyMapPins` | body-map-admin | body-map-tracker (reads only), body-map-admin |
 | `bodyMapYoungPeople` | body-map-admin | body-map-tracker (reads only), body-map-admin |
 | `bodyMapSettings` | body-map-admin | body-map-tracker (reads only), body-map-admin |
+| `visitorLog` | visitors-book (anonymous, creates only) | visitors-book-log (reads + staff sign-outs) |
 
 ### `staffProfiles` schema
 ```js
