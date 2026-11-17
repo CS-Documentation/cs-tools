@@ -32,6 +32,7 @@ body-map-admin.html         — Admin panel for the Body Map Tracker (new)
 support-plan-sample.html    — Interactive Support Plan, no-login sample (Phase 1, browser storage, new)
 visitors-book.html          — Public visitors' sign in / sign out form, no login (anonymous write-only, new)
 visitors-book-log.html      — Staff view of the visitors book: on site now, visit log, CSV export (new)
+visitors-book-qr.png / .svg  — QR code that opens visitors-book.html (print and display at the entrance)
 ```
 
 ## Tool Documentation

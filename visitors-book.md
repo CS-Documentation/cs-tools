@@ -10,6 +10,12 @@ A digital visitors' book. Anyone who arrives opens **`visitors-book.html`** (no 
 ### Separate Firebase app on the public page
 `visitors-book.html` calls `initializeApp(config, 'visitors-book')` — a **named** app — instead of the default. Firebase Auth stores its session per app name, so the visitors page's anonymous session lives separately from the staff session the other tools use. Without this, a staff member opening the public page on their own computer would have their login replaced by an anonymous one and be signed out of every other tool on the site.
 
+## Public link and QR code
+- **Link visitors use**: `https://cs-documentation.github.io/cs-tools/visitors-book.html` (GitHub Pages serves whatever is on `main`, so a change only goes live once it is merged there). Direct links: `…/visitors-book.html#sign-in` and `…/visitors-book.html#sign-out`.
+- **`visitors-book-qr.png`** (1176 px, for printing/sharing) and **`visitors-book-qr.svg`** (scales to any size) are a QR code for the link above, in brand blue with 25% error correction so it still scans if a printout is scuffed. Checked by decoding the PNG (full size and shrunk to 160 px) back to the exact URL.
+- If the site address ever changes, regenerate both files — they encode the URL, not the page — e.g. `python3 -m pip install segno`, then `segno.make(URL, error='q').save('visitors-book-qr.png', scale=24, border=4, dark='#1446a0')` (and the same for `.svg`).
+- The Pages address was inferred from the repo name (no custom domain file in the repo) and could not be fetched from the build sandbox; open the link once after merging to confirm.
+
 ## `visitors-book.html` flow
 1. **Home**: two large buttons, *Sign in* (I'm arriving) and *Sign out* (I'm leaving).
 2. **Sign in form**: name, young person visiting (free text — a name or initials), purpose of visit, date, time.
