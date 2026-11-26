@@ -30,6 +30,7 @@ task-manager-pro-admin.html — Admin panel for Task Manager Pro (new)
 body-map-tracker.html       — PIN-locked daily body map dashboard, reads a Google Sheet (new)
 body-map-admin.html         — Admin panel for the Body Map Tracker (new)
 support-plan-sample.html    — Interactive Support Plan, no-login sample (Phase 1, browser storage, new)
+task-board-public-sample.html — Task Board revamp: public PIN-locked task list, UX prototype with fictional data, no Firebase (new)
 visitors-book.html          — Public visitors' sign in / sign out form, no login (anonymous write-only, new)
 visitors-book-log.html      — Staff view of the visitors book: on site now, visit log, CSV export (new)
 visitors-book-qr.png / .svg  — QR code that opens visitors-book.html (print and display at the entrance)
@@ -46,6 +47,7 @@ Read these instead of the full HTML files:
 - [task-manager-pro.md](task-manager-pro.md) — Task Manager Pro viewer + admin panel
 - [body-map-tracker.md](body-map-tracker.md) — Body Map Tracker viewer + admin panel
 - [support-plan-sample.md](support-plan-sample.md) — Interactive Support Plan sample (no login, no Firebase, data stays in the browser)
+- [task-board-public-sample.md](task-board-public-sample.md) — Task Board revamp prototype: public view with colour-coded cards, ordered steps, unit / young person picker, and the done-then-checked flow (no Firebase, sample PIN 123456)
 - [visitors-book.md](visitors-book.md) — Visitors Book public form + staff log (also holds the Firestore rules to add)
 
 ## Shared Firestore Collections
