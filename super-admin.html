@@ -52,7 +52,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* APP LAYOUT */
 #app{display:none;flex-direction:row;min-height:100vh}
 #sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200}
-#main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+#main{margin-left:var(--sidebar-w);flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh}
 
 /* SIDEBAR */
 .sb-header{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
@@ -146,7 +146,7 @@ tr:hover td{background:var(--surface2)}
 .modal-close{background:transparent;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:2px 6px;border-radius:4px;line-height:1}
 .modal-close:hover{background:var(--surface2);color:var(--text)}
 .modal-body{padding:20px;overflow-y:auto;flex:1}
-.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;flex-shrink:0}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .form-hint{font-size:11px;color:var(--text3);margin-top:4px}
 .form-sep{border:none;border-top:1px solid var(--border);margin:16px 0}
@@ -173,14 +173,115 @@ tr:hover td{background:var(--surface2)}
 .toast-item.t-warn{background:var(--amber)}
 @keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
+/* UNITS & YOUNG PEOPLE BOARD */
+.hdr-actions{display:flex;gap:8px;flex-wrap:wrap}
+.board-toolbar{display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;margin-bottom:12px}
+.board-toolbar .search-in{background:#fff;min-width:240px}
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer;user-select:none}
+.chk input{accent-color:var(--brand);width:15px;height:15px;cursor:pointer}
+.board-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.board-summary{font-size:12px;color:var(--text3)}
+.arrow-btn{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);background:#fff;color:var(--text2);font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;padding-bottom:2px}
+.arrow-btn:hover{background:var(--brand-light);color:var(--brand);border-color:var(--border2)}
+.unit-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chip{--chip:var(--brand);--chip-bg:var(--brand-light);display:inline-flex;align-items:center;gap:7px;padding:6px 8px 6px 12px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-family:inherit;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--chip);color:var(--text)}
+.chip.active{background:var(--chip-bg);border-color:var(--chip);color:var(--chip)}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:var(--chip);flex-shrink:0}
+.chip .n{font-size:11px;font-weight:700;background:var(--surface3);color:var(--text3);padding:1px 8px;border-radius:20px}
+.chip.active .n{background:#fff;color:var(--chip)}
+.chip.archived{opacity:.65}
+
+.board{position:relative;display:flex;gap:16px;overflow-x:auto;align-items:flex-start;padding:2px 2px 16px;scroll-snap-type:x proximity}
+.board.is-dragging{scroll-snap-type:none}
+.board-msg{flex:1;text-align:center;padding:48px 20px;color:var(--text3);font-size:14px}
+.board-empty{flex:1;max-width:520px;margin:20px auto;background:var(--surface);border:2px dashed var(--border2);border-radius:16px;padding:40px 28px;text-align:center}
+.board-empty .big{font-size:40px;margin-bottom:10px}
+.board-empty h3{font-size:18px;margin-bottom:6px}
+.board-empty p{color:var(--text3);margin-bottom:18px;font-size:13px}
+
+.col{--accent:var(--brand);--accent-bg:var(--brand-light);flex:0 0 330px;width:330px;background:var(--surface3);border-radius:14px;border-top:4px solid var(--accent);display:flex;flex-direction:column;max-height:calc(100vh - 280px);min-height:240px;scroll-snap-align:start;transition:background .15s,box-shadow .15s}
+.col.drop-ok{background:var(--accent-bg);box-shadow:0 0 0 2px var(--accent)}
+.col.flash{animation:colFlash 1.4s ease}
+@keyframes colFlash{0%,60%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+.col-hdr{display:flex;align-items:center;gap:6px;padding:12px 8px 8px 14px}
+.col-name{font-size:15px;font-weight:800;letter-spacing:-.2px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col-count{background:var(--accent-bg);color:var(--accent);font-size:12px;font-weight:800;padding:2px 9px;border-radius:20px;white-space:nowrap}
+.col-spacer{flex:1}
+.ib{width:30px;height:30px;border-radius:8px;border:none;background:transparent;color:var(--text2);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;flex-shrink:0}
+.ib:hover{background:rgba(20,30,60,.08);color:var(--text)}
+.col-list{position:relative;flex:1;overflow-y:auto;padding:4px 10px 10px;display:flex;flex-direction:column;gap:8px;min-height:70px}
+.col-empty{border:1.5px dashed var(--border2);border-radius:var(--rs);padding:22px 12px;text-align:center;color:var(--text3);font-size:12.5px;line-height:1.5}
+.col-add{margin:0 10px 10px;padding:9px;border:1.5px dashed var(--border2);border-radius:var(--rs);background:transparent;color:var(--text2);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0}
+.col-add:hover{border-color:var(--accent);color:var(--accent);background:rgba(255,255,255,.7)}
+.col-note{margin:0 14px 8px;font-size:11.5px;color:var(--red)}
+.col-new{flex:0 0 260px;width:260px;min-height:140px;background:transparent;border:2px dashed var(--border2);border-top:2px dashed var(--border2);align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-weight:700;font-size:14px;gap:6px;font-family:inherit}
+.col-new:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-light)}
+.col-new .plus{font-size:28px;line-height:1}
+.col.is-moved{opacity:.92}
+
+.yp-card{background:#fff;border:1px solid var(--border);border-radius:var(--rs);padding:10px 8px 10px 10px;display:flex;gap:10px;align-items:flex-start;cursor:pointer;box-shadow:0 1px 3px rgba(20,70,160,.06);transition:box-shadow .15s,border-color .15s;outline:none}
+.yp-card:hover,.yp-card:focus-visible{box-shadow:var(--sh-md);border-color:var(--border2)}
+.yp-card:focus-visible{border-color:var(--brand)}
+.yp-card[draggable="true"]{cursor:grab}
+.yp-card.dragging{opacity:.35}
+.yp-card.flash{animation:cardFlash 1.6s ease}
+@keyframes cardFlash{0%,50%{background:#fff8d6;border-color:var(--amber)}100%{background:#fff}}
+.yp-av{width:36px;height:36px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;letter-spacing:.3px}
+.yp-main{flex:1;min-width:0}
+.yp-name{font-size:14px;font-weight:700;line-height:1.3;overflow-wrap:anywhere}
+.yp-meta{font-size:12px;color:var(--text3);margin-top:2px}
+.yp-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;align-items:center}
+.yp-tags .badge{font-size:10.5px;padding:2px 8px}
+.yp-la{font-size:11.5px;color:var(--text2)}
+.yp-side{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.yp-side .ib{width:26px;height:26px;font-size:15px}
+.is-moved .yp-card{background:#fafbfd}
+.is-moved .yp-av{background:var(--surface3);color:var(--text3)}
+
+/* pop-up menu */
+.pop-menu{position:fixed;z-index:1500;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 28px rgba(20,30,60,.2);padding:5px;min-width:190px}
+.pop-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:9px 11px;border:none;background:transparent;border-radius:7px;font-family:inherit;font-size:13px;font-weight:500;color:var(--text);cursor:pointer}
+.pop-item:hover{background:var(--surface2)}
+.pop-item.danger{color:var(--red)}
+.pop-item.danger:hover{background:var(--red-bg)}
+.pop-item .pi{width:18px;text-align:center}
+.pop-sep{height:1px;background:var(--border);margin:4px 2px}
+
+/* move modal: unit picker */
+.move-who{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;margin-bottom:16px;font-size:13px;color:var(--text2)}
+.move-who strong{color:var(--text);font-size:14px}
+.unit-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.unit-opt{--c:var(--brand);--cb:var(--brand-light);display:flex;align-items:center;gap:9px;text-align:left;padding:11px 12px;border:1.5px solid var(--border);border-radius:var(--rs);background:#fff;font-family:inherit;cursor:pointer;transition:all .12s}
+.unit-opt:hover{border-color:var(--c)}
+.unit-opt.sel{border-color:var(--c);background:var(--cb);box-shadow:0 0 0 2px var(--c) inset}
+.unit-opt .dot{width:10px;height:10px;border-radius:50%;background:var(--c);flex-shrink:0}
+.unit-opt .uo-name,.unit-opt .uo-sub{display:block}
+.unit-opt .uo-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.25;overflow-wrap:anywhere}
+.unit-opt .uo-sub{font-size:11px;color:var(--text3)}
+
+/* mobile menu button */
+.menu-btn{display:none;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:17px;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+
 /* RESPONSIVE */
 @media(max-width:700px){
   #sidebar{transform:translateX(-100%);transition:transform .25s}
   #sidebar.open{transform:translateX(0)}
   #main{margin-left:0}
+  .menu-btn{display:flex}
+  #content{padding:14px}
   .form-row{grid-template-columns:1fr}
   #sb-overlay{display:none;position:fixed;inset:0;background:rgba(26,26,46,.35);z-index:190}
   #sb-overlay.show{display:block}
+  .unit-chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;margin-right:-14px;padding-right:14px}
+  .chip{flex-shrink:0}
+  .modal-footer .btn{flex:1 1 auto;justify-content:center}
+  .board{scroll-snap-type:x mandatory}
+  .col{flex-basis:calc(100vw - 60px);width:calc(100vw - 60px);max-height:calc(100vh - 330px)}
+  .col-new{flex-basis:200px;width:200px}
+  .board-toolbar .search-in{min-width:0;flex:1 1 100%}
+  .board-right{margin-left:0;width:100%;justify-content:space-between}
+  .unit-pick{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -234,13 +335,9 @@ tr:hover td{background:var(--surface2)}
     </div>
     <nav class="sb-nav">
       <div class="sb-sec">Management</div>
-      <div class="nav-item active" onclick="showView('units')" id="nav-units">
-        <span class="ni">🏠</span> Units
-        <span class="nav-count" id="cnt-units">0</span>
-      </div>
-      <div class="nav-item" onclick="showView('serviceusers')" id="nav-serviceusers">
-        <span class="ni">👥</span> Service Users
-        <span class="nav-count" id="cnt-su">0</span>
+      <div class="nav-item active" onclick="showView('board')" id="nav-board">
+        <span class="ni">🏠</span> Units &amp; Young People
+        <span class="nav-count" id="cnt-su" title="Young people currently in care">0</span>
       </div>
       <div class="nav-item" onclick="showView('staff')" id="nav-staff">
         <span class="ni">🧑‍💼</span> Staff Accounts
@@ -264,78 +361,42 @@ tr:hover td{background:var(--surface2)}
 
   <div id="main">
     <div id="topbar">
+      <button class="menu-btn" onclick="openSidebar()" aria-label="Open menu">☰</button>
       <a href="index.html" class="home-btn" title="Home">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>
       </a>
-      <div class="tb-title" id="topbarTitle">Units <span class="tb-sub">Manage care units</span></div>
+      <div class="tb-title" id="topbarTitle">Units &amp; Young People <span class="tb-sub">Who is where</span></div>
     </div>
     <div id="content">
 
-      <!-- UNITS VIEW -->
-      <div class="view active" id="v-units">
+      <!-- UNITS & YOUNG PEOPLE BOARD -->
+      <div class="view active" id="v-board">
         <div class="page-hdr">
           <div>
-            <h2>Units</h2>
-            <p>Add, edit and manage care units across the organisation</p>
+            <h2>Units &amp; Young People</h2>
+            <p>Each unit has its own column — scroll across to see them all. To move someone, drag them onto another unit or tap <strong>Move</strong> on their card.</p>
           </div>
-          <button class="btn btn-primary" onclick="openUnitModal()">＋ Add Unit</button>
-        </div>
-        <div class="table-wrap">
-          <div class="table-toolbar">
-            <input class="search-in" id="unitSearch" placeholder="Search units…" oninput="renderUnits()">
-            <select class="filter-sel" id="unitFilter" onchange="renderUnits()">
-              <option value="all">All statuses</option>
-              <option value="active" selected>Active only</option>
-              <option value="archived">Archived only</option>
-            </select>
+          <div class="hdr-actions">
+            <button class="btn btn-ghost" onclick="openUnitModal()">＋ Add Unit</button>
+            <button class="btn btn-primary" onclick="openSUModal()">＋ Add Young Person</button>
           </div>
-          <table>
-            <thead><tr>
-              <th>Unit Name</th>
-              <th>Status</th>
-              <th>Active Users</th>
-              <th>Created</th>
-              <th></th>
-            </tr></thead>
-            <tbody id="unitsTbody"></tbody>
-          </table>
         </div>
-      </div>
 
-      <!-- SERVICE USERS VIEW -->
-      <div class="view" id="v-serviceusers">
-        <div class="page-hdr">
-          <div>
-            <h2>Service Users</h2>
-            <p>Manage young people profiles, unit assignments and move-on dates</p>
+        <div class="board-toolbar">
+          <input class="search-in" id="boardSearch" placeholder="Search young people…" oninput="renderBoard()">
+          <label class="chk"><input type="checkbox" id="showArchived" onchange="renderBoard()"> Show archived units</label>
+          <label class="chk"><input type="checkbox" id="showMovedOn" onchange="renderBoard()"> Show moved on <span id="movedOnCount" style="color:var(--text3)"></span></label>
+          <div class="board-right">
+            <span class="board-summary" id="boardSummary"></span>
+            <div style="display:flex;gap:6px">
+              <button class="arrow-btn" onclick="scrollBoard(-1)" title="Scroll left" aria-label="Scroll left">‹</button>
+              <button class="arrow-btn" onclick="scrollBoard(1)" title="Scroll right" aria-label="Scroll right">›</button>
+            </div>
           </div>
-          <button class="btn btn-primary" onclick="openSUModal()">＋ Add Service User</button>
         </div>
-        <div class="table-wrap">
-          <div class="table-toolbar">
-            <input class="search-in" id="suSearch" placeholder="Search service users…" oninput="renderSUs()">
-            <select class="filter-sel" id="suUnitFilter" onchange="renderSUs()">
-              <option value="all">All units</option>
-            </select>
-            <select class="filter-sel" id="suStatusFilter" onchange="renderSUs()">
-              <option value="active">Active</option>
-              <option value="moved-on">Moved on</option>
-              <option value="all">All</option>
-            </select>
-          </div>
-          <table>
-            <thead><tr>
-              <th>Name</th>
-              <th>Current Unit</th>
-              <th>DOB</th>
-              <th>Local Authority</th>
-              <th>Reg. Body</th>
-              <th>Status</th>
-              <th></th>
-            </tr></thead>
-            <tbody id="suTbody"></tbody>
-          </table>
-        </div>
+
+        <div class="unit-chips" id="unitChips"></div>
+        <div class="board" id="board"><div class="board-msg">Loading…</div></div>
       </div>
 
       <!-- STAFF VIEW -->
@@ -381,7 +442,7 @@ tr:hover td{background:var(--surface2)}
         <div class="page-hdr">
           <div>
             <h2>Regulatory Bodies</h2>
-            <p>Manage the options available in service user profiles</p>
+            <p>Manage the options available in young people's profiles</p>
           </div>
           <button class="btn btn-primary" onclick="openRBModal()">＋ Add Option</button>
         </div>
@@ -389,7 +450,7 @@ tr:hover td{background:var(--surface2)}
           <table>
             <thead><tr>
               <th>Label</th>
-              <th>Service Users Using This</th>
+              <th>Young People Using This</th>
               <th></th>
             </tr></thead>
             <tbody id="rbTbody"></tbody>
@@ -425,7 +486,7 @@ tr:hover td{background:var(--surface2)}
 <div class="modal-bg" id="suModal">
   <div class="modal modal-lg">
     <div class="modal-hdr">
-      <h3 id="suModalTitle">Add Service User</h3>
+      <h3 id="suModalTitle">Add Young Person</h3>
       <button class="modal-close" onclick="closeModal('suModal')">✕</button>
     </div>
     <div class="modal-body">
@@ -442,7 +503,7 @@ tr:hover td{background:var(--surface2)}
       <div class="form-group">
         <label>Unit *</label>
         <select id="suUnit"></select>
-        <div class="form-hint" id="suUnitHint" style="display:none">To date-lock a unit change and preserve history, use the <strong>Transfer</strong> button instead.</div>
+        <div class="form-hint" id="suUnitHint" style="display:none">This only corrects the unit. To record a move properly (with a date and history), close this and use the <strong>Move</strong> button on their card.</div>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -464,33 +525,36 @@ tr:hover td{background:var(--surface2)}
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('suModal')">Cancel</button>
+      <button class="btn btn-ghost" onclick="saveSU(true)" id="suAnotherBtn">Save &amp; add another</button>
       <button class="btn btn-primary" onclick="saveSU()" id="suSaveBtn">Save</button>
     </div>
   </div>
 </div>
 
-<!-- TRANSFER UNIT MODAL -->
+<!-- MOVE TO ANOTHER UNIT MODAL -->
 <div class="modal-bg" id="transferModal">
   <div class="modal">
     <div class="modal-hdr">
-      <h3>Transfer Unit</h3>
+      <h3>Move to another unit</h3>
       <button class="modal-close" onclick="closeModal('transferModal')">✕</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Transferring a service user to a new unit is date-locked. Handover records before the transfer date remain in the original unit.</p>
-      <div class="form-group">
-        <label>New Unit *</label>
-        <select id="transferUnit"></select>
+      <div class="move-who">
+        <div><strong id="transferName"></strong><br>currently in <span id="transferFrom"></span></div>
       </div>
       <div class="form-group">
-        <label>Transfer Date *</label>
+        <label>Move to *</label>
+        <div class="unit-pick" id="transferUnitList"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Move date *</label>
         <input id="transferDate" type="date">
-        <div class="form-hint">Records before this date stay with the previous unit</div>
+        <div class="form-hint">Handover records before this date stay with the previous unit</div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('transferModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="confirmTransfer()">Confirm Transfer</button>
+      <button class="btn btn-primary" onclick="confirmTransfer()" id="transferBtn">Move</button>
     </div>
   </div>
 </div>
@@ -581,7 +645,7 @@ tr:hover td{background:var(--surface2)}
       <div class="form-group">
         <label>Label *</label>
         <input id="rbLabel" type="text" placeholder="e.g. O">
-        <div class="form-hint">Short label shown in service user profiles</div>
+        <div class="form-hint">Short label shown in young people's profiles</div>
       </div>
     </div>
     <div class="modal-footer">
@@ -695,22 +759,31 @@ window.doSignOut = async () => {
 };
 
 // ── LOAD ALL DATA ──
+let dataLoaded = false;   // board shows "Loading…" until units + young people have both arrived
+
 async function loadAll() {
-  await Promise.all([loadUnits(), loadServiceUsers(), loadStaff(), loadRegBodies()]);
+  try {
+    await Promise.all([loadUnits(), loadServiceUsers(), loadStaff(), loadRegBodies()]);
+  } catch (e) {
+    toast('Could not load data: ' + e.message, 'error');
+  }
+  dataLoaded = true;
+  renderBoard();
+  renderRBs();
   updateCounts();
 }
 
 async function loadUnits() {
   const snap = await getDocs(query(collection(db, 'units'), orderBy('name')));
   units = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  populateUnitFilters();
-  renderUnits();
+  rebuildColours();
+  renderBoard();
 }
 
 async function loadServiceUsers() {
   const snap = await getDocs(query(collection(db, 'serviceUsers'), orderBy('name')));
   serviceUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  renderSUs();
+  renderBoard();
 }
 
 async function loadStaff() {
@@ -727,7 +800,6 @@ async function loadRegBodies() {
 
 // ── COUNTS ──
 function updateCounts() {
-  document.getElementById('cnt-units').textContent  = units.filter(u => u.status !== 'archived').length;
   document.getElementById('cnt-su').textContent     = serviceUsers.filter(s => s.status !== 'moved-on').length;
   document.getElementById('cnt-staff').textContent  = staffList.filter(s => s.status !== 'archived').length;
   document.getElementById('cnt-rb').textContent     = regBodies.length;
@@ -787,167 +859,491 @@ window.deleteRB = function(id) {
     updateCounts();
   };
   showConfirm('Delete Regulatory Body', `Delete "${rb.label}"?`,
-    inUse > 0 ? `⚠️ ${inUse} service user(s) currently have this value — it will remain on their profile but no longer appear as a dropdown option.` : 'This cannot be undone.', '🗑️');
+    inUse > 0 ? `⚠️ ${inUse} young person/people currently have this value — it will remain on their profile but no longer appear as a dropdown option.` : 'This cannot be undone.', '🗑️');
 };
 
-// ── UNITS RENDER ──
-window.renderUnits = function() {
-  const search = document.getElementById('unitSearch').value.toLowerCase();
-  const filter = document.getElementById('unitFilter').value;
-  const rows = units.filter(u => {
-    if (filter === 'active'   && u.status === 'archived') return false;
-    if (filter === 'archived' && u.status !== 'archived') return false;
-    return !search || u.name.toLowerCase().includes(search);
-  });
-  const tbody = document.getElementById('unitsTbody');
-  if (!rows.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No units found</td></tr>';
-    return;
+// ══════════════════════════════════════════════
+// UNITS & YOUNG PEOPLE BOARD
+// One column per unit; young people are cards inside their unit's column.
+// ══════════════════════════════════════════════
+const UNIT_COLOURS = [            // [accent, tint] — assigned in the order units were created
+  ['#1446a0', '#e8eef8'],         // brand blue
+  ['#0e7490', '#e3f4f8'],         // teal
+  ['#7b2d8b', '#f5eef8'],         // purple
+  ['#d97706', '#fef3e2'],         // amber
+  ['#1f9d55', '#e6f6ed'],         // green
+  ['#b83280', '#fbebf4']          // pink
+];
+const NO_UNIT_COLOUR = ['#c0392b', '#fdf0ef'];
+const MOVED_COLOUR   = ['#6b7280', '#eceef2'];
+let unitColourMap = {};
+let dragSUId      = null;
+let dropHoverCol  = null;
+let transferTargetId = null;
+
+function byName(a, b) {
+  return (a.name || '').localeCompare(b.name || '', 'en', { sensitivity: 'base', numeric: true });
+}
+function tsMillis(ts) {
+  try { return ts && ts.toMillis ? ts.toMillis() : (ts ? new Date(ts).getTime() : 0); } catch { return 0; }
+}
+function rebuildColours() {
+  const order = units.slice().sort((a, b) => tsMillis(a.createdAt) - tsMillis(b.createdAt) || byName(a, b));
+  unitColourMap = {};
+  order.forEach((u, i) => { unitColourMap[u.id] = UNIT_COLOURS[i % UNIT_COLOURS.length]; });
+}
+const colourOf   = unitId => unitColourMap[unitId] || UNIT_COLOURS[0];
+const activeIn   = unitId => serviceUsers.filter(s => s.currentUnitId === unitId && s.status !== 'moved-on');
+const unitById   = id => units.find(u => u.id === id);
+
+function ageOf(dob) {
+  if (!dob) return null;
+  const d = new Date(dob + 'T00:00:00');
+  if (isNaN(d)) return null;
+  const now = new Date();
+  let a = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) a--;
+  return a >= 0 ? a : null;
+}
+function fmtYMD(str) {
+  if (!str) return '';
+  const d = new Date(str + 'T00:00:00');
+  return isNaN(d) ? str : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+function initialsOf(name) {
+  const p = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!p.length) return '?';
+  return (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
+}
+
+function ypCardHTML(s, moved) {
+  const age  = ageOf(s.dob);
+  const meta = [];
+  if (moved) {
+    meta.push(s.moveOnDate ? `Moved on ${fmtYMD(s.moveOnDate)}` : 'Moved on');
+  } else {
+    if (age !== null) meta.push(`Age ${age}`);
+    if (s.dob) meta.push(fmtYMD(s.dob));
   }
-  tbody.innerHTML = rows.map(u => {
-    const activeUsers = serviceUsers.filter(s => s.currentUnitId === u.id && s.status !== 'moved-on').length;
+  const tags = [];
+  if (moved) {
+    const u = unitById(s.currentUnitId);
+    if (u) tags.push(`<span class="badge badge-grey">${esc(u.name)}</span>`);
+  }
+  if (s.regulatoryBody)  tags.push(`<span class="badge badge-purple">${esc(s.regulatoryBody)}</span>`);
+  if (s.localAuthority)  tags.push(`<span class="yp-la">${esc(s.localAuthority)}</span>`);
+  const id = esc(s.id);
+  return `<article class="yp-card" tabindex="0" ${moved ? '' : 'draggable="true"'} data-id="${id}" title="Click to edit${moved ? '' : ' · drag to another unit to move'}">
+    <div class="yp-av">${esc(initialsOf(s.name))}</div>
+    <div class="yp-main">
+      <div class="yp-name">${esc(s.name)}</div>
+      ${meta.length ? `<div class="yp-meta">${meta.join(' · ')}</div>` : ''}
+      ${tags.length ? `<div class="yp-tags">${tags.join('')}</div>` : ''}
+    </div>
+    <div class="yp-side">
+      <button class="ib" data-act="ypMenu" data-id="${id}" title="More options" aria-label="More options for ${esc(s.name)}">⋯</button>
+      ${moved
+        ? `<button class="btn btn-ghost btn-sm" data-act="reactivate" data-id="${id}">Reactivate</button>`
+        : `<button class="btn btn-ghost btn-sm" data-act="move" data-id="${id}">Move</button>`}
+    </div>
+  </article>`;
+}
+
+window.renderBoard = function() {
+  const board = document.getElementById('board');
+  if (!board) return;
+  if (!dataLoaded) { board.innerHTML = '<div class="board-msg">Loading…</div>'; return; }
+
+  const search    = document.getElementById('boardSearch').value.trim().toLowerCase();
+  const showArch  = document.getElementById('showArchived').checked;
+  const showMoved = document.getElementById('showMovedOn').checked;
+  const matches   = s => !search || (s.name || '').toLowerCase().includes(search) || (s.localAuthority || '').toLowerCase().includes(search);
+
+  const active  = serviceUsers.filter(s => s.status !== 'moved-on');
+  const moved   = serviceUsers.filter(s => s.status === 'moved-on');
+  const unitIds = new Set(units.map(u => u.id));
+
+  // Build the columns: [no unit] · active units · archived units · [moved on]
+  const cols = [];
+  const orphans = active.filter(s => !unitIds.has(s.currentUnitId));
+  if (orphans.length) cols.push({ key: 'none', kind: 'orphan', name: 'No unit assigned', people: orphans, colour: NO_UNIT_COLOUR });
+  const sortedUnits = units.filter(u => u.status !== 'archived').sort(byName)
+    .concat(units.filter(u => u.status === 'archived').sort(byName));
+  sortedUnits.forEach(u => {
+    const people   = active.filter(s => s.currentUnitId === u.id);
     const archived = u.status === 'archived';
-    return `<tr>
-      <td><strong>${esc(u.name)}</strong></td>
-      <td>${archived ? '<span class="badge badge-grey">Archived</span>' : '<span class="badge badge-green">Active</span>'}</td>
-      <td><span class="badge badge-blue">${activeUsers} user${activeUsers !== 1 ? 's' : ''}</span></td>
-      <td style="color:var(--text3);font-size:12px">${fmtDate(u.createdAt)}</td>
-      <td><div class="actions-cell">
-        <button class="btn btn-ghost btn-sm" onclick="openUnitModal('${u.id}')">Edit</button>
-        <button class="btn btn-ghost btn-sm" onclick="toggleUnitArchive('${u.id}')">${archived ? 'Unarchive' : 'Archive'}</button>
-        ${activeUsers === 0 ? `<button class="btn btn-danger btn-sm" onclick="deleteUnit('${u.id}')">Delete</button>` : ''}
-      </div></td>
-    </tr>`;
+    if (archived && !showArch && !people.length) return;   // hidden unless ticked (or still has people in it)
+    cols.push({ key: u.id, kind: 'unit', unit: u, name: u.name, people, archived, colour: colourOf(u.id) });
+  });
+  if (showMoved) cols.push({ key: 'moved', kind: 'moved', name: 'Moved on', people: moved, colour: MOVED_COLOUR });
+
+  // Remember scroll positions so a refresh doesn't jump the board around
+  const keepLeft = board.scrollLeft;
+  const keepTops = {};
+  board.querySelectorAll('.col[data-key]').forEach(c => { keepTops[c.dataset.key] = c.querySelector('.col-list').scrollTop; });
+
+  document.getElementById('movedOnCount').textContent = moved.length ? `(${moved.length})` : '';
+
+  // Quick-jump chips
+  document.getElementById('unitChips').innerHTML = cols.map(c => {
+    const n = c.people.filter(matches).length;
+    return `<button class="chip ${c.archived ? 'archived' : ''}" style="--chip:${c.colour[0]};--chip-bg:${c.colour[1]}" data-jump="${esc(c.key)}" title="Jump to ${esc(c.name)}"><span class="dot"></span>${esc(c.name)}<span class="n">${n}</span></button>`;
   }).join('');
+
+  // Summary
+  const unitCount = units.filter(u => u.status !== 'archived').length;
+  const matchCount = active.filter(matches).length;
+  document.getElementById('boardSummary').textContent =
+    `${unitCount} unit${unitCount !== 1 ? 's' : ''} · ${active.length} young ${active.length !== 1 ? 'people' : 'person'}` +
+    (search ? ` · ${matchCount} match${matchCount !== 1 ? 'es' : ''}` : '');
+
+  // Columns
+  let html = '';
+  if (!units.length && !cols.length) {
+    html += `<div class="board-empty"><div class="big">🏠</div><h3>No units yet</h3>
+      <p>Start by adding your first unit. Then you can add young people to it, and move them between units as things change.</p>
+      <button class="btn btn-primary" data-act="addUnit">＋ Add your first unit</button></div>`;
+  } else {
+    if (!cols.length) html += '<div class="board-msg" style="flex:0 0 300px">All units are archived — tick “Show archived units” above to see them.</div>';
+    cols.forEach(c => {
+      const shown = c.people.filter(matches).sort(byName);
+      const count = search ? `${shown.length} of ${c.people.length}` : `${c.people.length}`;
+      const droppable = c.kind === 'unit' && !c.archived;
+      const key = esc(c.key);
+      let body;
+      if (shown.length) body = shown.map(s => ypCardHTML(s, c.kind === 'moved')).join('');
+      else if (search)  body = '<div class="col-empty">No matches in here</div>';
+      else if (c.kind === 'moved') body = '<div class="col-empty">Nobody has moved on yet</div>';
+      else body = '<div class="col-empty">No young people in this unit yet.<br>Use the button below, or drag someone here.</div>';
+      html += `<section class="col ${c.kind === 'moved' ? 'is-moved' : ''}" data-key="${key}" ${droppable ? `data-drop="${key}"` : ''} style="--accent:${c.colour[0]};--accent-bg:${c.colour[1]}">
+        <header class="col-hdr">
+          <span class="col-name" title="${esc(c.name)}">${esc(c.name)}</span>
+          <span class="col-count">${count}</span>
+          ${c.archived ? '<span class="badge badge-grey">Archived</span>' : ''}
+          <span class="col-spacer"></span>
+          ${c.kind === 'unit' ? `<button class="ib" data-act="unitMenu" data-unit="${key}" title="Unit options" aria-label="Options for ${esc(c.name)}">⋯</button>` : ''}
+        </header>
+        ${c.kind === 'orphan' ? '<div class="col-note">These young people aren’t in a current unit. Drag them onto a unit, or use Move.</div>' : ''}
+        <div class="col-list">${body}</div>
+        ${droppable ? `<button class="col-add" data-act="addYP" data-unit="${key}">＋ Add young person</button>` : ''}
+      </section>`;
+    });
+    html += `<button class="col col-new" data-act="addUnit"><span class="plus">＋</span>Add a unit</button>`;
+  }
+  board.innerHTML = html;
+
+  board.scrollLeft = keepLeft;
+  board.querySelectorAll('.col[data-key]').forEach(c => {
+    if (keepTops[c.dataset.key]) c.querySelector('.col-list').scrollTop = keepTops[c.dataset.key];
+  });
+  updateActiveChip();
 };
+
+// Highlight the chips for the units currently in view
+function updateActiveChip() {
+  const board = document.getElementById('board');
+  if (!board) return;
+  const left = board.scrollLeft, right = left + board.clientWidth;
+  const visible = new Set();
+  board.querySelectorAll('.col[data-key]').forEach(c => {
+    const overlap = Math.min(right, c.offsetLeft + c.offsetWidth) - Math.max(left, c.offsetLeft);
+    if (c.offsetWidth && overlap >= c.offsetWidth * 0.5) visible.add(c.dataset.key);
+  });
+  document.querySelectorAll('#unitChips .chip').forEach(ch => ch.classList.toggle('active', visible.has(ch.dataset.jump)));
+}
+
+window.scrollToCol = function(key, flash = true) {
+  const board = document.getElementById('board');
+  const col = [...board.querySelectorAll('.col[data-key]')].find(c => c.dataset.key === key);
+  if (!col) return;
+  board.scrollTo({ left: Math.max(0, col.offsetLeft - 2), behavior: 'smooth' });
+  if (flash) { col.classList.remove('flash'); void col.offsetWidth; col.classList.add('flash'); }
+};
+
+window.scrollBoard = function(dir) {
+  const board = document.getElementById('board');
+  const col = board.querySelector('.col');
+  board.scrollBy({ left: dir * ((col ? col.offsetWidth : 300) + 16), behavior: 'smooth' });
+};
+
+function flashCard(id) {
+  const card = [...document.querySelectorAll('#board .yp-card')].find(c => c.dataset.id === id);
+  if (!card) return;
+  scrollToCol(card.closest('.col').dataset.key, false);
+  const list = card.closest('.col-list');
+  list.scrollTop = Math.max(0, card.offsetTop - 8);
+  card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
+}
+
+// ── POP-UP MENU (the ⋯ buttons) ──
+function closeMenu() {
+  const m = document.getElementById('popMenu');
+  if (m) { m.remove(); return true; }
+  return false;
+}
+function showMenu(btn, items) {
+  const was = document.getElementById('popMenu');
+  const sameOwner = was && was.dataset.owner === btn.dataset.act + (btn.dataset.id || btn.dataset.unit);
+  closeMenu();
+  if (sameOwner) return;                      // clicking the same ⋯ again just closes it
+  const pop = document.createElement('div');
+  pop.className = 'pop-menu';
+  pop.id = 'popMenu';
+  pop.dataset.owner = btn.dataset.act + (btn.dataset.id || btn.dataset.unit);
+  pop.innerHTML = items.map((it, i) => it.sep ? '<div class="pop-sep"></div>'
+    : `<button class="pop-item ${it.danger ? 'danger' : ''}" data-i="${i}"><span class="pi">${it.icon || ''}</span>${esc(it.label)}</button>`).join('');
+  document.body.appendChild(pop);
+  const r = btn.getBoundingClientRect();
+  pop.style.top  = Math.min(r.bottom + 4, window.innerHeight - pop.offsetHeight - 8) + 'px';
+  pop.style.left = Math.max(8, Math.min(r.right - pop.offsetWidth, window.innerWidth - pop.offsetWidth - 8)) + 'px';
+  pop.addEventListener('click', e => {
+    const b = e.target.closest('.pop-item');
+    if (!b) return;
+    const it = items[+b.dataset.i];
+    closeMenu();
+    it.run();
+  });
+}
+document.addEventListener('click', e => { if (!e.target.closest('#popMenu') && !e.target.closest('[data-act$="Menu"]')) closeMenu(); });
+document.addEventListener('scroll', closeMenu, true);
+window.addEventListener('resize', () => { closeMenu(); updateActiveChip(); });
+
+function openUnitMenu(btn, id) {
+  const u = unitById(id);
+  if (!u) return;
+  const archived = u.status === 'archived';
+  const items = [];
+  if (!archived) items.push({ icon: '＋', label: 'Add young person', run: () => openSUModal(null, id) });
+  items.push({ icon: '✏️', label: 'Rename unit', run: () => openUnitModal(id) });
+  items.push({ icon: archived ? '♻️' : '📦', label: archived ? 'Restore unit' : 'Archive unit', run: () => toggleUnitArchive(id) });
+  if (!activeIn(id).length) {
+    items.push({ sep: true });
+    items.push({ icon: '🗑️', label: 'Delete unit', danger: true, run: () => deleteUnit(id) });
+  }
+  showMenu(btn, items);
+}
+
+function openYPMenu(btn, id) {
+  const s = serviceUsers.find(x => x.id === id);
+  if (!s) return;
+  const moved = s.status === 'moved-on';
+  const items = [{ icon: '✏️', label: 'Edit details', run: () => openSUModal(id) }];
+  if (moved) {
+    items.push({ icon: '↩️', label: 'Reactivate', run: () => reactivateSU(id) });
+  } else {
+    items.push({ icon: '➡️', label: 'Move to another unit', run: () => openTransferModal(id) });
+    items.push({ icon: '👋', label: 'Mark as moved on', run: () => openMoveOnModal(id) });
+  }
+  items.push({ sep: true });
+  items.push({ icon: '🗑️', label: 'Delete', danger: true, run: () => deleteSU(id) });
+  showMenu(btn, items);
+}
+
+// ── BOARD EVENTS (one set of listeners; the board's HTML is re-created on every render) ──
+(function wireBoard() {
+  const board = document.getElementById('board');
+
+  board.addEventListener('click', e => {
+    const btn = e.target.closest('[data-act]');
+    if (btn) {
+      const { act, id, unit } = btn.dataset;
+      if (act === 'ypMenu')      return openYPMenu(btn, id);
+      if (act === 'unitMenu')    return openUnitMenu(btn, unit);
+      closeMenu();
+      if (act === 'move')        return openTransferModal(id);
+      if (act === 'reactivate')  return reactivateSU(id);
+      if (act === 'addYP')       return openSUModal(null, unit);
+      if (act === 'addUnit')     return openUnitModal();
+      return;
+    }
+    const card = e.target.closest('.yp-card');
+    if (card) openSUModal(card.dataset.id);
+  });
+
+  board.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('yp-card')) openSUModal(e.target.dataset.id);
+  });
+
+  board.addEventListener('scroll', () => requestAnimationFrame(updateActiveChip), { passive: true });
+
+  // Drag a card onto another unit's column → opens the Move dialog with that unit pre-selected
+  board.addEventListener('dragstart', e => {
+    const card = e.target.closest && e.target.closest('.yp-card[draggable="true"]');
+    if (!card) return;
+    dragSUId = card.dataset.id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', dragSUId);
+    closeMenu();
+    board.classList.add('is-dragging');
+    requestAnimationFrame(() => card.classList.add('dragging'));
+  });
+
+  board.addEventListener('dragover', e => {
+    if (!dragSUId) return;
+    // scroll sideways when dragging near the left/right edge
+    const r = board.getBoundingClientRect();
+    if (e.clientX < r.left + 90)       board.scrollLeft -= 22;
+    else if (e.clientX > r.right - 90) board.scrollLeft += 22;
+
+    const col = e.target.closest('.col[data-drop]');
+    if (!col) { setDropHover(null); return; }          // not a valid target → "no drop" cursor
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const s = serviceUsers.find(x => x.id === dragSUId);
+    setDropHover(s && s.currentUnitId !== col.dataset.drop ? col : null);
+  });
+
+  board.addEventListener('dragleave', e => {
+    if (!board.contains(e.relatedTarget)) setDropHover(null);
+  });
+
+  board.addEventListener('drop', e => {
+    if (!dragSUId) return;
+    const col = e.target.closest('.col[data-drop]');
+    if (!col) return;
+    e.preventDefault();
+    const id = dragSUId, unitId = col.dataset.drop;
+    endDrag();
+    const s = serviceUsers.find(x => x.id === id);
+    if (s && s.currentUnitId !== unitId) openTransferModal(id, unitId);
+  });
+
+  board.addEventListener('dragend', endDrag);
+
+  function setDropHover(col) {
+    if (dropHoverCol === col) return;
+    if (dropHoverCol) dropHoverCol.classList.remove('drop-ok');
+    dropHoverCol = col;
+    if (col) col.classList.add('drop-ok');
+  }
+  function endDrag() {
+    setDropHover(null);
+    dragSUId = null;
+    board.classList.remove('is-dragging');
+    board.querySelectorAll('.dragging').forEach(c => c.classList.remove('dragging'));
+  }
+
+  document.getElementById('unitChips').addEventListener('click', e => {
+    const chip = e.target.closest('[data-jump]');
+    if (chip) scrollToCol(chip.dataset.jump);
+  });
+
+  document.getElementById('transferUnitList').addEventListener('click', e => {
+    const opt = e.target.closest('[data-unit]');
+    if (!opt) return;
+    transferTargetId = opt.dataset.unit;
+    refreshTransferPicker();
+  });
+})();
 
 // ── UNIT MODAL ──
 window.openUnitModal = function(id) {
   editingUnitId = id || null;
-  document.getElementById('unitModalTitle').textContent = id ? 'Edit Unit' : 'Add Unit';
-  document.getElementById('unitName').value = id ? (units.find(u => u.id === id)?.name || '') : '';
+  document.getElementById('unitModalTitle').textContent = id ? 'Rename Unit' : 'Add Unit';
+  document.getElementById('unitName').value = id ? (unitById(id)?.name || '') : '';
   openModal('unitModal');
+  setTimeout(() => document.getElementById('unitName').focus(), 50);
 };
 
 window.saveUnit = async function() {
   const name = document.getElementById('unitName').value.trim();
   if (!name) { toast('Unit name is required', 'error'); return; }
+  const clash = units.find(u => u.id !== editingUnitId && (u.name || '').trim().toLowerCase() === name.toLowerCase());
+  if (clash) { toast(`There is already a unit called “${clash.name}”`, 'error'); return; }
   try {
+    let newId = null;
     if (editingUnitId) {
       await updateDoc(doc(db, 'units', editingUnitId), { name });
-      toast('Unit updated');
+      toast('Unit renamed');
     } else {
-      await addDoc(collection(db, 'units'), { name, status: 'active', createdAt: serverTimestamp() });
-      toast('Unit added', 'success');
+      const ref = await addDoc(collection(db, 'units'), { name, status: 'active', createdAt: serverTimestamp() });
+      newId = ref.id;
+      toast(`${name} added — now add some young people to it`, 'success');
     }
     closeModal('unitModal');
     await loadUnits();
-    await loadServiceUsers(); // refresh unit name references
     updateCounts();
+    if (newId) scrollToCol(newId);
   } catch (e) { toast(e.message, 'error'); }
 };
 
 window.toggleUnitArchive = async function(id) {
-  const u = units.find(x => x.id === id);
-  const newStatus = u.status === 'archived' ? 'active' : 'archived';
-  await updateDoc(doc(db, 'units', id), { status: newStatus });
-  toast(`Unit ${newStatus === 'archived' ? 'archived' : 'restored'}`);
-  await loadUnits();
-  updateCounts();
+  const u = unitById(id);
+  const archiving = u.status !== 'archived';
+  const n = activeIn(id).length;
+  if (archiving && n > 0) {
+    toast(`Move the ${n} young ${n === 1 ? 'person' : 'people'} out of ${u.name} before archiving it`, 'warn');
+    return;
+  }
+  try {
+    await updateDoc(doc(db, 'units', id), { status: archiving ? 'archived' : 'active' });
+    toast(archiving ? `${u.name} archived` : `${u.name} restored`);
+    await loadUnits();
+    updateCounts();
+  } catch (e) { toast(e.message, 'error'); }
 };
 
 window.deleteUnit = function(id) {
-  const u = units.find(x => x.id === id);
+  const u = unitById(id);
+  if (activeIn(id).length) { toast('Move the young people out of this unit first', 'warn'); return; }
+  const past = serviceUsers.filter(s => s.currentUnitId === id).length;
   confirmAction = async () => {
-    await deleteDoc(doc(db, 'units', id));
-    toast('Unit deleted');
-    await loadUnits();
-    updateCounts();
+    try {
+      await deleteDoc(doc(db, 'units', id));
+      toast('Unit deleted');
+      await loadUnits();
+      updateCounts();
+    } catch (e) { toast(e.message, 'error'); }
   };
-  showConfirm('Delete Unit', `Are you sure you want to delete "${u.name}"?`, 'This cannot be undone.', '🗑️');
+  showConfirm('Delete Unit', `Are you sure you want to delete "${u.name}"?`,
+    past ? `${past} moved-on young ${past === 1 ? 'person was' : 'people were'} last in this unit — their records will show “Unknown” for the unit. This cannot be undone.` : 'This cannot be undone.', '🗑️');
 };
 
-// ── SERVICE USERS RENDER ──
-window.renderSUs = function() {
-  const search = document.getElementById('suSearch').value.toLowerCase();
-  const unitF  = document.getElementById('suUnitFilter').value;
-  const statF  = document.getElementById('suStatusFilter').value;
-  const rows = serviceUsers.filter(s => {
-    if (statF === 'active'   && s.status === 'moved-on') return false;
-    if (statF === 'moved-on' && s.status !== 'moved-on') return false;
-    if (unitF !== 'all' && s.currentUnitId !== unitF) return false;
-    return !search || s.name.toLowerCase().includes(search);
-  });
-  const tbody = document.getElementById('suTbody');
-  if (!rows.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No service users found</td></tr>';
+// ── YOUNG PERSON MODAL ──
+window.openSUModal = function(id, presetUnitId) {
+  const activeUnits = units.filter(u => u.status !== 'archived').sort(byName);
+  if (!id && !activeUnits.length) {
+    toast('Add a unit first — then you can add young people to it', 'warn');
+    openUnitModal();
     return;
   }
-  tbody.innerHTML = rows.map(s => {
-    const unit = units.find(u => u.id === s.currentUnitId);
-    const movedOn = s.status === 'moved-on';
-    return `<tr>
-      <td><strong>${esc(s.name)}</strong></td>
-      <td>${unit ? `<span class="badge badge-blue">${esc(unit.name)}</span>` : '<span class="badge badge-grey">Unknown</span>'}</td>
-      <td style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace">${s.dob || '—'}</td>
-      <td style="font-size:12px;color:var(--text2)">${esc(s.localAuthority || '—')}</td>
-      <td>${s.regulatoryBody ? `<span class="badge badge-purple">${esc(s.regulatoryBody)}</span>` : '<span style="color:var(--text3)">—</span>'}</td>
-      <td>${movedOn ? '<span class="badge badge-grey">Moved On</span>' : '<span class="badge badge-green">Active</span>'}</td>
-      <td><div class="actions-cell">
-        <button class="btn btn-ghost btn-sm" onclick="openSUModal('${s.id}')">Edit</button>
-        ${!movedOn ? `<button class="btn btn-ghost btn-sm" onclick="openTransferModal('${s.id}')">Transfer</button>` : ''}
-        ${!movedOn ? `<button class="btn btn-amber btn-sm" onclick="openMoveOnModal('${s.id}')">Move On</button>` : `<button class="btn btn-ghost btn-sm" onclick="reactivateSU('${s.id}')">Reactivate</button>`}
-        <button class="btn btn-danger btn-sm" onclick="deleteSU('${s.id}')">Delete</button>
-      </div></td>
-    </tr>`;
-  }).join('');
-};
-
-function populateUnitFilters() {
-  const sel = document.getElementById('suUnitFilter');
-  const current = sel.value;
-  sel.innerHTML = '<option value="all">All units</option>' +
-    units.filter(u => u.status !== 'archived').map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
-  if (current) sel.value = current;
-}
-
-// ── SERVICE USER MODAL ──
-window.openSUModal = function(id) {
   editingSUId = id || null;
-  document.getElementById('suModalTitle').textContent = id ? 'Edit Service User' : 'Add Service User';
-  document.getElementById('suSaveBtn').textContent = id ? 'Save Changes' : 'Add Service User';
+  const s = id ? serviceUsers.find(x => x.id === id) : null;
+  const preset = presetUnitId ? activeUnits.find(u => u.id === presetUnitId) : null;
 
-  // Populate unit dropdown
+  document.getElementById('suModalTitle').textContent = id ? 'Edit Young Person' : (preset ? `Add Young Person to ${preset.name}` : 'Add Young Person');
+  document.getElementById('suSaveBtn').textContent = id ? 'Save Changes' : 'Add Young Person';
+  document.getElementById('suAnotherBtn').style.display = id ? 'none' : '';
+
+  // Unit dropdown
   const uSel = document.getElementById('suUnit');
-  uSel.innerHTML = units.filter(u => u.status !== 'archived').map(u =>
-    `<option value="${u.id}">${esc(u.name)}</option>`
-  ).join('');
+  const currentInList = s && activeUnits.some(u => u.id === s.currentUnitId);
+  uSel.innerHTML =
+    (!id ? '<option value="">— Choose a unit —</option>' : (currentInList ? '' : '<option value="">— No current unit —</option>')) +
+    activeUnits.map(u => `<option value="${esc(u.id)}">${esc(u.name)}</option>`).join('');
 
-  // Populate regulatory body dropdown from Firestore
-  const rbSel = document.getElementById('suRegBody');
-  rbSel.innerHTML = '<option value="">— Select —</option>' +
+  // Regulatory body dropdown
+  document.getElementById('suRegBody').innerHTML = '<option value="">— Select —</option>' +
     regBodies.map(r => `<option value="${esc(r.label)}">${esc(r.label)}</option>`).join('');
 
-  if (id) {
-    const s = serviceUsers.find(x => x.id === id);
-    document.getElementById('suName').value    = s.name          || '';
-    document.getElementById('suDob').value     = s.dob           || '';
-    document.getElementById('suLA').value      = s.localAuthority|| '';
-    document.getElementById('suRegBody').value = s.regulatoryBody|| '';
-    uSel.value = s.currentUnitId || '';
+  if (s) {
+    document.getElementById('suName').value    = s.name           || '';
+    document.getElementById('suDob').value     = s.dob            || '';
+    document.getElementById('suLA').value      = s.localAuthority || '';
+    document.getElementById('suRegBody').value = s.regulatoryBody || '';
+    uSel.value = currentInList ? s.currentUnitId : '';
     document.getElementById('suUnitHint').style.display = 'block';
 
-    // Show unit history
     const history = s.unitHistory || [];
     if (history.length) {
       document.getElementById('suHistoryWrap').style.display = 'block';
       document.getElementById('suHistoryList').innerHTML = history.slice().reverse().map(h => {
-        const uName = units.find(u => u.id === h.unitId)?.name || h.unitId;
-        const isCurrent = !h.toDate;
+        const uName = unitById(h.unitId)?.name || h.unitId;
         return `<div class="history-row">
           <span class="history-unit">${esc(uName)}</span>
-          <span class="history-dates">${h.fromDate} → ${h.toDate || 'present'}</span>
-          ${isCurrent ? '<span class="history-current">Current</span>' : ''}
+          <span class="history-dates">${esc(h.fromDate)} → ${esc(h.toDate || 'present')}</span>
+          ${!h.toDate ? '<span class="history-current">Current</span>' : ''}
         </div>`;
       }).join('');
     } else {
@@ -958,34 +1354,37 @@ window.openSUModal = function(id) {
     document.getElementById('suDob').value     = '';
     document.getElementById('suLA').value      = '';
     document.getElementById('suRegBody').value = '';
+    uSel.value = preset ? preset.id : '';
     document.getElementById('suUnitHint').style.display = 'none';
     document.getElementById('suHistoryWrap').style.display = 'none';
   }
   openModal('suModal');
+  setTimeout(() => document.getElementById('suName').focus(), 50);
 };
 
-window.saveSU = async function() {
+window.saveSU = async function(addAnother = false) {
   const name    = document.getElementById('suName').value.trim();
   const dob     = document.getElementById('suDob').value;
   const unitId  = document.getElementById('suUnit').value;
   const la      = document.getElementById('suLA').value.trim();
   const regBody = document.getElementById('suRegBody').value;
   if (!name) { toast('Name is required', 'error'); return; }
+  if (!editingSUId && !unitId) { toast('Please choose a unit', 'error'); return; }
 
+  const btns = [document.getElementById('suSaveBtn'), document.getElementById('suAnotherBtn')];
+  btns.forEach(b => b.disabled = true);
   try {
+    let newId = null;
     if (editingSUId) {
       const s = serviceUsers.find(x => x.id === editingSUId);
       const updates = { name, dob: dob || '', localAuthority: la, regulatoryBody: regBody };
-      // If unit changed directly (not via Transfer), update it but don't create history entry
-      if (unitId && unitId !== s.currentUnitId) {
-        updates.currentUnitId = unitId;
-      }
+      // Direct unit change (not via Move): corrects currentUnitId but writes no history entry
+      if (unitId && unitId !== s.currentUnitId) updates.currentUnitId = unitId;
       await updateDoc(doc(db, 'serviceUsers', editingSUId), updates);
-      toast('Service user updated');
+      toast(`${name} updated`);
     } else {
-      if (!unitId) { toast('Please select a unit', 'error'); return; }
       const today = toDateStr(new Date());
-      await addDoc(collection(db, 'serviceUsers'), {
+      const ref = await addDoc(collection(db, 'serviceUsers'), {
         name,
         dob: dob || '',
         localAuthority: la,
@@ -996,55 +1395,97 @@ window.saveSU = async function() {
         unitHistory: [{ unitId, fromDate: today, toDate: null }],
         createdAt: serverTimestamp()
       });
-      toast('Service user added', 'success');
+      newId = ref.id;
+      toast(`${name} added to ${unitById(unitId)?.name || 'unit'}`, 'success');
     }
-    closeModal('suModal');
-    await loadServiceUsers();
+
+    if (addAnother && newId) {
+      // keep the dialog open, same unit, blank fields — ready for the next young person
+      ['suName', 'suDob', 'suLA'].forEach(i => document.getElementById(i).value = '');
+      document.getElementById('suRegBody').value = '';
+      document.getElementById('suName').focus();
+      await loadServiceUsers();
+    } else {
+      closeModal('suModal');
+      await loadServiceUsers();
+      if (newId) flashCard(newId);
+    }
     updateCounts();
-  } catch (e) { toast(e.message, 'error'); }
+  } catch (e) {
+    toast(e.message, 'error');
+  } finally {
+    btns.forEach(b => b.disabled = false);
+  }
 };
 
 window.deleteSU = function(id) {
   const s = serviceUsers.find(x => x.id === id);
   confirmAction = async () => {
-    await deleteDoc(doc(db, 'serviceUsers', id));
-    toast('Service user deleted');
-    await loadServiceUsers();
-    updateCounts();
+    try {
+      await deleteDoc(doc(db, 'serviceUsers', id));
+      toast(`${s.name} deleted`);
+      await loadServiceUsers();
+      updateCounts();
+    } catch (e) { toast(e.message, 'error'); }
   };
-  showConfirm('Delete Service User', `Delete "${s.name}" permanently?`, 'This will remove their profile. Existing handover records referencing this person will remain but the profile will be gone.', '⚠️');
+  showConfirm('Delete Young Person', `Delete "${s.name}" permanently?`, 'This will remove their profile. Existing handover records referencing this person will remain but the profile will be gone. If they have simply left, use “Mark as moved on” instead.', '⚠️');
 };
 
-// ── TRANSFER UNIT ──
-window.openTransferModal = function(id) {
-  transferSUId = id;
+// ── MOVE TO ANOTHER UNIT ──
+window.openTransferModal = function(id, targetUnitId) {
   const s = serviceUsers.find(x => x.id === id);
-  const tSel = document.getElementById('transferUnit');
-  tSel.innerHTML = units
-    .filter(u => u.status !== 'archived' && u.id !== s.currentUnitId)
-    .map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
+  if (!s) return;
+  const options = units.filter(u => u.status !== 'archived' && u.id !== s.currentUnitId);
+  if (!options.length) { toast('There are no other units to move to — add a unit first', 'warn'); return; }
+  transferSUId = id;
+  transferTargetId = options.some(u => u.id === targetUnitId) ? targetUnitId : null;
+  document.getElementById('transferName').textContent = s.name;
+  const from = unitById(s.currentUnitId);
+  document.getElementById('transferFrom').innerHTML = from ? `<span class="badge badge-blue">${esc(from.name)}</span>` : '<span class="badge badge-grey">no unit</span>';
   document.getElementById('transferDate').value = toDateStr(new Date());
+  refreshTransferPicker();
   openModal('transferModal');
 };
 
+function refreshTransferPicker() {
+  const s = serviceUsers.find(x => x.id === transferSUId);
+  if (!s) return;
+  const options = units.filter(u => u.status !== 'archived' && u.id !== s.currentUnitId).sort(byName);
+  document.getElementById('transferUnitList').innerHTML = options.map(u => {
+    const c = colourOf(u.id), n = activeIn(u.id).length;
+    return `<button type="button" class="unit-opt ${u.id === transferTargetId ? 'sel' : ''}" style="--c:${c[0]};--cb:${c[1]}" data-unit="${esc(u.id)}">
+      <span class="dot"></span><span><span class="uo-name">${esc(u.name)}</span><span class="uo-sub">${n} young ${n === 1 ? 'person' : 'people'} now</span></span>
+    </button>`;
+  }).join('');
+  const btn = document.getElementById('transferBtn');
+  const target = unitById(transferTargetId);
+  btn.disabled = !target;
+  btn.textContent = target ? `Move to ${target.name}` : 'Choose a unit';
+}
+
 window.confirmTransfer = async function() {
-  const newUnitId      = document.getElementById('transferUnit').value;
-  const transferDate   = document.getElementById('transferDate').value;
-  if (!newUnitId || !transferDate) { toast('All fields required', 'error'); return; }
+  const newUnitId    = transferTargetId;
+  const transferDate = document.getElementById('transferDate').value;
+  if (!newUnitId)    { toast('Choose a unit to move to', 'error'); return; }
+  if (!transferDate) { toast('Choose a move date', 'error'); return; }
 
   const s = serviceUsers.find(x => x.id === transferSUId);
-  const updatedHistory = (s.unitHistory || []).map(h =>
-    h.toDate === null ? { ...h, toDate: transferDate } : h
-  );
+  const updatedHistory = (s.unitHistory || []).map(h => h.toDate ? h : { ...h, toDate: transferDate });
   updatedHistory.push({ unitId: newUnitId, fromDate: transferDate, toDate: null });
 
-  await updateDoc(doc(db, 'serviceUsers', transferSUId), {
-    currentUnitId: newUnitId,
-    unitHistory: updatedHistory
-  });
-  toast('Unit transfer saved', 'success');
-  closeModal('transferModal');
-  await loadServiceUsers();
+  const btn = document.getElementById('transferBtn');
+  btn.disabled = true;
+  try {
+    await updateDoc(doc(db, 'serviceUsers', transferSUId), { currentUnitId: newUnitId, unitHistory: updatedHistory });
+    toast(`${s.name} moved to ${unitById(newUnitId).name}`, 'success');
+    closeModal('transferModal');
+    await loadServiceUsers();
+    updateCounts();
+    flashCard(s.id);
+  } catch (e) {
+    toast(e.message, 'error');
+    btn.disabled = false;
+  }
 };
 
 // ── MOVE ON ──
@@ -1059,25 +1500,29 @@ window.openMoveOnModal = function(id) {
 window.confirmMoveOn = async function() {
   const date = document.getElementById('moveOnDate').value;
   if (!date) { toast('Move-on date required', 'error'); return; }
-  await updateDoc(doc(db, 'serviceUsers', moveOnSUId), {
-    status: 'moved-on',
-    moveOnDate: date
-  });
-  toast('Move-on date set');
-  closeModal('moveOnModal');
-  await loadServiceUsers();
-  updateCounts();
+  try {
+    await updateDoc(doc(db, 'serviceUsers', moveOnSUId), { status: 'moved-on', moveOnDate: date });
+    toast('Marked as moved on');
+    closeModal('moveOnModal');
+    await loadServiceUsers();
+    updateCounts();
+  } catch (e) { toast(e.message, 'error'); }
 };
 
 window.reactivateSU = async function(id) {
   const s = serviceUsers.find(x => x.id === id);
+  const u = unitById(s.currentUnitId);
   confirmAction = async () => {
-    await updateDoc(doc(db, 'serviceUsers', id), { status: 'active', moveOnDate: null });
-    toast('Service user reactivated', 'success');
-    await loadServiceUsers();
-    updateCounts();
+    try {
+      await updateDoc(doc(db, 'serviceUsers', id), { status: 'active', moveOnDate: null });
+      toast(`${s.name} reactivated`, 'success');
+      await loadServiceUsers();
+      updateCounts();
+      flashCard(id);
+    } catch (e) { toast(e.message, 'error'); }
   };
-  showConfirm('Reactivate', `Reactivate "${s.name}"?`, 'This will clear their move-on date and mark them as active again.', '✅');
+  showConfirm('Reactivate', `Reactivate "${s.name}"?`,
+    `This clears their move-on date and puts them back as active${u ? ` in ${u.name}` : ' (their old unit no longer exists, so they will appear under “No unit assigned” until you move them)'}.`, '✅');
 };
 
 // ── STAFF RENDER ──
@@ -1192,12 +1637,17 @@ window.showView = function(view) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('v-' + view).classList.add('active');
   document.getElementById('nav-' + view).classList.add('active');
-  const titles = { units: 'Units <span class="tb-sub">Manage care units</span>',
-                   serviceusers: 'Service Users <span class="tb-sub">Profiles and assignments</span>',
+  const titles = { board: 'Units &amp; Young People <span class="tb-sub">Who is where</span>',
                    staff: 'Staff Accounts <span class="tb-sub">Logins and roles</span>',
                    regbodies: 'Regulatory Bodies <span class="tb-sub">Manage dropdown options</span>' };
   document.getElementById('topbarTitle').innerHTML = titles[view] || view;
   closeSidebar();
+  if (view === 'board') requestAnimationFrame(updateActiveChip);
+};
+
+window.openSidebar = function() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sb-overlay').classList.add('show');
 };
 
 window.closeSidebar = function() {
@@ -1212,6 +1662,19 @@ window.closeModal = id => { document.getElementById(id).classList.remove('open')
 // Close on backdrop click
 document.querySelectorAll('.modal-bg').forEach(bg => {
   bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+});
+
+// Keyboard: Esc closes the menu / top-most dialog; Enter saves from the main text fields
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (closeMenu()) return;
+    const open = [...document.querySelectorAll('.modal-bg.open')].pop();
+    if (open) open.classList.remove('open');
+  } else if (e.key === 'Enter' && e.target.matches) {
+    if (e.target.matches('#suModal input'))  { e.preventDefault(); saveSU(); }
+    else if (e.target.id === 'unitName')     { e.preventDefault(); saveUnit(); }
+    else if (e.target.id === 'rbLabel')      { e.preventDefault(); saveRB(); }
+  }
 });
 
 // ── CONFIRM ──

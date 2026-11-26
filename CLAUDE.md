@@ -19,7 +19,7 @@ Connected Stars care management system — a suite of single-page HTML applicati
 index.html           — Dashboard / login portal (20 KB)
 cs-handover.html     — CS care handover tool (153 KB)
 o-handover.html      — Overnight/operational handover (114 KB)
-super-admin.html     — Admin management panel (58 KB)
+super-admin.html     — Admin management panel: units & young people board, staff, regulatory bodies (85 KB)
 task-board.html      — Kanban task manager (104 KB)
 cs-documents.html    — Document template manager (new)
 hounslow-kiosk.html  — On-site PIN-locked kiosk (Android tablet, new)
